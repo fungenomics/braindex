@@ -5,8 +5,8 @@
 # and is based off the file creationFDA_GeneLevel.R.
 # I have customized the functions and started to document them.
 
-data_dir <- "/Volumes/My Passport/braindex/brainspan/"
-# data_dir <- "."
+# data_dir <- "/Volumes/My Passport/braindex/brainspan/"
+data_dir <- "."
 load(file.path(data_dir, "data/CleanedData.genes.RData"))
 load(file.path(data_dir, "data/palette_brainspan.Rda"))
 

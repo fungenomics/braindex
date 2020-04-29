@@ -4,8 +4,8 @@ library(shinycssloaders)
 ws <- function(ui) withSpinner(ui, type = 3, size = 0.5,
                                color.background = "white", color = "#8896AE")
 
-data_dir <- "/Volumes/My Passport/braindex/brainspan/"
-# data_dir <- "."
+# data_dir <- "/Volumes/My Passport/braindex/brainspan/"
+data_dir <- "."
 load(file.path(data_dir, "data/geneName.Rda"))
 
 shinyUI(fluidPage(
