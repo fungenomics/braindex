@@ -14,7 +14,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(width = 3,
                  selectInput("gene", "Gene", choices = genes, multiple = TRUE, selected = "Ttyh1"),
-                 selectInput("mode", "How to plot expression", multiple = FALSE, choices = c("age", "pseudotime", "detected"), selected = "age"),
+                 selectInput("mode", "How to plot expression", multiple = FALSE, choices = c("age", "pseudotime", "detected"), selected = "detected"),
                  numericInput("span", "LOESS smoothing", value = 1, min = 0.5, max = 1.5, step = 0.1),
                  numericInput("min_prop", "Minimum detection rate to show cell type", value = 0.1, min = 0, max = 1, step = 0.05),
                  selectInput("points", "Show points", choices = c(TRUE, FALSE), selected = TRUE),

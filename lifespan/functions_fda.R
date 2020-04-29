@@ -5,9 +5,10 @@
 # and is based off the file creationFDA_GeneLevel.R.
 # I have customized the functions and started to document them.
 
-# data_dir <- "/Volumes/My Passport/braindex/brainspan/"
-data_dir <- "."
+data_dir <- "/Volumes/My Passport/braindex/brainspan/"
+# data_dir <- "."
 load(file.path(data_dir, "data/CleanedData.genes.RData"))
+load(file.path(data_dir, "data/palette_brainspan.Rda"))
 
 library(fda)
 
@@ -165,62 +166,6 @@ gcv_fdaBS <- function(lAge, y, ord, ordr_rough, range_logGCV  ){
 }
 
 
-
-# Plotting ----
-
-# plotFit.wNA <- function( xs, ge_NA, ge_Imputed, ge_fd, titles, xlabel='Log(Weeks after conception)', ylabel="Gene Expression"){
-#   # Plot fitted data with imputed NA in red
-#   col_points <- colorsNA(ge_NA)
-#   for(j in 1:nrow(ge_Imputed)){
-#     plot(  xs, ge_Imputed[j,], col=col_points[j,], main = titles[j], lwd=2,  xlab=xlabel, ylab=ylabel )
-#     lines(  ge_fd[j] , lwd=2 )
-#   }
-# }
-
-# plotFDA <- function(lst_GE_wNA, lst_GE_IMP, lst_GE_FD,lst_GE_FD_Deriv, exonOfInt, brNamesReduced, age_label,numAgeReduced, plotsPath){
-#
-#   if (!dir.exists(file.path(plotsPath, "Gene_FDA_curves/"))) {
-#     dir.create(file.path(plotsPath, "Gene_FDA_curves/"))
-#   }
-#   if (!dir.exists(paste0(plotsPath, "Gene_fitted_curves/"))) {
-#     dir.create(file.path(plotsPath, "Gene_fitted_curves/"))
-#   }
-#   if (!dir.exists(paste0(plotsPath, "Gene_derivatives/"))) {
-#     dir.create(file.path(plotsPath, "Gene_derivatives/"))
-#   }
-#
-#   for (i in 1:length(exonOfInt)) {
-#
-#     # For the plot of smooth curves, we can see what the method for plot.fd()
-#     # is doing here: https://github.com/cran/fda/blob/master/R/plot.fd.R#L18
-#     pdf( file.path(plotsPath, paste0('Gene_FDA_curves/FDA_plot_gene_', exonOfInt[i],".pdf")), width = 15, height = 10)
-#     plot( lst_GE_FD[[i]] , main=paste("Gene:", exonOfInt[i] ,sep=" "), lwd=2, xaxt="n", xlab='Weeks after conception', ylab="Gene Expression")
-#     legend("topright", brNamesReduced, lwd=2,col = 1:6, lty = 1:5)
-#     axis(1, at=log(numAgeReduced), labels=rep('',length(numAgeReduced)))
-#     num_age_label <- c(8, 12, 16, 21, 37, 92, 612, 1132, 1600, 2120)
-#     axis(1, at=log(num_age_label), labels=num_age_label)
-#     dev.off()
-#
-#     pdf( file.path(plotsPath, paste0('Gene_fitted_curves/Fitted_curve_gene_',exonOfInt[i], ".pdf")), width = 14, height = 14)
-#     par(mfrow=c(4,4))
-#     titres <- c()
-#     for(j in 1:length(brNamesReduced)){
-#       titres <- c(titres,paste("Gene:",exonOfInt[i],"--- B.R.:",brNamesReduced[j] ,sep=" ") )
-#     }
-#     plotFit.wNA(log(numAgeReduced), lst_GE_wNA[[i]], lst_GE_IMP[[i]], lst_GE_FD[[i]],  titles = titres )
-#     dev.off()
-#
-#     pdf( file.path(plotsPath, paste0('Gene_derivatives/FDA_derivative_gene_',exonOfInt[i], ".pdf")), width = 15, height = 10)
-#     plot(lst_GE_FD_Deriv[[i]], lwd=2, xaxt="n", xlab='Weeks after conception', ylab="Gene Expression", main=paste("FDA derivative Gene:",exonOfInt[i] ,sep=" "))
-#     legend("topright", brNamesReduced, lwd=2,col = 1:6, lty = 1:5)
-#     axis(1, at=log(numAgeReduced), labels=rep('',length(numAgeReduced)))
-#     axis(1, at=log(age_label), labels=age_label)
-#     dev.off()
-#   }
-# }
-
-
-
 # Wrapper ----
 
 createFDAcurves <- function(info, lambda_opt = 10^-2){
@@ -256,16 +201,6 @@ createFDAcurves <- function(info, lambda_opt = 10^-2){
     }
 
     fdNames$age_pcw <- info$num_age_reduced
-
-    # plotFDA(lst_GE_wNA,
-    #         lst_GE_IMP,
-    #         lst_GE_FD,
-    #         lst_GE_FD_Deriv,
-    #         exonOfInt = geneExonsNames,
-    #         info$brainRegionsNamesReduced,
-    #         info$num_age_label,
-    #         info$num_age_reduced,
-    #         plotsPath)
 
     return(  list( lst_GE_FD_Deriv = lst_GE_FD_Deriv,
                    lst_GE_FD       = lst_GE_FD,
