@@ -4,8 +4,13 @@ library(readr)
 genes <- readr::read_tsv("data/joint_cortex.gene_names.tsv")
 genes <- genes$genes
 
-# Define UI for cytoscope
-ui <- fluidPage(
+shinyUI(bootstrapPage(
+  
+  includeCSS("../www/minimal.css"),
+  
+  navigation(),
+  
+  beginPage(),
   
   # Application title
   titlePanel("Developing mouse brain"),
@@ -31,5 +36,8 @@ ui <- fluidPage(
       plotOutput("time_legend"),
       downloadButton("download_time", "Download (png)")
     )
-  )
-)
+  ),
+  
+  endPage()
+
+))
