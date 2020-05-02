@@ -20,7 +20,7 @@ load("data/shiny_precomputed_resources.Rda")
 genes <- readr::read_tsv("data/joint_cortex.gene_names.tsv")
 genes <- genes$genes
 
-server <- function(input, output, session) {
+shinyServer(function(input, output) {
   
   # # Note that the "gene" is really an arbitrary feature including any metadata column
   # updateSelectInput(session = session, "gene", choices =
@@ -122,5 +122,5 @@ server <- function(input, output, session) {
                                             ggsave(filename = file, plot = time_plot()$plot, width = 10, height = 4)
                                           })
   
-}
+})
 

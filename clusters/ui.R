@@ -1,5 +1,6 @@
 
 library(readr)
+source("../www/ui_functions.R")
 
 genes <- readr::read_tsv("data/joint_cortex.gene_names.tsv")
 genes <- genes$genes
@@ -13,7 +14,8 @@ shinyUI(bootstrapPage(
   beginPage(),
   
   # Application title
-  titlePanel("Developing mouse brain"),
+  titlePanel("Expression in single-cell developmental atlases, by cluster",
+	     windowTitle = "Clusters"),
   
   # Sidebar with input
   sidebarLayout(
@@ -33,7 +35,7 @@ shinyUI(bootstrapPage(
     # Output plots
     mainPanel(
       plotOutput("time", width = "10in", height = "4in"),
-      plotOutput("time_legend"),
+      plotOutput("time_legend", width = "10in", height = "1.5in"),
       downloadButton("download_time", "Download (png)")
     )
   ),
