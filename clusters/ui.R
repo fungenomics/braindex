@@ -34,7 +34,7 @@ shinyUI(bootstrapPage(
     
     # Output plots
     mainPanel(
-      plotOutput("time", width = "10in", height = "4in"),
+      plotOutput("time", width = "8in", height = "4in"),
       plotOutput("time_legend", width = "10in", height = "1.5in"),
       downloadButton("download_time", "Download (png)")
     )
