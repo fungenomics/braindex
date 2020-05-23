@@ -1,15 +1,19 @@
 
 # Load required packages ----
 library(feather)
-library(tidyverse)
+library(tidyr)
+library(dplyr)
 library(cowplot)
+library(glue)
+library(stringr)
+library(ggplot2)
 
 # Set-up / load common data ----
 
 # Red-blue colour palette
 rdbu <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "RdBu"))(n = 100))
 
-metadata <- read_tsv("data/joint_mouse/metadata_20190715.tsv") %>% 
+metadata <- readr::read_tsv("data/joint_mouse/metadata_20190715.tsv") %>% 
   select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class)
 
 # Brain region palettes
@@ -17,13 +21,13 @@ pons_palette <- metadata %>%
   filter(Species == "Mouse" & grepl("[Pp]ons|[Hh]indbrain", Structure)) %>% 
   select(Cell_type, Colour) %>% 
   distinct() %>% 
-  deframe()
+  tibble::deframe()
 
 cortex_palette <- metadata %>%
   filter(Species == "Mouse" & Structure == "Forebrain") %>%
   select(Cell_type, Colour) %>% 
   distinct() %>% 
-  deframe()
+  tibble::deframe()
 
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
@@ -88,7 +92,7 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     # 1. Pad gene names so that the plot takes up a more standardized
     # width; to 15 since that's the # of characters in the gene w/ longest name
     # 2. Order genes the same way they were provided in the input, with padding
-    mutate(Gene = factor(Gene, levels = gene)) %>% 
+    mutate(Gene = factor(Gene, levels = rev(gene))) %>% 
     arrange(Gene) %>% 
     mutate(Gene_padded = str_pad(Gene, 15, side = 'left', pad = " ")) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
@@ -108,7 +112,7 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     # which does not depend on the gene(s) of input
     scale_radius(limits = c(1e-10, NA)) +
     scale_color_gradientn(colours = tail(rdbu, 70)) +
-    ggmin::theme_min() +
+    theme_min() +
     ylab(NULL) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1,
                                      colour = joint_mouse_palette),

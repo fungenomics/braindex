@@ -2,6 +2,7 @@ library(shiny)
 
 source("functions_fda_custom_plotting.R")
 source("functions_fda.R")
+source("../style.R")
 
 shinyServer(function(input, output) {
   

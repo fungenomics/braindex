@@ -6,6 +6,7 @@ library(tidyr)
 library(ggplot2)
 
 source("functions.R")
+source("../style.R")
 
 # Set a default ggplot2 theme for the app, from cowplot
 ggplot2::theme_set(cowplot::theme_cowplot())
@@ -49,7 +50,7 @@ server <- function(input, output, session) {
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
   # labels
-  plotHeight <- reactive(100 + (17 * length(input_dendrogram()$gene)))
+  plotHeight <- reactive(100 + (50 * length(input_dendrogram()$gene)))
   
   # Output element which displays the bubble plot with the reactive height
   output$plotBubble <- renderUI({
