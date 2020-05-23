@@ -69,7 +69,6 @@ a {
 .dropdown .dropbtn {
   font-size: 16px;
   border: none;
-  outline: none;
   color: #8896AE;
   padding: 14px 16px;
   background-color: inherit;
@@ -84,7 +83,6 @@ a {
 
 /* Dropdown content (hidden by default) */
 .dropdown-content {
-  display: true;
   position: absolute;
   background-color: white;
   min-width: 150px;

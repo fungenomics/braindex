@@ -2,11 +2,12 @@
 library(readr)
 source("../www/ui_functions.R")
 
-genes <- readr::read_tsv("data/joint_cortex.gene_names.tsv")
-genes <- genes$genes
+# Load names of genes detected in mouse to provide choices in input
+genes_mouse <- readr::read_tsv("data/joint_mouse/joint_mouse.gene_names.tsv")$genes
 
-shinyUI(bootstrapPage(
+ui <- bootstrapPage(
   
+  # Custom styling
   includeCSS("../www/minimal.css"),
   
   navigation(),
@@ -15,31 +16,79 @@ shinyUI(bootstrapPage(
   
   # Application title
   titlePanel("Expression in single-cell developmental atlases, by cluster",
-	     windowTitle = "Clusters"),
+             windowTitle = "Clusters"),
   
   # Sidebar with input
   sidebarLayout(
     sidebarPanel(width = 3,
-                 selectInput("gene", "Gene", choices = genes, multiple = TRUE, selected = "Ttyh1"),
-                 selectInput("mode", "How to plot expression", multiple = FALSE, choices = c("age", "pseudotime", "detected"), selected = "detected"),
-                 numericInput("span", "LOESS smoothing", value = 1, min = 0.5, max = 1.5, step = 0.1),
-                 numericInput("min_prop", "Minimum detection rate to show cell type", value = 0.1, min = 0, max = 1, step = 0.05),
-                 selectInput("points", "Show points", choices = c(TRUE, FALSE), selected = TRUE),
-                 selectInput("trend", "Show trend", choices = c(TRUE, FALSE), selected = TRUE),
-                 selectInput("x_axis", "X-axis type", choices = c("even", "representative"), selected = "even"),
-                 numericInput("jitter_width", "Width for point jitter", value = 0.3, min = 0, max = 0.5, step = 0.1)
-              
                  
+                 # Input for dendrogram tab
+                 conditionalPanel(condition = "input.tabs == 'dendrogram'",
+                                  
+                                  selectInput("gene", "Gene", choices = genes_mouse,
+                                              multiple = TRUE),
+                                  
+                                  actionButton("update_dendrogram", label = "Update")
+                 ),
+                 
+                 # Input for timecourse tab
+                 conditionalPanel(condition = "input.tabs == 'timecourse'",
+                                  
+                                  # TODO: Dynamically provide the right gene
+                                  # names as choices based on which brain region
+                                  # is selected
+                                  selectInput("gene_region", "Gene",
+                                              choices = genes_mouse,
+                                              multiple = FALSE),
+                                  
+                                  # Specify the visible label as well as the internal
+                                  # strings used to refer to each region, matching
+                                  # the paths/files under the data directory
+                                  radioButtons("region", "Brain region",
+                                               choices = c("Forebrain" = "joint_cortex",
+                                                           "Pons" = "joint_pons"),
+                                               selected = "Forebrain"),
+                                  
+                                  actionButton("update_timecourse", label = "Update")
+                                  
+                 )
+                
     ),
     
     # Output plots
-    mainPanel(
-      plotOutput("time", width = "8in", height = "4in"),
-      plotOutput("time_legend", width = "10in", height = "1.5in"),
-      downloadButton("download_time", "Download (png)")
-    )
-  ),
+    mainPanel(tabsetPanel(
+      
+      tabPanel("Dendrogram",
+               
+               # Plot a dendrogram image above a bubble plot
+               div(style = "margin-bottom: -2em !important; margin-top: 5em;",
+                   fluidRow(imageOutput("dendrogram"))),
+               div(style = "margin-top: -10em;",
+                   fluidRow(uiOutput("plotBubble"))
+               ),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "dendrogram"
+               
+      ),
+      
+      tabPanel("Timecourse",
+               
+               # Plot a ribbon plot, showing the proportion of cells in which
+               # each gene is detected, broken down by cell type, across
+               # the time course
+               plotOutput("plotRibbon"),
+               plotOutput("ribbonLegend"),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "timecourse"
+      ),
+      
+      id = "tabs"
+      
+    ))),
   
+  # Custom styling
   endPage()
-
-))
+  
+)

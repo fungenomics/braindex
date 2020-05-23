@@ -1,264 +1,232 @@
 
-load("data/shiny_precomputed_resources.Rda")
+# Load required packages ----
+library(feather)
+library(tidyverse)
+library(cowplot)
 
-plot_gene_in_time <- function(gene,
-                              span = 1,
-                              points = TRUE,
-                              trend = TRUE,
-                              min_prop = 0.1,
-                              x_axis = "even",
-                              jitter_width = 0.3,
-                              facet_cell_type = FALSE,
-                              point_size = 1) {
-  
-	set.seed(100)
+# Set-up / load common data ----
 
-  y <- feather::read_feather("data/joint_cortex2.feather", c("orig.ident", "Cell", gene))
+# Red-blue colour palette
+rdbu <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "RdBu"))(n = 100))
+
+metadata <- read_tsv("data/joint_mouse/metadata_20190715.tsv") %>% 
+  select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class)
+
+# Brain region palettes
+pons_palette <- metadata %>%
+  filter(Species == "Mouse" & grepl("[Pp]ons|[Hh]indbrain", Structure)) %>% 
+  select(Cell_type, Colour) %>% 
+  distinct() %>% 
+  deframe()
+
+cortex_palette <- metadata %>%
+  filter(Species == "Mouse" & Structure == "Forebrain") %>%
+  select(Cell_type, Colour) %>% 
+  distinct() %>% 
+  deframe()
+
+# Joint mouse colour palette
+load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
+
+# Vector specifying the order of clusters in the dendrogram
+load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
+
+
+# Functions ----
+
+#' Bubbleplot of gene expression
+#' 
+#' Generate a bubble plot for genes of interest across clusters in the mouse
+#' dendrogram, where bubble colour encodes the mean expression in each cluster
+#' and bubble size encodes the proportion of cells where each gene is detected
+#'
+#' @param gene Character vector, one or more genes of interest to plot
+#' @param scale Logical, whether or not to linearly scale gene expression across
+#' clusters to [0,1] to improve visualization. Default: TRUE
+#' @param return_df Logical, for debugging purposes, whether or not to return
+#' the input dataframe for ggplot2 and exit before plotting. Default: FALSE.
+#' TODO: Use this option to provide an option to donwload the underlying data.
+#' 
+#' @return ggplot2 object
+#'
+#' @examples
+#' bubbleplot_expr("Dlx1")
+bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
   
-  if (length(gene) > 1) {
-    
-    mean_expr <- rowMeans(y[, 3:ncol(y)])
-    y$Gene <- mean_expr
-    
-  } else  colnames(y)[3] <- "Gene"
+  # Load the mean expression of genes across clusters
+  exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
+                      columns = c("Cluster", gene))
   
-  y$Cell_type <- jc_all_meta_labelled$Cell_type
-  y$Colour <- jc_all_meta_labelled$Colour
-  y$Old_cluster <- jc_all_meta_labelled$ID_20190715_with_blacklist
-  
-  df <- y %>%
-    # Filter clusters
-    filter(!grepl("BLACKLIST", Old_cluster)) %>% 
-    filter(!grepl("Mixed|Ery|Unresolved|Split|Active|Cck", Cell_type)) %>% 
-    mutate(orig.ident2 = orig.ident) %>%
-    separate(orig.ident2, into = c("region", "age"), sep = " ") %>% 
-    left_join(timepoints, by = "age") %>% 
-    # Calculate proportions
-    group_by(Cell_type) %>% 
-    mutate(n = n()) %>% 
-    mutate(Prop_detected = sum(Gene >  0)/n) %>% 
-    ungroup() %>% 
-    arrange(desc(Prop_detected)) %>% 
-    mutate(Group = paste0(Cell_type, " (", round(Prop_detected, 2)*100, "%)")) %>% 
-    mutate(Group = factor(Group, levels = unique(.$Group))) %>% 
-    filter(Prop_detected >= min_prop)
-  
-  if (x_axis == "even") {
+  # Scale expression of each gene linearly across clusters to [0, 1]
+  if (scale) {
     
-    df$X <- df$numeric
-    breaks <- timepoints$numeric
-    xlim <- c(1, 9)
-    
-  }  else if (x_axis == "representative") {
-    
-    df$X <- df$numeric3
-    breaks <- timepoints$numeric3
-    xlim <- c(-11, 6)
+    exp <- exp %>%
+      as.data.frame() %>%
+      tibble::column_to_rownames(var = "Cluster") %>%
+      apply(2, scales::rescale, to = c(0, 1)) %>%
+      as.data.frame %>%
+      tibble::rownames_to_column(var = "Cluster")
     
   }
   
-  palette_with_prop <- df %>%
-    select(Group, Colour) %>% 
-    distinct(Group, .keep_all = TRUE) %>% 
-    tibble::deframe()
+  # Convert to long / tidy format with columns: Cluster, Gene, Expression
+  exp <- exp %>%
+    gather(., "Gene", "Expression", 2:ncol(.))
   
-  p1 <- df %>%
-    ggplot(aes(x = X, y = Gene))
+  # Load the prorportion of cells in each cluster in which each gene was detected,
+  # and convert to long / tidy format with columns: Cluster, Gene, Pct1
+  pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
+                       columns = c("Cluster", gene)) %>%
+    gather(., "Gene", "Pct1", 2:ncol(.))
   
-  if (points) p1 <- p1 +
-    geom_jitter(aes(colour = Group),
-                alpha = 0.5,
-                width = jitter_width,
-                size = point_size)
-  
-  if (trend) p1 <- p1 + 
-    stat_smooth(geom ='line', data = df %>% filter(Gene > 0),
-                mapping = aes(x = X, y = Gene, group = Group, alpha = Prop_detected, colour = Group),
-                se = FALSE,
-                method = "loess",
-                size = 2,
-                span = span)
-  
-  p1 <- p1 +
-    scale_colour_manual(values = palette_with_prop, name = "Cell type") + 
-    scale_alpha_continuous(range = c(0.4, 1)) +
-    guides(alpha = FALSE) +
-    ylab(ifelse(length(gene) == 1, "Expression", "Mean expression")) +
-    xlab("Age") +
-    ggtitle(ifelse(length(gene) == 1, gene, "Mean expression")) +
-    ylim(c(0, 4)) +
-    scale_x_continuous(breaks = breaks, labels = timepoints$age, limits = xlim) +
-    theme(axis.title   = element_text(size = 12, face = "bold"),
-          axis.text    = element_text(size = 10),
-          title        = element_text(size = 12, face = "bold.italic"),
-          legend.title = element_text(size = 12, face = "bold"))
-  
-  if (facet_cell_type) p1 <- p1 + facet_wrap(~ Group) + theme(legend.position = "none")
-  
-  legend <- cowplot::get_legend(p1)
-  
-  return(list("plot" = p1 + theme(legend.position = "none"),
-              "legend" = legend))
-  
-  
-}
-
-
-
-palette_group <- c("Excitatory neuron"  = "#c9110e",
-                   "Inhibitory neuron"  = "#4a1cc9",
-                   "Oligodendrocyte"    = "#b7dd5f",
-                   "Astro-ependymal"    = "#0b7c68")
-
-plot_gene_in_pseudotime <- function(gene,
-                                    span = 0.7,
-                                    points = TRUE,
-                                    trend = TRUE,
-                                    min_prop = 0.1,
-                                    facet_cell_type = FALSE,
-                                    point_size = 1) {
- 
-  set.seed(100)
-
-  y <- feather::read_feather("data/joint_cortex.embedding_and_genes.feather",
-                             c("orig.ident", "Cell", gene))
-  
-  if (length(gene) > 1) {
-    
-    mean_expr <- rowMeans(y[, 3:ncol(y)])
-    y$Gene <- mean_expr
-    
-  } else  colnames(y)[3] <- "Gene"
-  
-  df <- bind_cols(y, jc_meta_pseudotime) %>% 
-    filter(!is.na(pseudotime))
+  df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  
   
   df <- df %>%
-    filter(!grepl("BLACKLIST", Cell_type)) %>% 
-    filter(!grepl("Mixed|Ery|Unresolved|Split|Active|Cck|hem|Cajal|Menin|Endo|Stria|Thal|Peri|neuronal", Cell_type)) %>% 
-    # Calculate proportions
-    group_by(Lineage) %>% 
-    mutate(n = n()) %>% 
-    mutate(Prop_detected = sum(Gene >  0)/n) %>% 
-    ungroup() %>% 
-    arrange(desc(Prop_detected)) %>% 
-    mutate(Lineage = factor(Lineage, levels = unique(.$Lineage))) %>% 
-    filter(Prop_detected >= min_prop)
+    
+    # filter(Expression != 0 & !is.na(Expression) & Pct1 > 0) %>%
+    
+    # 1. Pad gene names so that the plot takes up a more standardized
+    # width; to 15 since that's the # of characters in the gene w/ longest name
+    # 2. Order genes the same way they were provided in the input, with padding
+    mutate(Gene = factor(Gene, levels = gene)) %>% 
+    arrange(Gene) %>% 
+    mutate(Gene_padded = str_pad(Gene, 15, side = 'left', pad = " ")) %>% 
+    mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
+    # Order the clusters on the x-axis to match the dendrogram image
+    mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
+    filter(!is.na(Cluster)) %>% 
+    replace_na(list(Expression = 0, Pct1 = 0))
   
-  p1 <- df %>%
-    ggplot(aes(x = pseudotime_scaled, y = Gene))
+  if (return_df) return(df)
   
-  if (points) p1 <- p1 +
-    geom_point(aes(colour = Cell_type),
-               alpha = 0.5,
-               size = point_size)
+  # Generate plot
+  df %>% 
+    ggplot(aes(x = Cluster, y = Gene_padded)) +
+    geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
+    # TODO: Fix this so rather than relative units, it uses fixed units
+    # so that there is a standard mapping between Pct1 and circle size,
+    # which does not depend on the gene(s) of input
+    scale_radius(limits = c(1e-10, NA)) +
+    scale_color_gradientn(colours = tail(rdbu, 70)) +
+    ggmin::theme_min() +
+    ylab(NULL) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1,
+                                     colour = joint_mouse_palette),
+          panel.grid.major.x = element_line(colour = "grey90"),
+          panel.border = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank(),
+          # Do not show the legend because it is included in the static
+          # dendrogram image displayed above the bubbleplot
+          legend.position = "none")
   
-  if (trend) p1 <- p1 + 
-    stat_smooth(geom ='line', data = df,
-                mapping = aes(x = pseudotime_scaled, y = Gene, group = Lineage, alpha = Prop_detected, colour = Lineage),
-                se = FALSE,
-                method = "loess",
-                size = 2,
-                span = span)
-  
-  p1 <- p1 +
-    scale_colour_manual(values = c(palette_group, palette_cortex), name = "Cell type") + 
-    scale_alpha_continuous(range = c(0.5, 1)) +
-    guides(alpha = FALSE) +
-    ylab(ifelse(length(gene) == 1, "Expression", "Mean expression")) +
-    xlab("Pseudotime") +
-    ggtitle(ifelse(length(gene) == 1, gene, "Mean expression")) +
-    ylim(c(0, 4)) +
-    scale_x_continuous(breaks = c(10, 90), labels = c("Early", "Late")) +
-    theme(axis.title   = element_text(size = 12, face = "bold"),
-          axis.text    = element_text(size = 10),
-          title        = element_text(size = 12, face = "bold.italic"),
-          legend.title = element_text(size = 12, face = "bold"))
-  
-  if (facet_cell_type) p1 <- p1 + facet_wrap(~ Lineage) + theme(legend.position = "none")
- 
-  legend <- cowplot::get_legend(p1)
+}
 
-  return(list("plot" = p1 + theme(legend.position = "none"),
-              "legend" = legend))
+
+#' Prepare input for ribbon plot
+#' 
+#' Loads gene expression values, cell metadata, and tidies values while filtering
+#' out blacklisted clusters
+#'
+#' @param gene String corresponding to gene name (only a single value allowed) 
+#' @param region String, corresponding to the brain region to plot, one of
+#' "joint_cortex" or "joint_pons"
+#'
+#' @return Dataframe with first column "Cell" and the rest corresponding to 
+#' sample & cluster-level metadata for each Cell
+#'
+#' TODO: At some point, generalize this to be able to be used by other functions
+#' which require a similar input
+#'
+#' @examples
+#' prep_ribbon_input("Pdgfra", "joint_cortex")
+prep_ribbon_input <- function(gene, region) {
+  
+  ribbon_df <- read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
+                            c("Cell", "ID_20190715_with_blacklist_and_refined", gene)) %>% 
+    rowwise() %>% 
+    mutate(Cell = str_extract(Cell, "[ACGT]{16}")) %>% 
+    select(Cell, Cluster = ID_20190715_with_blacklist_and_refined, everything()) %>% 
+    ungroup() %>% 
+    left_join(metadata, by = "Cluster") %>% 
+    mutate(Age = ifelse(Age == "E12.5-E15.5", "E12.5", Age))
+  
+  ribbon_df <- ribbon_df %>% 
+    # Filter out cell types to exclude
+    filter(!grepl("BLACKLISTED", Cluster)) %>% 
+    filter(!is.na(Cell_type)) %>% 
+    mutate(Age = factor(Age, levels = c("E12.5",
+                                        "E15.5",
+                                        "P0",
+                                        "P3",
+                                        "P6"))) %>% 
+    arrange(Age)
   
 }
 
 
 
-ribbon_plot <- function(gene, mode = 1, ymax = NA) {
+#' Generate a ribbon plot
+#' 
+#' This function generates a ribbon plot representing proportions over time,
+#' as seen in ,. This function is based on R code provided by the authors at
+#' https://github.com/MarioniLab/EmbryoTimecourse2018/tree/master/analysis_scripts/atlas/vis/ribbon
+#'
+#' @param gene String corresponding to gene name (only a single value allowed) 
+#' @param region String, corresponding to the brain region to plot, one of
+#' "joint_cortex" or "joint_pons"
+#' @param ymax Numeric, value in [0, 1] specifying the maximum value for the y-axis.
+#' By default, y-axis is scaled to the range of the data (see more at 
+#' https://ggplot2.tidyverse.org/reference/lims.html)
+#'
+#' @return ggplot2 object
+#'
+#' @examples
+#' ribbon_plot("Pdgfra", "joint_cortex")
+ribbon_plot <- function(gene, region, ymax = NA) {
   
-  breaks <- timepoints$numeric
-  xlim <- c(1, 9)
-
-  ribbon_df <- feather::read_feather("data/joint_cortex2.feather",
-                                     c("orig.ident", "Cell", gene)) %>% 
-    rowwise() %>% 
-    mutate(Cell = stringr::str_extract(Cell, "[ACGT]{16}")) %>% 
-    ungroup()
+  # Adapt palette to brain region
+  if (region == "joint_cortex") colours <- cortex_palette
+  else if (region == "joint_pons") colours <- pons_palette
   
-  ribbon_df$Cell_type <- jc_all_meta_labelled$Cell_type
-  ribbon_df$Colour <- jc_all_meta_labelled$Colour
-  
-  ribbon_df <- ribbon_df %>% 
-    filter(!grepl("Mixed|Ery|Unresolved|Split|Active|Cck", Cell_type)) %>% 
-    mutate(orig.ident = factor(orig.ident, levels = c("Forebrain E10.5",
-                                                      "Forebrain E12.5",
-                                                      "Forebrain E13.5",
-                                                      "Forebrain E15.5",
-                                                      "Forebrain E16.5",
-                                                      "Forebrain E18.5",
-                                                      "Forebrain P0",
-                                                      "Forebrain P3",
-                                                      "Forebrain P6"))) %>% 
-    arrange(orig.ident)
-  
+  # Prep input dataframe
+  ribbon_df <- prep_ribbon_input(gene, region)
   ribbon_df$gene <- ribbon_df[[gene]]
   
-  if (mode == 1) {
-    
-    ribbon_df_celltype_frac <- ribbon_df %>% 
-      group_by(orig.ident) %>% 
-      mutate(total = n()) %>% 
-      group_by(orig.ident, Cell_type) %>% 
-      mutate(frac = sum(gene > 0) / total) %>% 
-      distinct(orig.ident, Cell_type, frac) %>% 
-      ungroup()
-    
-    ribbon_df_cum_frac <- ribbon_df %>% 
-      group_by(orig.ident) %>% 
-      summarize(cumfrac = sum(gene > 0) / n()) %>% 
-      ungroup()
-    
-  } else if (mode == 2) {
-    
-    ribbon_df_celltype_frac <- ribbon_df %>% 
-      filter(gene > 0) %>% 
-      group_by(orig.ident) %>% 
-      mutate(total = n()) %>% 
-      group_by(orig.ident, Cell_type) %>% 
-      mutate(frac = n() / total) %>% 
-      distinct(orig.ident, Cell_type, frac) %>% 
-      ungroup()
-    
-    ribbon_df_cum_frac <- data.frame(orig.ident = unique(ribbon_df$orig.ident),
-                                     cumfrac = 1)
-    
-  }
+  # For each cluster at each timepoint, calculate the proportion of cells in
+  # which the gene is detected
+  ribbon_df_celltype_frac <- ribbon_df %>% 
+    group_by(Age) %>% 
+    mutate(total = n()) %>% 
+    group_by(Age, Cell_type) %>% 
+    mutate(frac = sum(gene > 0) / total) %>% 
+    distinct(Age, Cell_type, frac) %>% 
+    ungroup()
   
-  timepoints2 <- ribbon_df$orig.ident
+  # For each timepoint, calculate the proportion of cells in which the gene 
+  # is detected
+  ribbon_df_cum_frac <- ribbon_df %>% 
+    group_by(Age) %>% 
+    summarize(cumfrac = sum(gene > 0) / n()) %>% 
+    ungroup()
+  
+  # Get the values to use on the x-axis
+  timepoints2 <- ribbon_df$Age
   clusters <- ribbon_df$Cell_type
-  colours <- palette_cortex
   
   df = data.frame(cluster = rep(unique(clusters), length(unique(timepoints2))),
                   stage = do.call(c, lapply(as.character(unique(timepoints2)), rep, times = length(unique(clusters)))))
   
+  # Use the same order for clusters (vertically) as they are saved
+  # in the colour palette
   df$ranking = match(df$cluster, names(colours))
   df = df[order(df$stage, df$ranking),]
   
-  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = orig.ident, frac)) %>% 
+  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = Age, frac)) %>% 
+    # Complete cases when genes were not detected in certain timepoints/clusters
+    # by replacing with a zero
     mutate(frac = replace_na(frac, 0)) %>% 
-    left_join(select(ribbon_df_cum_frac, stage = orig.ident, cumfrac))
+    left_join(select(ribbon_df_cum_frac, stage = Age, cumfrac))
   
   df$xpos = match(df$stage, unique(timepoints2))
   
@@ -266,26 +234,14 @@ ribbon_plot <- function(gene, mode = 1, ymax = NA) {
     ggplot(aes(x = xpos, y = frac, fill = cluster)) +
     geom_area(stat = "identity") +
     scale_fill_manual(values = colours, drop = FALSE, name = "") +
-    scale_x_continuous(breaks = breaks, labels = timepoints$age, limits = xlim) +
+    scale_x_continuous(breaks = seq_along(unique(df$stage)),
+                       labels = unique(df$stage),
+                       limits = c(1, length(unique(df$stage)))) +
     labs(x = "age", title = gene) +
-    guides(fill = guide_legend(ncol = 3))
+    guides(fill = guide_legend(ncol = 2)) +
+    ylab(glue("proportion {gene}+ cells")) +
+    ylim(0, ymax) 
   
-  
-  if (mode == 1) {
-    
-    p1 <- p1  + ylab(glue("proportion {gene}+ cells")) +
-      ylim(0, ymax)
-    
-  } else if (mode == 2) {
-    
-    p1 <- p1 + ylab(glue("breakdown of {gene}+ cells"))
-    
-  }
-  
-  legend <- cowplot::get_legend(p1)
-  
-  return(list("plot" = p1 + theme(legend.position = "none"),
-              "legend" = legend))
-
+  return(p1)
   
 }

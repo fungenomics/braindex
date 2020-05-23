@@ -1,126 +1,95 @@
 
-
-# shinyOptions(cache = diskCache("./cache"))
-
 library(cowplot)
-library(shiny)
 library(glue)
 library(dplyr)
 library(tidyr)
-library(magrittr)
 library(ggplot2)
-library(grid)
-library(gridExtra)
 
-source("shiny_functions.R")
-theme_set(theme_cowplot())
+source("functions.R")
 
-load("data/shiny_precomputed_resources.Rda")
+# Set a default ggplot2 theme for the app, from cowplot
+ggplot2::theme_set(cowplot::theme_cowplot())
 
-genes <- readr::read_tsv("data/joint_cortex.gene_names.tsv")
-genes <- genes$genes
-
-shinyServer(function(input, output) {
+server <- function(input, output, session) {
   
-  # # Note that the "gene" is really an arbitrary feature including any metadata column
-  # updateSelectInput(session = session, "gene", choices =
-  #                     list(
-  #                       "Quality control stats" = qc_stats,
-  #                       "Gene signatures" = gene_sigs,
-  #                       "Genes" = all_genes
-  #                     )
-  # )
-  # 
-  # observe({
-  #   
-  #   req(input$gene)
-  #   gene <- input$gene
-  #   
-  #   if (gene %in% gene_sigs) {
-  #     
-  #     updateSelectInput(session, "gene_stat", selected = "ssgsea")  
-  #     updateSelectInput(session, "palette", selected = "rdbu")
-  #     
-  #   } else if (gene %in% qc_stats) {
-  #     
-  #     updateSelectInput(session, "gene_stat", selected = "qcstat")  
-  #     updateSelectInput(session, "palette", selected = "viridis")
-  #     
-  #   } else {
-  #     
-  #     updateSelectInput(session, "gene_stat", selected = "indiv")  
-  #     updateSelectInput(session, "palette", selected = "redgrey")
-  #     
-  #   }
-  #   
-  # })
+  # Dendrogram tab content ----
   
-  # Reactive expressions ----
-  
-  
-  # Expression
-  time_plot <- reactive({
+  # Capture all input from this tab as a list in case we want to add
+  # more options in the future
+  input_dendrogram <- eventReactive(input$update_dendrogram, {
     
-    req(input$gene, input$mode, input$points, input$min_prop, input$span, input$trend, input$x_axis, input$jitter_width)
+    list(
+      "gene" = input$gene
+    )
     
-    if (input$mode == "age") {
-
-    plot_gene_in_time(gene         = input$gene,
-                      span         = input$span,
-                      points       = input$points,
-                      min_prop     = input$min_prop,
-                      trend        = input$trend,
-                      x_axis       = input$x_axis,
-                      jitter_width = input$jitter_width)
-   
-    } else if (input$mode == "pseudotime") {
-
-	  plot_gene_in_pseudotime(gene         = input$gene,
-                      span         = input$span,
-                      points       = input$points,
-                      min_prop     = input$min_prop,
-                      trend        = input$trend)
-
-    } else if (input$mode == "detected") {
-
-	ribbon_plot(gene = input$gene)
-
-    }
-
   })
   
-  # output$time <- renderCachedPlot({
-  #   time_plot()$plot
-  # },
-  # cacheKeyExpr = list(input$gene, input$span, input$min_prop, input$points, input$trend, input$x_axis, input$jitter_width)
-  # )
+  # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
+  # Nat Genet, 2019
+  output$dendrogram <- renderImage({
+    list(src = "img/tree.png",
+         contentType = 'image/png',
+         width = 1207,
+         height = 250)
+  }, deleteFile = FALSE)
   
-  output$time <- renderPlot({time_plot()$plot})
-
-  # output$time_legend <- renderCachedPlot({
-   #  leg <- time_plot()$legend
-  #   
-  #   grid.newpage()
-  #   grid.draw(leg)
-   #  
-  # },
-  # cacheKeyExpr = list(input$gene, input$span, input$min_prop, input$points, input$trend, input$x_axis, input$jitter_width)
- #  )
+  output$bubble <- renderPlot({
+    
+    req(input_dendrogram())
+    
+    plot_grid(
+      # Generate a bubble plot for expression across clusters in dendrogram order
+      bubbleplot_expr(gene = input_dendrogram()$gene),
+      # Add a dummy element on the right to customize alignment w/ dendrogram image
+      NULL,
+      rel_widths = c(0.92, 0.08))
+    
+  })
   
-	output$time_legend <- renderPlot({
-
-		leg <- time_plot()$legend
-		grid.newpage()
-		grid.draw(leg)
-
-	})
-
-  # Feature plot download
-  output$download_time <- downloadHandler(filename = "time.png",
-                                          contentType = "image/png",
-                                          content = function(file) {
-                                            ggsave(filename = file, plot = time_plot()$plot, width = 10, height = 4)
-                                          })
+  # Customize the height of the bubbleplot based on the number of genes which
+  # are being displayed, after allocating a baseline height for the x-axis
+  # labels
+  plotHeight <- reactive(100 + (17 * length(input_dendrogram()$gene)))
   
-})
+  # Output element which displays the bubble plot with the reactive height
+  output$plotBubble <- renderUI({
+    plotOutput("bubble", height = plotHeight(), width = 1277)
+  })
+  
+  
+  # Timecourse tab content ---
+  input_timecourse <- eventReactive(input$update_timecourse, {
+    
+    list(
+      "gene"   = input$gene_region,
+      "region" = input$region
+    )
+    
+  })
+  
+  # Generate bubble plot and save the output so that we can later split
+  # into the plot itself, and the legend
+  ribbon <- reactive({
+    
+    req(input_timecourse())
+    
+    ribbon_plot(gene   = input_timecourse()$gene,
+                region = input_timecourse()$region)
+    
+  })
+  
+  # Here, we're grabbing only the plot part, not the legend
+  output$plotRibbon <- renderPlot({ ribbon() +
+      theme(legend.position = "none")
+  })
+  
+  # Extract the legend to plot separately
+  output$ribbonLegend <- renderPlot({
+    
+    leg <- cowplot::get_legend(ribbon())
+    plot_grid(leg)
+    
+  })
+  
+}
 
