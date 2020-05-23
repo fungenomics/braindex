@@ -1,6 +1,14 @@
+# Exclude files produced by R
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-*/data/*
+
+# Exclude any data
+*/data/*.RData
+*/data/*.Rda
+*/data/*.tsv
+*/data/*.feather
+
+# Exclude a toy app used for debugging purposes
 debug-app
