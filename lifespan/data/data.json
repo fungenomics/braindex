@@ -1,0 +1,24 @@
+{
+  
+    ".": [
+      
+      {
+        
+        "file": "geneName.Rda",
+        "path": "sjessa/from_hydra/CBX/brainspan/output/01/CleanedData.genes.RData",
+        "description": "Complete set of input data produced by preprocessing and cleaning the Brainspan dataset, including expression & imputed expression in consolidated brain regions, as documented in sjessa/from_hydra/CBX/brainspan/01-clean_gene_level_data.html",
+        "contents": "R file containing multiple objects"
+    
+      },
+      {
+    
+        "file": "palette_brainspan.Rda",
+        "path": "sjessa/from_hydra/CBX/brainspan/output/02/palette_brainspan.Rda",
+        "description": "Custom palette for consolidated brain regions in Brainspan",
+        "contents": "Named character vector where names correspond to brain regions and values to hex colour codes"
+    
+      }
+      
+    ]
+  
+}

@@ -147,25 +147,6 @@ fdaBrainSpan <- function( logAge, y,  ordr, ordr_rough ,lambda1, fd_names = NULL
 
 
 
-#' Not used here?
-gcv_fdaBS <- function(lAge, y, ord, ordr_rough, range_logGCV  ){
-    ## Code for the GCV to determine lambda
-    loglam <- seq(range_logGCV[1],range_logGCV[2],0.25)
-    nlam <- length(loglam)
-    dfsave <- rep(NA, nlam)
-    gcvsave <- rep(NA, nlam)
-    for(ilam in 1:nlam){
-        cat(paste('log10 lambda = ', loglam[ilam],'\n'))
-        lambda <- 10^loglam[ilam]
-        fd_test <- fdaBrainSpan(lAge, y, 5, 3, lambda )
-        dfsave[ilam ] <- fd_test$df
-        gcvsave[ilam] <- sum(fd_test$gcv)
-    }
-    ret <- list( loglambda= loglam, gcvVal=gcvsave, dfval=dfsave)
-    return(ret)
-}
-
-
 # Wrapper ----
 
 createFDAcurves <- function(info, lambda_opt = 10^-2){

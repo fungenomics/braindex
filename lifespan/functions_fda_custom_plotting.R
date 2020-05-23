@@ -13,25 +13,28 @@ library(dplyr)
 library(cowplot)
 
 
-brain_region_labels <- c("A1C" = "Primary auditory cortex",
-                         "AMY" = "Amygdala",
+brain_region_labels <- c("A1C"     = "Primary auditory cortex",
+                         "AMY"     = "Amygdala",
                          "CBC_URL" = "Upper rhombic lip /\n cerebellar cortex",
-                         "DFC" = "Dorsolateral prefrontal cortex",
-                         "HIP" = "Hippocampus",
-                         "IPC" = "Posterior inferior \nparietal cortex",
-                         "ITC" = "Inferior temporal cortex",
+                         "DFC"     = "Dorsolateral prefrontal cortex",
+                         "HIP"     = "Hippocampus",
+                         "IPC"     = "Posterior inferior \nparietal cortex",
+                         "ITC"     = "Inferior temporal cortex",
                          "M1C_S1C" = "Primary motor &\n somatosensory cortex",
-                         "MD_DTH" = "Thalamus",
-                         "MFC" = "Medial prefrontal cortex",
-                         "OFC" = "Orbital prefrontal cortex",
+                         "MD_DTH"  = "Thalamus",
+                         "MFC"     = "Medial prefrontal cortex",
+                         "OFC"     = "Orbital prefrontal cortex",
                          "S1C_PCx" = "Parietal cerebral wall /\nprimariy somatosensory \ncortex",
-                         "STC" = "Superior temporal cortex",
+                         "STC"     = "Superior temporal cortex",
                          "STR_MGE" = "Medial ganglionic \neminence / striatum",
                          "V1C_Ocx" = "Occipital cerebral wall /\n primary visual \ncortex",
-                         "VFC" = "Ventrolateral prefrontal \ncortex")
+                         "VFC"     = "Ventrolateral prefrontal \ncortex")
 
+# A function to return the full name of a brain region, given the abbreviation
 region_labeller <- function(variable, value) {
+  
   return(brain_region_labels[value])
+  
 }
 
 
@@ -79,7 +82,8 @@ plotFDAcurves <- function(fda_output, ncol_legend = 1, ...) {
     theme_min() +
     xlab("Age (PCW prenatally, years postnatally)") +
     ylab("Expression") +
-    scale_x_continuous(breaks = log(fda_output$fdNames$age_pcw), labels = stringr::str_split(fda_output$fdNames$age, " ") %>% sapply(getElement, 1)) +
+    scale_x_continuous(breaks = log(fda_output$fdNames$age_pcw),
+                       labels = stringr::str_split(fda_output$fdNames$age, " ") %>% sapply(getElement, 1)) +
     # A hack to not show all axis labels...
     # https://stackoverflow.com/questions/31732597/how-to-not-show-all-labels-on-ggplot-axis#comment87387614_46409142
     theme(axis.text.x = element_text(size = rel(0.9), color = rep(c("black", rep("transparent", each = 5)), 7)),
