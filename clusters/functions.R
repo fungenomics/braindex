@@ -90,11 +90,16 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     # filter(Expression != 0 & !is.na(Expression) & Pct1 > 0) %>%
     
     # 1. Pad gene names so that the plot takes up a more standardized
-    # width; to 15 since that's the # of characters in the gene w/ longest name
+    # width; to roughly the the # of characters in the gene w/ longest name
     # 2. Order genes the same way they were provided in the input, with padding
     mutate(Gene = factor(Gene, levels = rev(gene))) %>% 
     arrange(Gene) %>% 
-    mutate(Gene_padded = str_pad(Gene, 15, side = 'right', pad = " ")) %>% 
+    # However, letters take up more pixels thn spaces, so do less padding
+    # for genes with longer names
+    mutate(Gene_padded = case_when(
+      str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
+      str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " "))
+      ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
     # Order the clusters on the x-axis to match the dendrogram image
     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
@@ -123,6 +128,7 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
           # Do not show the legend because it is included in the static
           # dendrogram image displayed above the bubbleplot
           legend.position = "none") +
+    # Put gene labels on the right hand side
     scale_y_discrete(position = "right")
   
 }
