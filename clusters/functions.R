@@ -13,7 +13,7 @@ library(ggplot2)
 # Red-blue colour palette
 rdbu <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "RdBu"))(n = 100))
 
-metadata <- readr::read_tsv("data/joint_mouse/metadata_20190715.tsv") %>% 
+metadata <- data.table::fread("data/joint_mouse/metadata_20190715.tsv", data.table = FALSE) %>% 
   select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class)
 
 # Brain region palettes
@@ -94,7 +94,7 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     # 2. Order genes the same way they were provided in the input, with padding
     mutate(Gene = factor(Gene, levels = rev(gene))) %>% 
     arrange(Gene) %>% 
-    mutate(Gene_padded = str_pad(Gene, 15, side = 'left', pad = " ")) %>% 
+    mutate(Gene_padded = str_pad(Gene, 15, side = 'right', pad = " ")) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
     # Order the clusters on the x-axis to match the dendrogram image
     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
@@ -114,15 +114,16 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     scale_color_gradientn(colours = tail(rdbu, 70)) +
     theme_min() +
     ylab(NULL) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1,
-                                     colour = joint_mouse_palette),
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5,
+                                     colour = joint_mouse_palette, size = rel(0.7)),
           panel.grid.major.x = element_line(colour = "grey90"),
           panel.border = element_blank(),
           axis.ticks.x = element_blank(),
           axis.ticks.y = element_blank(),
           # Do not show the legend because it is included in the static
           # dendrogram image displayed above the bubbleplot
-          legend.position = "none")
+          legend.position = "none") +
+    scale_y_discrete(position = "right")
   
 }
 

@@ -30,8 +30,8 @@ server <- function(input, output, session) {
   output$dendrogram <- renderImage({
     list(src = "img/tree.png",
          contentType = 'image/png',
-         width = 1207,
-         height = 250)
+         width = 965,
+         height = 200)
   }, deleteFile = FALSE)
   
   output$bubble <- renderPlot({
@@ -39,22 +39,22 @@ server <- function(input, output, session) {
     req(input_dendrogram())
     
     plot_grid(
+      NULL,
       # Generate a bubble plot for expression across clusters in dendrogram order
       bubbleplot_expr(gene = input_dendrogram()$gene),
       # Add a dummy element on the right to customize alignment w/ dendrogram image
-      NULL,
-      rel_widths = c(0.92, 0.08))
+      rel_widths = c(0.04, 0.95))
     
   })
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
   # labels
-  plotHeight <- reactive(100 + (50 * length(input_dendrogram()$gene)))
+  plotHeight <- reactive(100 + (40 * length(input_dendrogram()$gene)))
   
   # Output element which displays the bubble plot with the reactive height
   output$plotBubble <- renderUI({
-    plotOutput("bubble", height = plotHeight(), width = 1277)
+    plotOutput("bubble", height = plotHeight(), width = 1017)
   })
   
   

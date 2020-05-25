@@ -28,6 +28,15 @@ a {
   width: 18%;
   min-width: 77px;
   float: left;
+  margin-top: 14px;
+}
+
+/* App positioning */
+.container-app {
+  width: 1200px;
+  text-align: left;
+  position: relative;
+  margin-left: 100px;
 }
 
 

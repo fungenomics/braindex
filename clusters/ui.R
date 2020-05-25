@@ -3,7 +3,7 @@ library(readr)
 source("../www/ui_functions.R")
 
 # Load names of genes detected in mouse to provide choices in input
-genes_mouse <- readr::read_tsv("data/joint_mouse/joint_mouse.gene_names.tsv")$genes
+genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
 
 ui <- bootstrapPage(
   
@@ -63,7 +63,7 @@ ui <- bootstrapPage(
                # Plot a dendrogram image above a bubble plot
                div(style = "margin-bottom: -2em !important; margin-top: 5em;",
                    fluidRow(imageOutput("dendrogram"))),
-               div(style = "margin-top: -10em;",
+               div(style = "margin-top: -14em;",
                    fluidRow(uiOutput("plotBubble"))
                ),
                
