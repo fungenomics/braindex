@@ -52,10 +52,19 @@
     },
     {
       
-     "file": "metadata_20190715.tsv",
+     "file": "metadata_20190715_select.tsv",
      "path": "sjessa/from_hydra/single_cell/scDev_data/data/metadata/metadata_20190715.tsv",
      "description": "Cluster metadata for all clusters derived from individual samples including Age, Species, full cell type, number of cells, etc; roughly matching Table 2a in Jessa et al, Nat Genet, 2019",
-     "contents": "TSV file where columns correspond to metadata features, one row per cluster"
+     "contents": "TSV file where columns correspond to metadata features, one row per cluster",
+     "script": "data_prep/prep_data.R"
+      
+    },
+    {
+      
+      "file": "palettes.Rda",
+      "description": "Common colour palettes for red-blue gradients and for cortex/pons samples",
+      "contents": "R data file with three objects, rdbu (red-blue palette), cortex_palette, and pons_palette",
+      "script": "data_prep/prep_data.R"
       
     }
     

@@ -11,23 +11,10 @@ library(ggplot2)
 # Set-up / load common data ----
 
 # Red-blue colour palette
-rdbu <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "RdBu"))(n = 100))
+metadata <- data.table::fread("data/joint_mouse/metadata_20190715_select.tsv",
+                              data.table = FALSE)
 
-metadata <- data.table::fread("data/joint_mouse/metadata_20190715.tsv", data.table = FALSE) %>% 
-  select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class)
-
-# Brain region palettes
-pons_palette <- metadata %>%
-  filter(Species == "Mouse" & grepl("[Pp]ons|[Hh]indbrain", Structure)) %>% 
-  select(Cell_type, Colour) %>% 
-  distinct() %>% 
-  tibble::deframe()
-
-cortex_palette <- metadata %>%
-  filter(Species == "Mouse" & Structure == "Forebrain") %>%
-  select(Cell_type, Colour) %>% 
-  distinct() %>% 
-  tibble::deframe()
+load("data/joint_mouse/palettes.Rda")
 
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
@@ -84,7 +71,8 @@ prep_bubbleplot_input <- function(gene, scale = TRUE) {
                        columns = c("Cluster", gene)) %>%
     gather(., "Gene", "Pct1", 2:ncol(.))
   
-  df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  
+  df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
+    left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
   
   df <- df %>%
     
