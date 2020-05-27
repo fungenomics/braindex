@@ -50,7 +50,7 @@ server <- function(input, output, session) {
       # Generate a bubble plot for expression across clusters in dendrogram order
       bubbleplot_expr(gene = input_dendrogram()$gene),
       # Add a dummy element on the right to customize alignment w/ dendrogram image
-      rel_widths = c(0.04, 0.95))
+      rel_widths = c(0.04, 0.96))
     
   }, cacheKeyExpr = { input_dendrogram()$gene })
   
@@ -61,7 +61,7 @@ server <- function(input, output, session) {
   
   # Output element which displays the bubble plot with the reactive height
   output$plotBubble <- renderUI({
-    plotOutput("bubble", height = plotHeight(), width = 1010)
+    plotOutput("bubble", height = plotHeight(), width = 1199)
   })
   
   

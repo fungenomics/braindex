@@ -62,10 +62,10 @@ ui <- bootstrapPage(
                
                # Plot a dendrogram image above a bubble plot
 	       div(style = "margin-top: 5em; margin-bottom: -2em !important;",
-			fluidRow(tags$img(src = "tree.png", width = "955", height = "193"))), 
+			fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))), 
                # div(style = "margin-bottom: -2em !important; margin-top: 5em;",
                #    fluidRow(imageOutput("dendrogram"))),
-               div(style = "margin-top: 1em",
+               div(style = "margin-top: 3em",
                    fluidRow(uiOutput("plotBubble"))
                ),
                
