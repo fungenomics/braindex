@@ -4,6 +4,9 @@
 .RData
 .Ruserdata
 
+# Exclude cache
+*/cache/*
+
 # Exclude any data
 */data/*.RData
 */data/*.Rda

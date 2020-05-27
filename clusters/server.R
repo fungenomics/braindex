@@ -1,4 +1,11 @@
 
+# For the plot cache
+# NOTE TO SELF:
+# To get this to work, need to:
+# 1) Make the cache folder, i.e. mkdir cache
+# 2) Give the shiny user permissions, i.e. chmod -R a=rwx cache
+shinyOptions(cache = diskCache("./cache"))
+
 library(cowplot)
 library(glue)
 library(dplyr)
@@ -27,14 +34,14 @@ server <- function(input, output, session) {
   
   # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
   # Nat Genet, 2019
-  output$dendrogram <- renderImage({
-    list(src = "img/tree.png",
-         contentType = 'image/png',
-         width = 965,
-         height = 200)
-  }, deleteFile = FALSE)
+  # output$dendrogram <- renderImage({
+  #   list(src = "img/tree.png",
+  #        contentType = 'image/png',
+  #        width = 965,
+  #        height = 200)
+  # }, deleteFile = FALSE)
   
-  output$bubble <- renderPlot({
+  output$bubble <- renderCachedPlot({
     
     req(input_dendrogram())
     
@@ -45,7 +52,7 @@ server <- function(input, output, session) {
       # Add a dummy element on the right to customize alignment w/ dendrogram image
       rel_widths = c(0.04, 0.95))
     
-  })
+  }, cacheKeyExpr = { input_dendrogram()$gene })
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
@@ -54,7 +61,7 @@ server <- function(input, output, session) {
   
   # Output element which displays the bubble plot with the reactive height
   output$plotBubble <- renderUI({
-    plotOutput("bubble", height = plotHeight(), width = 1017)
+    plotOutput("bubble", height = plotHeight(), width = 1010)
   })
   
   
