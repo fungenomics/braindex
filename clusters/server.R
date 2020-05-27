@@ -78,7 +78,10 @@ server <- function(input, output, session) {
                input$bubble_hover,
                xvar = "Cluster",
                yvar = "Gene_padded",
-               maxpoints = 1)
+               maxpoints = 1) %>% 
+      select(Gene, Sample, Cluster, Cell_type, Cell_class, N_cells,
+             Mean_expression = Expression,
+             Proportion_of_cluster = Pct1)
     
   })
   
