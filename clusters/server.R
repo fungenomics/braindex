@@ -32,40 +32,58 @@ server <- function(input, output, session) {
     
   })
   
-  # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
-  # Nat Genet, 2019
-  # output$dendrogram <- renderImage({
-  #   list(src = "img/tree.png",
-  #        contentType = 'image/png',
-  #        width = 965,
-  #        height = 200)
-  # }, deleteFile = FALSE)
-  
-  output$bubble <- renderCachedPlot({
+  bubble_input <- reactive({
     
     req(input_dendrogram())
+    prep_bubbleplot_input(gene = input_dendrogram()$gene)
     
-    plot_grid(
-      NULL,
-      # Generate a bubble plot for expression across clusters in dendrogram order
-      bubbleplot_expr(gene = input_dendrogram()$gene),
-      # Add a dummy element on the right to customize alignment w/ dendrogram image
-      rel_widths = c(0.04, 0.96))
+  })
+  
+  output$bubble <- renderPlot({
     
-  }, cacheKeyExpr = { input_dendrogram()$gene })
+    req(bubble_input())
+    
+    # plot_grid(
+    #   NULL,
+    #   # Generate a bubble plot for expression across clusters in dendrogram order
+    #   bubbleplot(df = bubble_input()),
+    #   # Add a dummy element on the right to customize alignment w/ dendrogram image
+    #   rel_widths = c(0.02, 0.98))
+    
+    bubbleplot(df = bubble_input())
+    
+  }, width = 1171,
+  height = function() 100 + 30 * length(input_dendrogram()$gene))
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
   # labels
-  plotHeight <- reactive(100 + (40 * length(input_dendrogram()$gene)))
+  # plotHeight <- reactive(100 + (40 * length(input_dendrogram()$gene)))
   
   # Output element which displays the bubble plot with the reactive height
-  output$plotBubble <- renderUI({
-    plotOutput("bubble", height = plotHeight(), width = 1199)
+  # output$plotBubble <- renderUI({
+  #   plotOutput("bubble", height = plotHeight(), width = 1195,
+  #              # Interactivity
+  #              hover = hoverOpts(
+  #                id = "bubble_hover"))
+  # })
+  
+  output$bubble_hover_info <- renderTable({
+    
+    # TODO: explore wellpanel example here
+    # https://gitlab.com/snippets/16220
+    
+    # str(input$bubble_hover)
+    nearPoints(bubble_input(),
+               input$bubble_hover,
+               xvar = "Cluster",
+               yvar = "Gene_padded",
+               maxpoints = 1)
+    
   })
   
   
-  # Timecourse tab content ---
+  # Timecourse tab content ----
   input_timecourse <- eventReactive(input$update_timecourse, {
     
     list(

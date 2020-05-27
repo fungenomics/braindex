@@ -36,7 +36,8 @@ load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
 
-# Functions ----
+
+# Custom functions ----
 
 #' Bubbleplot of gene expression
 #' 
@@ -55,7 +56,7 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 #'
 #' @examples
 #' bubbleplot_expr("Dlx1")
-bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
+prep_bubbleplot_input <- function(gene, scale = TRUE) {
   
   # Load the mean expression of genes across clusters
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
@@ -106,10 +107,15 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
     filter(!is.na(Cluster)) %>% 
     replace_na(list(Expression = 0, Pct1 = 0))
   
-  if (return_df) return(df)
+  return(df)
+  
+}
+
+
+bubbleplot <- function(df) {
   
   # Generate plot
-  df %>% 
+  p1 <- df %>% 
     ggplot(aes(x = Cluster, y = Gene_padded)) +
     geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
     # TODO: Fix this so rather than relative units, it uses fixed units
@@ -130,6 +136,8 @@ bubbleplot_expr <- function(gene, scale = TRUE, return_df = FALSE) {
           legend.position = "none") +
     # Put gene labels on the right hand side
     scale_y_discrete(position = "right")
+  
+  return(p1)
   
 }
 

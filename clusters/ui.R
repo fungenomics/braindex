@@ -52,7 +52,7 @@ ui <- bootstrapPage(
                                   actionButton("update_timecourse", label = "Update")
                                   
                  )
-                
+                 
     ),
     
     # Output plots
@@ -60,14 +60,21 @@ ui <- bootstrapPage(
       
       tabPanel("Dendrogram",
                
-               # Plot a dendrogram image above a bubble plot
-	       div(style = "margin-top: 5em; margin-bottom: -2em !important;",
-			fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))), 
-               # div(style = "margin-bottom: -2em !important; margin-top: 5em;",
-               #    fluidRow(imageOutput("dendrogram"))),
-               div(style = "margin-top: 3em",
-                   fluidRow(uiOutput("plotBubble"))
+               # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
+               # Nat Genet, 2019
+               div(style = "margin-top: 3em; margin-bottom: -2em !important;",
+                   fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
+               ), 
+               
+               div(style = "margin-top: 3em; margin-left: 1.3em;",
+                   # fluidRow(uiOutput("plotBubble"
+                   fluidRow(plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = TRUE))),
+                   fluidRow(
+                     tableOutput("bubble_hover_info"))
                ),
+               
+               # uiOutput("bubble_hover_info"),
                
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
