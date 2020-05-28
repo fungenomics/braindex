@@ -43,7 +43,8 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 #'
 #' @examples
 #' bubbleplot_expr("Dlx1")
-prep_bubbleplot_input <- function(gene, scale = TRUE) {
+prep_bubbleplot_input <- function(gene,
+                                  scale = TRUE) {
   
   # Load the mean expression of genes across clusters
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
@@ -100,16 +101,13 @@ prep_bubbleplot_input <- function(gene, scale = TRUE) {
 }
 
 
-bubbleplot <- function(df) {
+bubbleplot <- function(df, max_point_size) {
   
   # Generate plot
   p1 <- df %>% 
     ggplot(aes(x = Cluster, y = Gene_padded)) +
     geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
-    # TODO: Fix this so rather than relative units, it uses fixed units
-    # so that there is a standard mapping between Pct1 and circle size,
-    # which does not depend on the gene(s) of input
-    scale_radius(limits = c(1e-10, NA)) +
+    scale_size_area(max_size = max_point_size) +
     scale_color_gradientn(colours = tail(rdbu, 70)) +
     theme_min() +
     ylab(NULL) +
@@ -121,8 +119,8 @@ bubbleplot <- function(df) {
           axis.ticks.y = element_blank(),
           # Do not show the legend because it is included in the static
           # dendrogram image displayed above the bubbleplot
-          legend.position = "none") +
-    # Put gene labels on the right hand side
+          legend.position = "bottom") +
+    # Put gene labels on the right hand side to improve alignment
     scale_y_discrete(position = "right")
   
   return(p1)

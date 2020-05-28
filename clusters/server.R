@@ -27,7 +27,9 @@ server <- function(input, output, session) {
   input_dendrogram <- eventReactive(input$update_dendrogram, {
     
     list(
-      "gene" = input$gene
+      "gene"   = input$gene,
+      "scale"  = input$bubble_scale,
+      "size"   = input$bubble_size
     )
     
   })
@@ -35,7 +37,8 @@ server <- function(input, output, session) {
   bubble_input <- reactive({
     
     req(input_dendrogram())
-    prep_bubbleplot_input(gene = input_dendrogram()$gene)
+    prep_bubbleplot_input(gene  = input_dendrogram()$gene,
+                          scale = input_dendrogram()$scale)
     
   })
   
@@ -43,14 +46,15 @@ server <- function(input, output, session) {
     
     req(bubble_input())
     
-    bubbleplot(df = bubble_input())
+    bubbleplot(df = bubble_input(),
+               max_point_size = input_dendrogram()$size)
     
   },
   width = 1175,
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
-  height = function() 100 + 30 * length(input_dendrogram()$gene))
+  height = function() 150 + 30 * length(input_dendrogram()$gene))
   
   output$bubble_hover_info <- renderUI({
     

@@ -28,6 +28,13 @@ ui <- bootstrapPage(
                                   selectInput("gene", "Gene", choices = genes_mouse,
                                               multiple = TRUE),
                                   
+                                  radioButtons("bubble_scale", "Scale expression to [0, 1] across clusters",
+                                               choices = c(TRUE, FALSE),
+                                               selected = TRUE),
+                            
+                                  sliderInput("bubble_size", "Max point size", min = 3, max = 6,
+                                              step = 0.5, value = 4),
+                                  
                                   actionButton("update_dendrogram", label = "Update")
                  ),
                  
