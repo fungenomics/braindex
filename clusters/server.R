@@ -43,48 +43,60 @@ server <- function(input, output, session) {
     
     req(bubble_input())
     
-    # plot_grid(
-    #   NULL,
-    #   # Generate a bubble plot for expression across clusters in dendrogram order
-    #   bubbleplot(df = bubble_input()),
-    #   # Add a dummy element on the right to customize alignment w/ dendrogram image
-    #   rel_widths = c(0.02, 0.98))
-    
     bubbleplot(df = bubble_input())
     
-  }, width = 1171,
-  height = function() 100 + 30 * length(input_dendrogram()$gene))
+  },
+  width = 1171,
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
-  # labels
-  # plotHeight <- reactive(100 + (40 * length(input_dendrogram()$gene)))
+  height = function() 100 + 30 * length(input_dendrogram()$gene))
   
-  # Output element which displays the bubble plot with the reactive height
-  # output$plotBubble <- renderUI({
-  #   plotOutput("bubble", height = plotHeight(), width = 1195,
-  #              # Interactivity
-  #              hover = hoverOpts(
-  #                id = "bubble_hover"))
-  # })
-  
-  output$bubble_hover_info <- renderTable({
+  output$bubble_hover_info <- renderUI({
     
-    # TODO: explore wellpanel example here
+    # This mouseover tooltip is created following this example
     # https://gitlab.com/snippets/16220
     
-    # str(input$bubble_hover)
-    nearPoints(bubble_input(),
-               input$bubble_hover,
-               xvar = "Cluster",
-               yvar = "Gene_padded",
-               maxpoints = 1) %>% 
-      select(Gene, Sample, Cluster, Cell_type, Cell_class, N_cells,
-             Mean_expression = Expression,
-             Proportion_of_cluster = Pct1)
+    hover <- input$bubble_hover
     
+    point <- nearPoints(bubble_input(),
+                        hover,
+                        xvar = "Cluster",
+                        yvar = "Gene_padded",
+                        maxpoints = 1) %>% 
+      select(Gene, Sample, Cluster, Cell_type, Cell_class, N_cells,
+             Expression, Pct1)
+    
+    # Don't show the tooltip if mouse is not hovering over a point
+    if (nrow(point) == 0) return(NULL)
+    
+    # Create tooltip for mouseover
+    # calculate point position INSIDE the image as percent of total dimensions
+    # from left (horizontal) and from top (vertical)
+    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
+    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+    
+    # calculate distance from left and bottom side of the picture in pixels
+    left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
+    top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+    
+    # Create style property fot tooltip
+    # background color is set so tooltip is a bit transparent
+    # z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+                    "left:", left_px + 0.5, "px; top:", top_px + 0.5, "px; width: 350px;")
+    
+    # Actual tooltip created as wellPanel, specify info to display
+    wellPanel(
+      style = style,
+      p(HTML(paste0("<b> Gene: </b>",       point$Gene, "<br/>",
+                    "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                    "<b> Cell type: </b>",  point$Cell_type, "<br/>",
+                    "<b> Sample: </b>",     point$Sample, "<br/>",
+                    "<b> Expression: </b>", point$Pct1 * point$N_cells, " ",
+                    point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")))
+    )
   })
-  
   
   # Timecourse tab content ----
   input_timecourse <- eventReactive(input$update_timecourse, {

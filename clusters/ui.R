@@ -67,14 +67,12 @@ ui <- bootstrapPage(
                ), 
                
                div(style = "margin-top: 3em; margin-left: 1.3em;",
-                   # fluidRow(uiOutput("plotBubble"
                    fluidRow(plotOutput("bubble",
                                        hover = hoverOpts(id = "bubble_hover", clip = TRUE))),
                    fluidRow(
-                     tableOutput("bubble_hover_info"))
+                     uiOutput("bubble_hover_info"))
+                   
                ),
-               
-               # uiOutput("bubble_hover_info"),
                
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
