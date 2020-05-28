@@ -1,9 +1,9 @@
 
 # For the plot cache
-# NOTE TO SELF:
+# NOTE:
 # To get this to work, need to:
 # 1) Make the cache folder, i.e. mkdir cache
-# 2) Give the shiny user permissions, i.e. chmod -R a=rwx cache
+# 2) On the server, give the shiny user permissions, i.e. chmod -R a=rwx cache
 shinyOptions(cache = diskCache("./cache"))
 
 library(cowplot)
@@ -27,42 +27,47 @@ server <- function(input, output, session) {
   input_dendrogram <- eventReactive(input$update_dendrogram, {
     
     list(
-      "gene"   = input$gene,
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size
     )
     
   })
   
+  # Generate the input dataframe for the bubbleplot
   bubble_input <- reactive({
     
     req(input_dendrogram())
-    prep_bubbleplot_input(gene  = input_dendrogram()$gene,
-                          scale = input_dendrogram()$scale)
+    bubble_prep(gene  = input$gene,
+                scale = input_dendrogram()$scale)
     
   })
   
+  # Generate the bubbleplot
   output$bubble <- renderPlot({
     
     req(bubble_input())
     
-    bubbleplot(df = bubble_input(),
+    bubble_plot(df = bubble_input(),
                max_point_size = input_dendrogram()$size)
     
   },
+  
+  # Choose width to align horizontally with dendrogram image
   width = 1175,
   
-  # Customize the height of the bubbleplot based on the number of genes which
-  # are being displayed, after allocating a baseline height for the x-axis
-  height = function() 150 + 30 * length(input_dendrogram()$gene))
+  # Customize the height of the bubbleplot to scale with the number of genes which
+  # are being displayed, after allocating a baseline height for the x-axis & legend
+  height = function() 150 + 30 * length(input$gene))
   
+  # Create a tooltip with cluster / expression information that appears when
+  # hovering over a bubble
+  # 
+  # This adapted from this example https://gitlab.com/snippets/16220
   output$bubble_hover_info <- renderUI({
-    
-    # This mouseover tooltip is created following this example
-    # https://gitlab.com/snippets/16220
     
     hover <- input$bubble_hover
     
+    # Find the nearest data point to the mouse hover position
     point <- nearPoints(bubble_input(),
                         hover,
                         xvar = "Cluster",
@@ -71,7 +76,7 @@ server <- function(input, output, session) {
       select(Gene, Sample, Cluster, Cell_type, Cell_class, N_cells,
              Expression, Pct1)
     
-    # Don't show the tooltip if mouse is not hovering over a point
+    # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
     # Create tooltip for mouseover
@@ -88,7 +93,7 @@ server <- function(input, output, session) {
     # background color is set so tooltip is a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", left_px + 0.5, "px; top:", top_px + 0.5, "px; width: 350px;")
+                    "left:", left_px, "px; top:", top_px, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
@@ -106,29 +111,29 @@ server <- function(input, output, session) {
   input_timecourse <- eventReactive(input$update_timecourse, {
     
     list(
-      "gene"   = input$gene_region,
+      # "gene"   = input$gene_region,
       "region" = input$region
     )
     
   })
   
-  # Generate bubble plot and save the output so that we can later split
+  # Generate ribbon plot and save the output so that we can later split
   # into the plot itself, and the legend
   ribbon <- reactive({
     
     req(input_timecourse())
     
-    ribbon_plot(gene   = input_timecourse()$gene,
+    ribbon_plot(gene   = input$gene,
                 region = input_timecourse()$region)
     
   })
   
-  # Here, we're grabbing only the plot part, not the legend
+  # Grabbing only the plot part, remove the legend
   output$plotRibbon <- renderPlot({ ribbon() +
       theme(legend.position = "none")
   })
   
-  # Extract the legend to plot separately
+  # Extract the ribbon plot legend to plot separately
   output$ribbonLegend <- renderPlot({
     
     leg <- cowplot::get_legend(ribbon())

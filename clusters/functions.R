@@ -10,10 +10,11 @@ library(ggplot2)
 
 # Set-up / load common data ----
 
-# Red-blue colour palette
+# Cluster-level metadata
 metadata <- data.table::fread("data/joint_mouse/metadata_20190715_select.tsv",
                               data.table = FALSE)
 
+# Red-blue gradient and brain region colour palettes
 load("data/joint_mouse/palettes.Rda")
 
 # Joint mouse colour palette
@@ -23,30 +24,24 @@ load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
 
-
 # Custom functions ----
 
-#' Bubbleplot of gene expression
+#' Prepare input for bubble_plot
 #' 
-#' Generate a bubble plot for genes of interest across clusters in the mouse
-#' dendrogram, where bubble colour encodes the mean expression in each cluster
-#' and bubble size encodes the proportion of cells where each gene is detected
-#'
+#' Load gene expression data from feather, tidy & optionally scale expression,
+#' and return the dataframe required as input for the bubble_plot() function
+#' 
 #' @param gene Character vector, one or more genes of interest to plot
 #' @param scale Logical, whether or not to linearly scale gene expression across
 #' clusters to [0,1] to improve visualization. Default: TRUE
-#' @param return_df Logical, for debugging purposes, whether or not to return
-#' the input dataframe for ggplot2 and exit before plotting. Default: FALSE.
-#' TODO: Use this option to provide an option to donwload the underlying data.
+#' TODO: Use this to provide an option to donwload the underlying data.
 #' 
-#' @return ggplot2 object
-#'
-#' @examples
-#' bubbleplot_expr("Dlx1")
-prep_bubbleplot_input <- function(gene,
-                                  scale = TRUE) {
+#' @examples 
+#' bubble_prep("Dlx1")
+bubble_prep <- function(gene,
+                        scale = TRUE) {
   
-  # Load the mean expression of genes across clusters
+  # Load the mean expression of genes across clusters, given gene of interest
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
                       columns = c("Cluster", gene)) %>% 
     filter(Cluster %in% dendrogram_order)
@@ -73,23 +68,25 @@ prep_bubbleplot_input <- function(gene,
                        columns = c("Cluster", gene)) %>%
     gather(., "Gene", "Pct1", 2:ncol(.))
   
+  # Join with cluster metadata
   df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
     left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
   
+  # Tidy data for plotting
   df <- df %>%
     
-    # 1. Pad gene names so that the plot takes up a more standardized
-    # width; to roughly the the # of characters in the gene w/ longest name
-    # 2. Order genes the same way they were provided in the input, with padding
+    # Order genes to match order input by user
     mutate(Gene = factor(Gene, levels = rev(gene))) %>% 
     arrange(Gene) %>% 
     
+    # Pad gene names so that the plot takes up a more standardized
+    # width; to roughly the the # of characters in the gene w/ longest name
     # However, letters take up more pixels thn spaces, so do less padding
     # for genes with longer names
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
       str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " "))
-      ) %>% 
+    ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
     
     # Order the clusters on the x-axis to match the dendrogram image
@@ -97,6 +94,9 @@ prep_bubbleplot_input <- function(gene,
     
     filter(!is.na(Cluster)) %>% 
     
+    # Convert NAs (undetected genes) to 0s -- this ensures all
+    # clusters have a value for all genes, so that all clusters are plot,
+    # even if the gene was undetected
     replace_na(list(Expression = 0, Pct1 = 0)) 
   
   return(df)
@@ -104,7 +104,20 @@ prep_bubbleplot_input <- function(gene,
 }
 
 
-bubbleplot <- function(df, max_point_size) {
+#' Bubbleplot of gene expression
+#' 
+#' Generate a bubble plot for genes of interest across clusters in the mouse
+#' dendrogram, where bubble colour encodes the mean expression in each cluster
+#' and bubble size encodes the proportion of cells where each gene is detected
+#'
+#' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
+#' Gene_padded, Pct1, and Expression
+#'
+#' @return ggplot2 object
+#'
+#' @examples
+#' bubble_prep("Dlx1") %>% bubbleplot()
+bubble_plot <- function(df, max_point_size) {
   
   # Generate plot
   p1 <- df %>% 

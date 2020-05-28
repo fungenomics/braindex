@@ -22,15 +22,17 @@ ui <- bootstrapPage(
   sidebarLayout(
     sidebarPanel(width = 3,
                  
+                 # Gene input field, shared across tabs
+                 selectInput("gene", "Gene", choices = genes_mouse,
+                             multiple = TRUE),
+                 
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
-                                  selectInput("gene", "Gene", choices = genes_mouse,
-                                              multiple = TRUE),
-                                  
-                                  radioButtons("bubble_scale", "Scale expression to [0, 1] across clusters",
-                                               choices = c(TRUE, FALSE),
-                                               selected = TRUE),
+                                  selectInput("bubble_scale", "Scaliing",
+                                               choices = c("Scale each gene to [0, 1]" = TRUE,
+                                                           "Conserve scale across genes" = FALSE),
+                                               selected = "Scale each gene to the same range, [0, 1]"),
                             
                                   sliderInput("bubble_size", "Max point size", min = 3, max = 6,
                                               step = 0.5, value = 4),
@@ -40,13 +42,6 @@ ui <- bootstrapPage(
                  
                  # Input for timecourse tab
                  conditionalPanel(condition = "input.tabs == 'timecourse'",
-                                  
-                                  # TODO: Dynamically provide the right gene
-                                  # names as choices based on which brain region
-                                  # is selected
-                                  selectInput("gene_region", "Gene",
-                                              choices = genes_mouse,
-                                              multiple = FALSE),
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -73,9 +68,12 @@ ui <- bootstrapPage(
                    fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
                ), 
                
+               # Display the bubbleplot
                div(style = "margin-top: 3em; margin-left: 1.3em;",
                    fluidRow(plotOutput("bubble",
                                        hover = hoverOpts(id = "bubble_hover", clip = TRUE))),
+                   
+                   # UI for tooltip
                    fluidRow(
                      uiOutput("bubble_hover_info"))
                    
