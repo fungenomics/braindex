@@ -48,7 +48,8 @@ prep_bubbleplot_input <- function(gene,
   
   # Load the mean expression of genes across clusters
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
-                      columns = c("Cluster", gene))
+                      columns = c("Cluster", gene)) %>% 
+    filter(Cluster %in% dendrogram_order)
   
   # Scale expression of each gene linearly across clusters to [0, 1]
   if (scale) {
@@ -77,13 +78,12 @@ prep_bubbleplot_input <- function(gene,
   
   df <- df %>%
     
-    # filter(Expression != 0 & !is.na(Expression) & Pct1 > 0) %>%
-    
     # 1. Pad gene names so that the plot takes up a more standardized
     # width; to roughly the the # of characters in the gene w/ longest name
     # 2. Order genes the same way they were provided in the input, with padding
     mutate(Gene = factor(Gene, levels = rev(gene))) %>% 
     arrange(Gene) %>% 
+    
     # However, letters take up more pixels thn spaces, so do less padding
     # for genes with longer names
     mutate(Gene_padded = case_when(
@@ -91,10 +91,13 @@ prep_bubbleplot_input <- function(gene,
       str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " "))
       ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
+    
     # Order the clusters on the x-axis to match the dendrogram image
     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
+    
     filter(!is.na(Cluster)) %>% 
-    replace_na(list(Expression = 0, Pct1 = 0))
+    
+    replace_na(list(Expression = 0, Pct1 = 0)) 
   
   return(df)
   
