@@ -11,6 +11,8 @@ library(glue)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(kableExtra)
+library(DT)
 
 source("functions.R")
 source("../style.R")
@@ -24,11 +26,13 @@ server <- function(input, output, session) {
   
   # Capture all input from this tab as a list in case we want to add
   # more options in the future
-  input_dendrogram <- eventReactive(input$update_dendrogram, {
+  input_new <- eventReactive(input$update, {
     
     list(
+      "gene"   = input$gene,
       "scale"  = input$bubble_scale,
-      "size"   = input$bubble_size
+      "size"   = input$bubble_size,
+      "region" = input$region
     )
     
   })
@@ -36,9 +40,9 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot
   bubble_input <- reactive({
     
-    req(input_dendrogram())
-    bubble_prep(gene  = input$gene,
-                scale = input_dendrogram()$scale)
+    # Display up to the first 6 genes input
+    bubble_prep(gene  = head(input_new()$gene, 6),
+                scale = input_new()$scale)
     
   })
   
@@ -48,7 +52,7 @@ server <- function(input, output, session) {
     req(bubble_input())
     
     bubble_plot(df = bubble_input(),
-               max_point_size = input_dendrogram()$size)
+                max_point_size = input_new()$size)
     
   },
   
@@ -57,7 +61,7 @@ server <- function(input, output, session) {
   
   # Customize the height of the bubbleplot to scale with the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis & legend
-  height = function() 150 + 30 * length(input$gene))
+  height = function() 150 + 30 * length(input_new()$gene))
   
   # Create a tooltip with cluster / expression information that appears when
   # hovering over a bubble
@@ -93,7 +97,7 @@ server <- function(input, output, session) {
     # background color is set so tooltip is a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", left_px, "px; top:", top_px, "px; width: 350px;")
+                    "left:", left_px + 2, "px; top:", top_px + 2, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
@@ -107,38 +111,57 @@ server <- function(input, output, session) {
     )
   })
   
-  # Timecourse tab content ----
-  input_timecourse <- eventReactive(input$update_timecourse, {
+  # Download data in bubbleplot tab as TSV
+  output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
+                                            contentType = "text/tsv",
+                                            content = function(file) {
+                                              write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                                            })
+  
+  # Show table with cluster & expression info below bubble plot
+  output$cluster_table <- renderDataTable({
     
-    list(
-      # "gene"   = input$gene_region,
-      "region" = input$region
-    )
+    req(bubble_input())
+    
+    bubble_input() %>%
+      select(-Pct1, -Gene_padded) %>% 
+      mutate(Expression = round(Expression, 2)) %>% 
+      spread(Gene, Expression) %>% 
+      DT::datatable(options = list(
+        columnDefs = list(list(visible = FALSE,
+                               # Hide the Colour column
+                               targets = c(6))),
+        selection = "none")
+      ) %>%
+      
+      # Colour the cluster column based on the palette
+      formatStyle("Cluster",
+                  backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
     
   })
+  
+  # Timecourse tab content ----
   
   # Generate ribbon plot and save the output so that we can later split
   # into the plot itself, and the legend
   ribbon <- reactive({
-    
-    req(input_timecourse())
-    
-    ribbon_plot(gene   = input$gene,
-                region = input_timecourse()$region)
-    
+
+    ribbon_plot(gene   = input_new()$gene[1],
+                region = input_new()$region)
+
   })
-  
+
   # Grabbing only the plot part, remove the legend
   output$plotRibbon <- renderPlot({ ribbon() +
       theme(legend.position = "none")
   })
-  
+
   # Extract the ribbon plot legend to plot separately
   output$ribbonLegend <- renderPlot({
-    
+
     leg <- cowplot::get_legend(ribbon())
     plot_grid(leg)
-    
+
   })
   
 }

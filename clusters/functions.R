@@ -97,7 +97,10 @@ bubble_prep <- function(gene,
     # Convert NAs (undetected genes) to 0s -- this ensures all
     # clusters have a value for all genes, so that all clusters are plot,
     # even if the gene was undetected
-    replace_na(list(Expression = 0, Pct1 = 0)) 
+    replace_na(list(Expression = 0, Pct1 = 0)) %>% 
+    
+    # Keep columns
+    select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
   
   return(df)
   
@@ -137,7 +140,8 @@ bubble_plot <- function(df, max_point_size) {
           # dendrogram image displayed above the bubbleplot
           legend.position = "bottom") +
     # Put gene labels on the right hand side to improve alignment
-    scale_y_discrete(position = "right")
+    scale_y_discrete(position = "right") %>% 
+    suppressWarnings()
   
   return(p1)
   

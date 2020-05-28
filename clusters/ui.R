@@ -29,15 +29,14 @@ ui <- bootstrapPage(
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
-                                  selectInput("bubble_scale", "Scaliing",
-                                               choices = c("Scale each gene to [0, 1]" = TRUE,
-                                                           "Conserve scale across genes" = FALSE),
-                                               selected = "Scale each gene to the same range, [0, 1]"),
-                            
-                                  sliderInput("bubble_size", "Max point size", min = 3, max = 6,
-                                              step = 0.5, value = 4),
+                                  selectInput("bubble_scale", "Scaling",
+                                              choices = c("Scale each gene to [0, 1]" = TRUE,
+                                                          "Conserve scale across genes" = FALSE),
+                                              selected = "Scale each gene to the same range, [0, 1]"),
                                   
-                                  actionButton("update_dendrogram", label = "Update")
+                                  sliderInput("bubble_size", "Max point size", min = 3, max = 6,
+                                              step = 0.5, value = 4)
+                                  
                  ),
                  
                  # Input for timecourse tab
@@ -48,12 +47,10 @@ ui <- bootstrapPage(
                                   # the paths/files under the data directory
                                   radioButtons("region", "Brain region",
                                                choices = c("Forebrain" = "joint_cortex",
-                                                           "Pons" = "joint_pons"),
-                                               selected = "Forebrain"),
-                                  
-                                  actionButton("update_timecourse", label = "Update")
-                                  
-                 )
+                                                           "Pons" = "joint_pons"))
+                 ),
+                 
+                 actionButton("update", label = "Update")
                  
     ),
     
@@ -62,6 +59,10 @@ ui <- bootstrapPage(
       
       tabPanel("Dendrogram",
                
+               tags$br(),
+               
+               p("Display up to 6 genes"),
+               
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
                div(style = "margin-top: 3em; margin-bottom: -2em !important;",
@@ -69,7 +70,7 @@ ui <- bootstrapPage(
                ), 
                
                # Display the bubbleplot
-               div(style = "margin-top: 3em; margin-left: 1.3em;",
+               div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
                    fluidRow(plotOutput("bubble",
                                        hover = hoverOpts(id = "bubble_hover", clip = TRUE))),
                    
@@ -79,13 +80,18 @@ ui <- bootstrapPage(
                    
                ),
                
+               fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
+               
+               fluidRow(
+                 downloadButton("download_bubble", "Download data (TSV)")),
+               
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
                
       ),
       
       tabPanel("Timecourse",
-               
+
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course
