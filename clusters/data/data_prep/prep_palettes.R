@@ -1,5 +1,7 @@
 
-library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(readr)
 
 metadata <- data.table::fread("../joint_mouse/metadata_20190715.tsv", data.table = FALSE) %>% 
   select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class, N_cells) %>% 

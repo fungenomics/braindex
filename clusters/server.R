@@ -46,7 +46,7 @@ server <- function(input, output, session) {
     bubbleplot(df = bubble_input())
     
   },
-  width = 1171,
+  width = 1175,
   
   # Customize the height of the bubbleplot based on the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis
