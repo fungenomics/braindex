@@ -11,7 +11,6 @@ library(glue)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(kableExtra)
 library(DT)
 
 source("functions.R")

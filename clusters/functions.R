@@ -140,8 +140,7 @@ bubble_plot <- function(df, max_point_size) {
           # dendrogram image displayed above the bubbleplot
           legend.position = "bottom") +
     # Put gene labels on the right hand side to improve alignment
-    scale_y_discrete(position = "right") %>% 
-    suppressWarnings()
+    scale_y_discrete(position = "right")
   
   return(p1)
   
