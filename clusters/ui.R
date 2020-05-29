@@ -82,8 +82,8 @@ ui <- bootstrapPage(
                
                fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
                
-               fluidRow(
-                 downloadButton("download_bubble", "Download data (TSV)")),
+               # fluidRow(
+               #   downloadButton("download_bubble", "Download data (TSV)")),
                
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
