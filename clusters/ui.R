@@ -40,7 +40,7 @@ ui <- bootstrapPage(
                  ),
                  
                  # Input for timecourse tab
-                 conditionalPanel(condition = "input.tabs == 'timecourse'",
+                 conditionalPanel(condition = "input.tabs != 'dendrogram'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -48,6 +48,28 @@ ui <- bootstrapPage(
                                   radioButtons("region", "Brain region",
                                                choices = c("Forebrain" = "joint_cortex",
                                                            "Pons" = "joint_pons"))
+                 ),
+                 
+                 # Input for joint analysis tab
+                 conditionalPanel(condition = "input.tabs == 'joint'",
+                                  
+                                  selectInput("dr", "Dimensionality reduction",
+                                              multiple = FALSE,
+                                              choices = c("tSNE", "PCA", "UMAP"),
+                                              selected = "tSNE"),
+                                  
+                                  selectInput("dr_clustering", "Group cells by",
+                                              multiple = FALSE,
+                                              choices = c(
+                                                "Clustering at the region level",
+                                                "Clustering at the sample level"
+                                              ),
+                                              selected = "Clustering at the region level"),
+                                  
+                                  selectInput("label_clusters", "Label clusters",
+                                             choices = c(TRUE, FALSE),
+                                             selected = "FALSE")
+                                  
                  ),
                  
                  actionButton("update", label = "Update")
@@ -91,7 +113,7 @@ ui <- bootstrapPage(
       ),
       
       tabPanel("Timecourse",
-
+               
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course
@@ -100,6 +122,27 @@ ui <- bootstrapPage(
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
+      ),
+      
+      tabPanel("Single-cell expression, by region",
+               
+               tags$br(),
+               
+               # Plot a ribbon plot, showing the proportion of cells in which
+               # each gene is detected, broken down by cell type, across
+               # the time course
+               fluidRow(
+                 
+                 column(4,
+                        plotOutput("dr_joint", width = "5.5in", height = "5in")),
+                 
+                 column(4,
+                        p("Test"))
+                 
+               ),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "joint"
       ),
       
       id = "tabs"

@@ -21,6 +21,18 @@ cortex_palette <- metadata %>%
   distinct() %>% 
   tibble::deframe()
 
+x <- metadata %>% 
+  select(Cluster, Colour)
+
+joint_mouse_palette_refined <- x %>% 
+  select(Cluster, Colour) %>% 
+  tibble::deframe()
+
+joint_mouse_palette_refined_nounderscore <- x %>% 
+  select(Cluster, Colour) %>% 
+  mutate(Cluster2 = gsub("_", " ", Cluster)) %>% 
+  tibble::deframe()
+
 rdbu <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "RdBu"))(n = 100))
 
-save(pons_palette, cortex_palette, rdbu, file = "../joint_mouse/palettes.Rda")
+save(pons_palette, cortex_palette, rdbu, joint_mouse_palette_refined, joint_mouse_palette_refined_nounderscore, file = "../joint_mouse/palettes.Rda")

@@ -7,6 +7,7 @@ library(cowplot)
 library(glue)
 library(stringr)
 library(ggplot2)
+library(ggrepel)
 
 # Set-up / load common data ----
 
@@ -16,6 +17,9 @@ metadata <- data.table::fread("data/joint_mouse/metadata_20190715_select.tsv",
 
 # Red-blue gradient and brain region colour palettes
 load("data/joint_mouse/palettes.Rda")
+
+cortex_palette_joint <- readRDS("data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds")
+pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds")
 
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
@@ -267,5 +271,137 @@ ribbon_plot <- function(gene, region, ymax = NA) {
     ylim(0, ymax) 
   
   return(p1)
+  
+}
+
+
+dr_plot <- function(embedding,
+                    colour_by = NULL,
+                    colours = NULL,
+                    colour_by_type = "discrete",
+                    label = TRUE,
+                    point_size = ifelse(nrow(embedding) > 300, 0.6, 1.3),
+                    alpha = 0.8,
+                    legend = ifelse((is.null(colour_by)) && (label), FALSE, TRUE),
+                    label_repel = TRUE,
+                    label_size = 4,
+                    cells = NULL,
+                    order_by = NULL,
+                    clusters_to_label = NULL,
+                    hide_ticks = TRUE,
+                    title = NULL,
+                    label_short = FALSE,
+                    na_color = "gray80",
+                    limits = NULL,
+                    hide_axes = FALSE,
+                    border_colour = NULL,
+                    border_size = NULL,
+                    show_n_cells = FALSE) {
+  
+  order_by <- colour_by
+  
+  dr_cols <- colnames(embedding)[c(2, 3)]
+  colnames(embedding)[c(2, 3)] <- c("dim1", "dim2")
+  
+  if (!is.null(cells)) embedding <- embedding %>% filter(Cell %in% cells)
+  if (!is.null(order_by)) embedding <- embedding %>% arrange_(order_by)
+  
+  if (show_n_cells) {
+    
+    embedding <- embedding %>%
+      group_by(Cluster) %>%
+      mutate(n_cells = n()) %>% 
+      mutate(Cluster2 = paste0(Cluster, " (", n_cells, ")"))
+    
+    # Rename the palette
+    names(colours) <- paste0(names(colours), " (", 
+                             embedding %>% distinct(cluster, n_cells) %>% arrange(desc(n_cells)) %>% .$n_cells,
+                             ")")
+    
+  } else {
+    
+    embedding$Cluster2 <- embedding$Cluster
+    
+  }
+  
+  gg <- ggplot(embedding, aes(x = dim1, y = dim2))
+  
+  # Deal with the palette
+  if (is.null(colour_by)) {
+    
+    gg <- gg +
+      geom_point(aes(colour = Cluster2), size = point_size, alpha = alpha) +
+      scale_color_manual(values = colours)
+    
+  } else {
+    
+    if (is.null(limits)) lims <- c(NA, NA)
+    else lims <- limits
+    
+    gg <- gg +
+      geom_point(aes_string(colour = colour_by), size = point_size, alpha = alpha)
+    
+    if (!is.null(colours)) {
+      
+      if (colour_by_type == "discrete") gg <- gg + scale_color_manual(values = colours, na.value = na_color)
+      else if (colour_by_type == "continuous") {
+        
+        gg <- gg + scale_color_gradientn(colours = colours,
+                                         na.value = na_color,
+                                         limits = lims)
+      }
+      
+    } else {
+      
+      if (colour_by_type == "continuous") { # Otherwise for discrete, default ggplot2 colours are used
+        
+        gg <- gg + scale_color_gradientn(colours = grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "OrRd"))(n = 100),
+                                         na.value = na_color,
+                                         limits = lims)
+        
+      }
+    }
+  }
+  
+  # Label clusters
+  if (label) {
+    
+    centers <- embedding %>%
+      group_by(Cluster) %>%
+      summarise(mean_x = median(dim1),
+                mean_y = median(dim2))
+    gg <- gg + ggrepel::geom_label_repel(data = centers,
+                                         aes(x = mean_x, y = mean_y),
+                                         label = centers$Cluster,
+                                         size = label_size,
+                                         segment.color = 'grey50',
+                                         fontface = 'bold',
+                                         alpha = 0.8,
+                                         segment.alpha = 0.8,
+                                         label.size = NA,
+                                         force = 2,
+                                         segment.size = 0.5,
+                                         arrow = arrow(length = unit(0.01, 'npc')))
+    
+  }
+  
+  gg <- gg + theme_min(border_colour = border_colour, border_size = border_size)
+  
+  # Set the right axes titles
+  if (hide_axes) gg <- gg + xlab(NULL) + ylab(NULL)
+  else gg <- gg + 
+    labs(x = dr_cols[1],
+         y = dr_cols[2],
+         colour = "Cluster")
+  
+  # More aesthetics
+  if (!legend) gg <- gg + theme(legend.position = "none")
+  else if (!is.null(colour_by)) {
+    if (colour_by == "orig.ident") gg <- gg + labs(colour = "Sample")
+  }
+  
+  if (!is.null(title)) gg <- gg + ggtitle(title)
+  
+  return(gg)
   
 }

@@ -17,7 +17,7 @@ source("functions.R")
 source("../style.R")
 
 # Set a default ggplot2 theme for the app, from cowplot
-ggplot2::theme_set(cowplot::theme_cowplot())
+ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
@@ -27,12 +27,41 @@ server <- function(input, output, session) {
   # more options in the future
   input_new <- eventReactive(input$update, {
     
-    list(
+    # Inputs to use as is
+    l <- list(
       "gene"   = input$gene,
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
-      "region" = input$region
+      "region" = input$region,
+      "label_clusters" = input$label_clusters
     )
+    
+    # Get the columns for the appropriate type of dim red
+    if      (input$dr == "tSNE") l$dr <- c("tSNE_1", "tSNE_2")
+    else if (input$dr == "UMAP") l$dr <- c("UMAP1", "UMAP2")
+    else if (input$dr == "PCA")  l$dr <- c("PC1", "PC2")
+    
+    # Get the clustering to use for the joint analysis tab
+    # Option 1: Clustering done at the joint analysis level
+    # Option 2: Clustering done per sample (for the forebrain, there was some refinement done so the latest
+    # version of labels is different than in the pons)
+    if (input$dr_clustering == "Clustering at the region level") {
+      
+      l$clust <- "ID_20190715_joint_clustering"
+      
+      if       (input$region == "joint_cortex") l$clust_palette <- cortex_palette_joint
+      else if (input$region == "joint_pons")    l$clust_palette <- pons_palette_joint
+      
+    } else {
+      
+      l$clust_palette <- joint_mouse_palette_refined
+      
+      if      (input$region == "joint_cortex") l$clust <- "ID_20190730_with_blacklist_and_refined"
+      else if (input$region == "joint_pons")   l$clust <- "ID_20190715_with_blacklist_and_refined"
+      
+    }
+    
+    return(l)
     
   })
   
@@ -144,24 +173,60 @@ server <- function(input, output, session) {
   # Generate ribbon plot and save the output so that we can later split
   # into the plot itself, and the legend
   ribbon <- reactive({
-
+    
     ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region)
-
+    
   })
-
+  
   # Grabbing only the plot part, remove the legend
   output$plotRibbon <- renderPlot({ ribbon() +
       theme(legend.position = "none")
   })
-
+  
   # Extract the ribbon plot legend to plot separately
   output$ribbonLegend <- renderPlot({
-
+    
     leg <- cowplot::get_legend(ribbon())
     plot_grid(leg)
-
+    
   })
+  
+  # Joint analysis tab content ----
+  
+  dr_joint_embedding <- reactive({
+    
+    region <- input_new()$region
+    
+    df <- feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
+                                columns = c("Cell",
+                                            input_new()$dr,
+                                            input_new()$clust))
+    
+    names(df)[4] <- "Cluster"
+    
+    return(df)
+    
+  })
+  
+  output$dr_joint <- renderPlot({
+    
+    dr_plot(dr_joint_embedding(),
+            colour_by = "Cluster",
+            colours   = input_new()$clust_palette,
+            legend    = FALSE,
+            label     = input_new()$label_clusters)
+    
+  })
+  
+  # dr_joint_exp <- reactive({
+  #   
+  #   req(dr_k27m())
+  #   cbind(dr_k27m(),
+  #         feather::read_feather("data/k27m.embedding_and_genes.feather", columns = input$gene))
+  #   
+  # })
+  
   
 }
 

@@ -1,7 +1,7 @@
 
 
 theme_min <- function(base_size = 11, base_family = "",
-                      border_colour = "grey90",
+                      border_colour = "black",
                       border_size = 1) {
 
   theme_light(base_size = 11, base_family = "") +

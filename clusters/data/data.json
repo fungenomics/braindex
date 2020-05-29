@@ -87,6 +87,14 @@
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint cortex space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
        
+     },
+     {
+       
+       "file": "joint_cortex.palette_ID_20190715_joint_clustering.Rds",
+       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds",
+       "description": "Colour palette for clustering at the joint cortex level, from the 20190715 annotation",
+       "contents": "Rds file with character vector, where names are clusters and values are hex codes"
+       
      }
      
    ],
@@ -107,6 +115,14 @@
        "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes.feather",
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint pons space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
+       
+     },
+     {
+       
+       "file": "joint_pons.palette_ID_20190715_joint_clustering.Rds",
+       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds",
+       "description": "Colour palette for clustering at the joint pons level, from the 20190715 annotation",
+       "contents": "Rds file with character vector, where names are clusters and values are hex codes"
        
      }
      

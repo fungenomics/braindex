@@ -10,11 +10,13 @@
 # Exclude any data
 */data/*.RData
 */data/*.Rda
+*/data/*.Rds
 */data/*.tsv
 */data/*.feather
 
 */data/*/*.RData
 */data/*/*.Rda
+*/data/*/*.Rds
 */data/*/*.tsv
 */data/*/*.feather
 
