@@ -67,8 +67,14 @@ ui <- bootstrapPage(
                                               selected = "Clustering at the region level"),
                                   
                                   selectInput("label_clusters", "Label clusters",
-                                             choices = c(TRUE, FALSE),
-                                             selected = "FALSE")
+                                              choices = c(TRUE, FALSE),
+                                              selected = "FALSE"),
+                                  
+                                  selectInput("feature_palette", "Colour palette",
+                                              choices = list("Grey-red"   = "redgrey",
+                                                             "Blue-red"   = "rdbu",
+                                                             "Blues"      = "blues"),
+                                              selected = "redgrey")
                                   
                  ),
                  
@@ -133,11 +139,14 @@ ui <- bootstrapPage(
                # the time course
                fluidRow(
                  
-                 column(4,
-                        plotOutput("dr_joint", width = "5.5in", height = "5in")),
+                 plotOutput("dr_joint", width = "5.5in", height = "5in",
+                            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE))
                  
-                 column(4,
-                        p("Test"))
+               ),
+               
+               fluidRow(
+                 
+                 plotOutput("feature_joint", width = "6.32in", height = "5in")
                  
                ),
                

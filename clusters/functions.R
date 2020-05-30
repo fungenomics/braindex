@@ -294,13 +294,14 @@ dr_plot <- function(embedding,
                     na_color = "gray80",
                     limits = NULL,
                     hide_axes = FALSE,
-                    border_colour = NULL,
-                    border_size = NULL,
                     show_n_cells = FALSE) {
   
   order_by <- colour_by
   
-  dr_cols <- colnames(embedding)[c(2, 3)]
+  dr_cols <- colnames(embedding)[c(2, 3)] %>% 
+    # Remove underscores
+  {gsub("_", " ", .)}
+  
   colnames(embedding)[c(2, 3)] <- c("dim1", "dim2")
   
   if (!is.null(cells)) embedding <- embedding %>% filter(Cell %in% cells)
@@ -385,7 +386,7 @@ dr_plot <- function(embedding,
     
   }
   
-  gg <- gg + theme_min(border_colour = border_colour, border_size = border_size)
+  gg <- gg + theme_min()
   
   # Set the right axes titles
   if (hide_axes) gg <- gg + xlab(NULL) + ylab(NULL)
@@ -401,6 +402,153 @@ dr_plot <- function(embedding,
   }
   
   if (!is.null(title)) gg <- gg + ggtitle(title)
+  
+  return(gg)
+  
+}
+
+#' Colour cells in t-SNE or PCA space by gene expression
+#'
+#' Plot a low-dimensional embedding of the cells,
+#' coloured by expression of a gene, or mean expression of a group of marker
+#' genes. Defaults to t-SNE space, but see the \code{reduction} argument for
+#' how to plot in PCA space instead. This function is based on \code{Seurat::FeaturePlot}.
+#'
+#' @param seurat Seurat object, where dimensionality reduction has been applied,
+#' i.e. (after applying Seurat::RunPCA() or Seurat::RunTSNE() to the object)
+#' @param genes String or character vector specifying gene(s) to use
+#' @param reduction String specifying the dimensionality reduction to use,
+#' retrieves t-SNE by default. This should match the names of the elements of
+#' the list seurat@@dr, so it will typically be one of "pca" or "tsne".
+#' Default: "tsne"
+#' @param dim1 Numeric, index of dimension from \code{reduction} to plot on
+#' the x-axis. e.g. to plot the 3rd PC on the x-axis, pass 3. Default: 1.
+#' @param dim2 Numeric, like \code{dim2}, but for the y-axis. Default: 2.
+#' @param label Logical, whether to label clusters on the plot. Default: TRUE.
+#' @param palette String or character vector. If a string,
+#' one of "viridis", "blues", or "redgrey", specifying which gradient
+#' palette to use. Otherwise, a character vector of colours (from low to high)
+#' to interpolate to create the scael. Default: redgrey.
+#' @param title (Optional) String specifying the plot title
+#' @param alpha Numeric, fixed alpha for points. Default: 0.6
+#' @param point_size Numeric, size of points in scatterplot. Default: 1. (A smaller
+#' value around 0.5 is better for plots which will be viewed at small scale.)
+#' @param label_repel Logical, if \code{label} is TRUE, whether to plot cluster
+#' labels repelled from the center, on a slightly transparent white background and
+#' with an arrow pointing to the cluster center. If FALSE, simply plot the
+#' cluster label at the cluster center. Default: TRUE.
+#' @param label_size Numeric, controls the size of text labels. Default: 4.
+#' @param legend Logical, whether or not to plot legend. Default: TRUE
+#' @param hide_ticks Logical, whether to hide axis ticks. Default: FALSE
+#' @param hide_axes Logical, whether to hide axis labels. Default: TRUE
+#' @param label_short (Optional/Experimental!!) Logical, if TRUE, assumes clusters
+#' (at seurat@@ident) consist of a prefix and a suffix separated by a non-alpha
+#' numeric character (\code{"[^[:alnum:]]+"}), and tries to separate these names
+#' and only plot the prefix, for shorter labels and a cleaner plot. Default: FALSE.
+#' @param limits (Optional) A numeric vector of length two providing the limits to
+#' use for the colour scale (documentation
+#' from \code{\link[ggplot2]{continous_scale}}. Default: 0 and max of the data.
+#'
+#' @export
+#' @return A ggplot object
+feature_plot <- function(df,
+                         label = TRUE,
+                         palette = "redgrey",
+                         title = NULL,
+                         alpha = 0.6,
+                         label_repel = TRUE,
+                         label_size = 4,
+                         legend = TRUE,
+                         hide_ticks = FALSE,
+                         hide_axes = FALSE,
+                         y_max = NULL,
+                         label_short = FALSE,
+                         return_df = FALSE,
+                         point_size = 1,
+                         order_size = NULL,
+                         legend_title = "Expression") {
+  
+  dr_cols <- colnames(df)[c(2, 3)] %>% 
+    # Remove underscores
+  {gsub("_", " ", .)}
+  
+  colnames(df)[c(2, 3)] <- c("dim1", "dim2")
+  
+  df <- df %>% dplyr::arrange(Expression)
+  
+  # Set limits: if not provided, use default min/max
+  if (is.null(y_max)) limits <- c(NA, NA)
+  else {
+    
+    limits <- c(0, y_max)
+    
+  }
+  
+  # Plot
+  gg <- df %>%
+    ggplot(aes(x = dim1, y = dim2)) +
+    geom_point(aes(colour = Expression), size = point_size, alpha = alpha)
+  
+  if (palette == "viridis") {
+    
+    gg <- gg + viridis::scale_color_viridis(limits = limits)
+    
+  } else if (palette == "blues") {
+    
+    gg <- gg + scale_colour_gradientn(
+      colours = RColorBrewer::brewer.pal(n = 8, name = "Blues"),
+      limits = limits)
+    
+  } else if (palette == "redgrey") {
+    
+    # NOTE: palette chosen is not the default gradient from gray -> red
+    # but sets a midpoint at a lighter colour
+    gg <- gg + scale_color_gradientn(
+      colours = grDevices::colorRampPalette(colors = c("gray83", "#E09797", "red"))(n = 200),
+      limits = limits)
+    
+  } else if (palette == "rdbu") {
+    
+    gg <- gg + scale_color_gradientn(
+      colours = rdbu,
+      limits = limits)
+    
+  }
+  
+  # Label clusters
+  if (label) {
+    
+    centers <- df %>%
+      group_by(cluster) %>%
+      summarise(mean_x = median(dim1),
+                mean_y = median(dim2))
+    gg <- gg + ggrepel::geom_label_repel(data = centers,
+                                         aes(x = mean_x, y = mean_y),
+                                         label = centers$cluster,
+                                         size = label_size,
+                                         segment.color = 'grey50',
+                                         fontface = 'bold',
+                                         alpha = 0.8,
+                                         segment.alpha = 0.8,
+                                         label.size = NA,
+                                         force = 2,
+                                         segment.size = 0.5,
+                                         arrow = arrow(length = unit(0.01, 'npc')))
+    
+  }
+  
+  gg <- gg + theme_min()
+  
+  # Set the right axes titles
+  if (hide_axes) gg <- gg + xlab(NULL) + ylab(NULL)
+  else gg <- gg + xlab(dr_cols[1]) + ylab(dr_cols[2])
+  
+  # More aesthetics
+  if (!legend) gg <- gg + theme(legend.position = "none")
+  
+  if (!is.null(title)) gg <- gg + ggtitle(title)
+  
+  gg <- gg + labs(colour = legend_title)
   
   return(gg)
   

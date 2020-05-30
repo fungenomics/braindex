@@ -21,7 +21,7 @@ ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
-  # Dendrogram tab content ----
+  
   
   # Capture all input from this tab as a list in case we want to add
   # more options in the future
@@ -33,7 +33,8 @@ server <- function(input, output, session) {
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
       "region" = input$region,
-      "label_clusters" = input$label_clusters
+      "label_clusters" = input$label_clusters,
+      "ft_palette"     = input$feature_palette
     )
     
     # Get the columns for the appropriate type of dim red
@@ -64,6 +65,8 @@ server <- function(input, output, session) {
     return(l)
     
   })
+  
+  # Dendrogram tab content ----
   
   # Generate the input dataframe for the bubbleplot
   bubble_input <- reactive({
@@ -106,7 +109,7 @@ server <- function(input, output, session) {
                         yvar = "Gene_padded",
                         maxpoints = 1) %>% 
       select(Gene, Sample, Cluster, Cell_type, Cell_class, N_cells,
-             Expression, Pct1)
+             Expression, Pct1, Colour)
     
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
@@ -122,9 +125,9 @@ server <- function(input, output, session) {
     top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
     
     # Create style property fot tooltip
-    # background color is set so tooltip is a bit transparent
+    # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
                     "left:", left_px + 2, "px; top:", top_px + 2, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
@@ -196,8 +199,11 @@ server <- function(input, output, session) {
   
   dr_joint_embedding <- reactive({
     
+    req(input_new())
+    
     region <- input_new()$region
     
+    # Load the Cell barcode, 2D coordinates, and selected clustering solution
     df <- feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
                                 columns = c("Cell",
                                             input_new()$dr,
@@ -211,21 +217,66 @@ server <- function(input, output, session) {
   
   output$dr_joint <- renderPlot({
     
+    req(input_new())
+    
     dr_plot(dr_joint_embedding(),
             colour_by = "Cluster",
-            colours   = input_new()$clust_palette,
             legend    = FALSE,
+            
+            # Parameters available to the user
+            colours   = input_new()$clust_palette,
             label     = input_new()$label_clusters)
     
   })
   
-  # dr_joint_exp <- reactive({
-  #   
-  #   req(dr_k27m())
-  #   cbind(dr_k27m(),
-  #         feather::read_feather("data/k27m.embedding_and_genes.feather", columns = input$gene))
-  #   
-  # })
+  dr_joint_exp <- reactive({
+    
+    req(input_new())
+
+    region <- input_new()$region
+    
+    # Add the gene expression levels to the embedding
+    cbind(dr_joint_embedding(),
+          feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
+                                columns = input_new()$gene))
+
+  })
+  
+  # If more than one gene was provided, compute an aggregate
+  dr_joint_agg <- reactive({
+    
+    req(input_new())
+    
+    if (length(input_new()$gene) == 1) {
+      
+      df <- dr_joint_exp()[, 1:5]
+      names(df)[5] <- "Expression"
+      
+    } else if (length(input$gene) > 1) {
+      
+      # Take the mean of all the gene columns
+      meanexp <- dr_joint_exp()[, 5:ncol(dr_joint_exp())] %>% rowMeans
+      
+      df <- dr_joint_embedding()
+      df$Expression <- meanexp
+      
+    }
+    
+    return(df)
+    
+  })
+  
+  output$feature_joint <- renderPlot({
+    
+    req(input_new())
+    
+    feature_plot(dr_joint_agg(),
+            label = FALSE,
+            
+            # Parameters available to the user
+            palette = input_new()$ft_palette)
+    
+  })
   
   
 }
