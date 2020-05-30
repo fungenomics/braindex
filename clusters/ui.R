@@ -140,13 +140,18 @@ ui <- bootstrapPage(
                fluidRow(
                  
                  plotOutput("dr_joint", width = "5.5in", height = "5in",
-                            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE))
+                            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
+                 
+                 uiOutput("dr_joint_hover_info")
                  
                ),
                
                fluidRow(
                  
-                 plotOutput("feature_joint", width = "6.32in", height = "5in")
+                 plotOutput("feature_joint", width = "6.33in", height = "5in",
+                            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
+                            
+                 uiOutput("feature_joint_hover_info")      
                  
                ),
                

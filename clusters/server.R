@@ -114,21 +114,13 @@ server <- function(input, output, session) {
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
-    # Create tooltip for mouseover
-    # calculate point position INSIDE the image as percent of total dimensions
-    # from left (horizontal) and from top (vertical)
-    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
-    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
-    
-    # calculate distance from left and bottom side of the picture in pixels
-    left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-    top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+    pos <- get_tooltip_pos(hover)
     
     # Create style property fot tooltip
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
-                    "left:", left_px + 2, "px; top:", top_px + 2, "px; width: 350px;")
+                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
@@ -229,6 +221,37 @@ server <- function(input, output, session) {
     
   })
   
+  output$dr_joint_hover_info <- renderUI({
+    
+    hover <- input$dr_joint_hover
+    
+    # Find the nearest data point to the mouse hover position
+    point <- nearPoints(dr_joint_embedding(),
+                        hover,
+                        xvar = input_new()$dr[1],
+                        yvar = input_new()$dr[2],
+                        maxpoints = 1) %>% 
+      select(Cell, Cluster)
+    
+    # Hide the tooltip if mouse is not hovering over a bubble
+    if (nrow(point) == 0) return(NULL)
+    
+    pos <- get_tooltip_pos(hover)
+    
+    # Create style property fot tooltip
+    # background color is set to the cluster colour, with the tooltip a bit transparent
+    # z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
+    
+    # Actual tooltip created as wellPanel, specify info to display
+    wellPanel(
+      style = style,
+      p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
+                    "<b> Cluster: </b>", point$Cluster, "<br/>")))
+    )
+  })
+  
   dr_joint_exp <- reactive({
     
     req(input_new())
@@ -276,6 +299,38 @@ server <- function(input, output, session) {
             # Parameters available to the user
             palette = input_new()$ft_palette)
     
+  })
+  
+  output$feature_joint_hover_info <- renderUI({
+    
+    hover <- input$feature_joint_hover
+    
+    # Find the nearest data point to the mouse hover position
+    point <- nearPoints(dr_joint_agg(),
+                        hover,
+                        xvar = input_new()$dr[1],
+                        yvar = input_new()$dr[2],
+                        maxpoints = 1) %>% 
+      select(Cell, Cluster, Expression)
+    
+    # Hide the tooltip if mouse is not hovering over a bubble
+    if (nrow(point) == 0) return(NULL)
+    
+    pos <- get_tooltip_pos(hover)
+    
+    # Create style property fot tooltip
+    # background color is set to the cluster colour, with the tooltip a bit transparent
+    # z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
+    
+    # Actual tooltip created as wellPanel, specify info to display
+    wellPanel(
+      style = style,
+      p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
+                    "<b> Cluster: </b>", point$Cluster, "<br/>",
+                    "<b> Expression: </b>", round(point$Expression, 2), "<br/>")))
+    )
   })
   
   
