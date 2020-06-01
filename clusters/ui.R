@@ -51,21 +51,12 @@ ui <- bootstrapPage(
                  ),
                  
                  # Input for joint analysis tab
-                 conditionalPanel(condition = "input.tabs == 'joint'",
+                 conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
                                   selectInput("dr", "Dimensionality reduction",
                                               multiple = FALSE,
                                               choices = c("tSNE", "PCA", "UMAP"),
                                               selected = "tSNE"),
-                                  
-                                  selectInput("dr_clustering", "Annotate cells by",
-                                              multiple = FALSE,
-                                              choices = c(
-                                                "Clustering at the region level" = "joint",
-                                                "Clustering at the sample level" = "sample",
-                                                "Timepoint"                      = "timepoint"
-                                              ),
-                                              selected = "Clustering at the region level"),
                                   
                                   selectInput("label_clusters", "Label clusters",
                                               choices = c(TRUE, FALSE),
@@ -80,6 +71,19 @@ ui <- bootstrapPage(
                                   selectInput("vln_joint_points", "Show points in violin plot",
                                               choices = c(TRUE, FALSE),
                                               selected = FALSE)
+                                  
+                 ),
+                 
+                 conditionalPanel(condition = "input.tabs == 'joint'",
+                                  
+                                  selectInput("dr_clustering", "Annotate cells by",
+                                              multiple = FALSE,
+                                              choices = c(
+                                                "Clustering at the region level" = "joint",
+                                                "Clustering at the sample level" = "sample",
+                                                "Timepoint"                      = "timepoint"
+                                              ),
+                                              selected = "Clustering at the region level")
                                   
                  ),
                  
@@ -169,6 +173,32 @@ ui <- bootstrapPage(
                
                # Specify the value to use when checking if this tab is selected
                value = "joint"
+      ),
+      
+      tabPanel("Single-cell expression, by sample",
+               
+               p("Single-sample"),
+               
+               # fluidRow(
+               #   
+               #   plotOutput("dr_sample", width = "15in", height = "3in")
+               #   
+               # ),
+               # 
+               # fluidRow(
+               #   
+               #   plotOutput("feature_sample", width = "15in", height = "3in")
+               #   
+               # ),
+               # 
+               # fluidRow(
+               #   
+               #   plotOutput("vln_sample", width = "15in", height = "3in")
+               #   
+               # ),
+               
+               value = "sample"
+               
       ),
       
       id = "tabs"

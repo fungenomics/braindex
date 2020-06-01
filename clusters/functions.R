@@ -31,6 +31,58 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
 # Custom functions ----
 
+get_embedding <- function(sample,
+                          dr_cols,
+                          cluster_column) {
+  
+  df <- feather::read_feather(glue("data/{sample}/{sample}.embedding_and_genes.feather"),
+                              columns = c("Cell",
+                                          dr_cols,
+                                          cluster_column))
+  
+  names(df)[4] <- "Cluster"
+  
+  return(df)
+  
+}
+
+
+get_expression <- function(sample,
+                           embedding,
+                           gene,
+                           aggregate = TRUE) {
+  
+  # Add the gene expression levels to the embedding
+  df <- cbind(embedding,
+              feather::read_feather(glue("data/{sample}/{sample}.embedding_and_genes.feather"),
+                                    columns = gene))
+  
+  if (aggregate) {
+    
+    if (length(gene) == 1) {
+      
+      df2 <- df[, 1:5]
+      names(df2)[5] <- "Expression"
+      
+    } else if (length(gene) > 1) {
+      
+      # Take the mean of all the gene columns
+      meanexp <- df[, 5:ncol(df)] %>% rowMeans
+      
+      df2 <- df
+      df2$Expression <- meanexp
+    
+    }
+    
+    df <- df2
+    
+  }
+  
+  return(df)
+  
+}
+
+
 #' Prepare input for bubble_plot
 #' 
 #' Load gene expression data from feather, tidy & optionally scale expression,
@@ -554,11 +606,11 @@ feature_plot <- function(df,
 
 
 vln <- function(df,
-               palette,
-               scale = "width",
-               points = FALSE,
-               point_size = 0.4,
-               y_lab = "Normalized expression") {
+                palette,
+                scale = "width",
+                points = FALSE,
+                point_size = 0.4,
+                y_lab = "Normalized expression") {
   
   cluster_order <- df %>% 
     group_by(Cluster) %>% 

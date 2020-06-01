@@ -21,8 +21,6 @@ ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
-  
-  
   # Capture all input from this tab as a list in case we want to add
   # more options in the future
   input_new <- eventReactive(input$update, {
@@ -43,6 +41,16 @@ server <- function(input, output, session) {
     else if (input$dr == "UMAP") l$dr <- c("UMAP1", "UMAP2")
     else if (input$dr == "PCA")  l$dr <- c("PC1", "PC2")
     
+    # Get the samples depending on region
+    if      (input$region == "joint_cortex") l$samples <- c("ct_e12", "ct_e15", "ct_p0", "ct_p3", "ct_p6")
+    else if (input$region == "joint_pons")   l$samples <- c("po_e12", "po_e15", "po_p0", "po_p3", "po_p6")
+    
+    # Get cluster column for each sample depending on region
+    if      (input$region == "joint_cortex") l$clust_sample <- "ID_20190730_with_blacklist_and_refined"
+    else if (input$region == "joint_pons")   l$clust_sample <- "ID_20190715_with_blacklist_and_refined"
+    
+    l$clust_palette_sample <- joint_mouse_palette_refined
+    
     # Get the clustering to use for the joint analysis tab
     # Option 1: Clustering done at the joint analysis level
     # Option 2: Clustering done per sample (for the forebrain, there was some refinement done so the latest
@@ -51,8 +59,8 @@ server <- function(input, output, session) {
       
       l$clust <- "ID_20190715_joint_clustering"
       
-      if       (input$region == "joint_cortex") l$clust_palette <- cortex_palette_joint
-      else if (input$region == "joint_pons")    l$clust_palette <- pons_palette_joint
+      if      (input$region == "joint_cortex") l$clust_palette <- cortex_palette_joint
+      else if (input$region == "joint_pons")   l$clust_palette <- pons_palette_joint
       
     } else if (input$dr_clustering == "sample") {
       
@@ -197,17 +205,10 @@ server <- function(input, output, session) {
     
     req(input_new())
     
-    region <- input_new()$region
-    
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
-    df <- feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
-                                columns = c("Cell",
-                                            input_new()$dr,
-                                            input_new()$clust))
-    
-    names(df)[4] <- "Cluster"
-    
-    return(df)
+    get_embedding(sample  = input_new()$region,
+                  dr_cols = input_new()$dr,
+                  cluster_column = input_new()$clust)
     
   })
   
@@ -225,70 +226,46 @@ server <- function(input, output, session) {
     
   })
   
-  output$dr_joint_hover_info <- renderUI({
-    
-    hover <- input$dr_joint_hover
-    
-    # Find the nearest data point to the mouse hover position
-    point <- nearPoints(dr_joint_embedding(),
-                        hover,
-                        xvar = input_new()$dr[1],
-                        yvar = input_new()$dr[2],
-                        maxpoints = 1) %>% 
-      select(Cell, Cluster)
-    
-    # Hide the tooltip if mouse is not hovering over a bubble
-    if (nrow(point) == 0) return(NULL)
-    
-    # Create style property fot tooltip
-    # background color is set to the cluster colour, with the tooltip a bit transparent
-    # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 350px;")
-    
-    # Actual tooltip created as wellPanel, specify info to display
-    wellPanel(
-      style = style,
-      p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-                    "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
-                    "</b>", point$Cluster, "<br/>")))
-    )
-  })
+  # output$dr_joint_hover_info <- renderUI({
+  #   
+  #   hover <- input$dr_joint_hover
+  #   
+  #   # Find the nearest data point to the mouse hover position
+  #   point <- nearPoints(dr_joint_embedding(),
+  #                       hover,
+  #                       xvar = input_new()$dr[1],
+  #                       yvar = input_new()$dr[2],
+  #                       maxpoints = 1) %>% 
+  #     select(Cell, Cluster)
+  #   
+  #   # Hide the tooltip if mouse is not hovering over a bubble
+  #   if (nrow(point) == 0) return(NULL)
+  #   
+  #   # Create style property fot tooltip
+  #   # background color is set to the cluster colour, with the tooltip a bit transparent
+  #   # z-index is set so we are sure are tooltip will be on top
+  #   style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+  #                   "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 350px;")
+  #   
+  #   # Actual tooltip created as wellPanel, specify info to display
+  #   wellPanel(
+  #     style = style,
+  #     p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
+  #                   "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+  #                   "</b>", point$Cluster, "<br/>")))
+  #   )
+  # })
   
   dr_joint_exp <- reactive({
     
     req(input_new())
-
-    region <- input_new()$region
     
-    # Add the gene expression levels to the embedding
-    cbind(dr_joint_embedding(),
-          feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
-                                columns = input_new()$gene))
-
-  })
-  
-  # If more than one gene was provided, compute an aggregate
-  dr_joint_agg <- reactive({
-    
-    req(input_new())
-    
-    if (length(input_new()$gene) == 1) {
-      
-      df <- dr_joint_exp()[, 1:5]
-      names(df)[5] <- "Expression"
-      
-    } else if (length(input$gene) > 1) {
-      
-      # Take the mean of all the gene columns
-      meanexp <- dr_joint_exp()[, 5:ncol(dr_joint_exp())] %>% rowMeans
-      
-      df <- dr_joint_embedding()
-      df$Expression <- meanexp
-      
-    }
-    
-    return(df)
+    get_expression(sample    = input_new()$region,
+                   embedding = dr_joint_embedding(),
+                   gene      = input_new()$gene,
+                   
+                   # If more than one gene was provided, compute an aggregate
+                   aggregate = TRUE)
     
   })
   
@@ -296,44 +273,44 @@ server <- function(input, output, session) {
     
     req(input_new())
     
-    feature_plot(dr_joint_agg(),
-            label = FALSE,
-            
-            # Parameters available to the user
-            palette = input_new()$ft_palette)
+    feature_plot(dr_joint_exp(),
+                 label = FALSE,
+                 
+                 # Parameters available to the user
+                 palette = input_new()$ft_palette)
     
   })
   
-  output$feature_joint_hover_info <- renderUI({
-    
-    hover <- input$feature_joint_hover
-    
-    # Find the nearest data point to the mouse hover position
-    point <- nearPoints(dr_joint_agg(),
-                        hover,
-                        xvar = input_new()$dr[1],
-                        yvar = input_new()$dr[2],
-                        maxpoints = 1) %>% 
-      select(Cell, Cluster, Expression)
-    
-    # Hide the tooltip if mouse is not hovering over a bubble
-    if (nrow(point) == 0) return(NULL)
-
-    # Create style property fot tooltip
-    # background color is set to the cluster colour, with the tooltip a bit transparent
-    # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2, "px; width: 350px;")
-    
-    # Actual tooltip created as wellPanel, specify info to display
-    wellPanel(
-      style = style,
-      p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-                    "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
-                    "</b>", point$Cluster, "<br/>",
-                    "<b> Expression: </b>", round(point$Expression, 2), "<br/>")))
-    )
-  })
+  # output$feature_joint_hover_info <- renderUI({
+  #   
+  #   hover <- input$feature_joint_hover
+  #   
+  #   # Find the nearest data point to the mouse hover position
+  #   point <- nearPoints(dr_joint_agg(),
+  #                       hover,
+  #                       xvar = input_new()$dr[1],
+  #                       yvar = input_new()$dr[2],
+  #                       maxpoints = 1) %>% 
+  #     select(Cell, Cluster, Expression)
+  #   
+  #   # Hide the tooltip if mouse is not hovering over a bubble
+  #   if (nrow(point) == 0) return(NULL)
+  # 
+  #   # Create style property fot tooltip
+  #   # background color is set to the cluster colour, with the tooltip a bit transparent
+  #   # z-index is set so we are sure are tooltip will be on top
+  #   style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
+  #                   "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2, "px; width: 350px;")
+  #   
+  #   # Actual tooltip created as wellPanel, specify info to display
+  #   wellPanel(
+  #     style = style,
+  #     p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
+  #                   "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+  #                   "</b>", point$Cluster, "<br/>",
+  #                   "<b> Expression: </b>", round(point$Expression, 2), "<br/>")))
+  #   )
+  # })
   
   output$scatter_joint <- renderPlot({
     
@@ -343,9 +320,55 @@ server <- function(input, output, session) {
   
   output$vln_joint <- renderPlot({
     
-    vln(dr_joint_agg(),
+    vln(dr_joint_exp(),
         palette = input_new()$clust_palette,
         points  = input_new()$vln_joint_points)
+    
+  })
+  
+  dr_sample <- reactive({
+    
+    map(input_new()$samples,
+        ~ get_embedding(sample = .x,
+                        dr_cols = input_new()$dr,
+                        cluster_column = input_new()$clust_sample))
+    
+  })
+  
+  output$dr_sample <- renderPlot({
+    
+    map(dr_sample(),
+        ~ dr_plot(.x,
+                  colour_by = "Cluster",
+                  legend    = FALSE,
+                  
+                  # Parameters available to the user
+                  colours   = input_new()$clust_palette_sample)) %>% 
+                  {plot_grid(plotlist = ., ncol = 5)}
+    
+  })
+  
+  dr_sample_exp <- reactive({
+    
+    map2(input_new()$samples, dr_sample(),
+         ~ get_expression(sample    = .x,
+                          embedding = .y,
+                          gene      = input_new()$gene,
+                          
+                          # If more than one gene was provided, compute an aggregate
+                          aggregate = TRUE))
+    
+  })
+  
+  output$feature_sample <- renderPlot({
+    
+    map(dr_sample_exp(),
+        ~ feature_plot(.x,
+                       label = FALSE,
+                       
+                       # Parameters available to the user
+                       palette = input_new()$ft_palette)) %>% 
+                       {plot_grid(plotlist = ., ncol = 5)}
     
   })
   
