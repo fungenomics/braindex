@@ -34,6 +34,16 @@ shinyUI(bootstrapPage(
     mainPanel(tabsetPanel(
       
       tabPanel("BrainSpan atlas",
+
+	       tags$br(),
+
+	       p("Visualize the expression of a gene of interest across the lifespan in samples from the BrainSpan project"),
+
+	       p("• In the top row, each curve corresponds to the smoothed expression for one brain region"),
+
+	       p("• Below, one plot is displayed per region, with points representing individual samples -- grey ppints represent observations, and red points indicate imputed values"),
+	       p("• The x-axis is log (post-conception weeks), but the the labels correspond to post-conception weeks prenatally, and years postnatally"),
+
                ws(plotOutput("allcurves", width = "6in", height = "4.5in")),
                
                # Add some whitespace for more breathing room
