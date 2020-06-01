@@ -58,11 +58,12 @@ ui <- bootstrapPage(
                                               choices = c("tSNE", "PCA", "UMAP"),
                                               selected = "tSNE"),
                                   
-                                  selectInput("dr_clustering", "Group cells by",
+                                  selectInput("dr_clustering", "Annotate cells by",
                                               multiple = FALSE,
                                               choices = c(
-                                                "Clustering at the region level",
-                                                "Clustering at the sample level"
+                                                "Clustering at the region level" = "joint",
+                                                "Clustering at the sample level" = "sample",
+                                                "Timepoint"                      = "timepoint"
                                               ),
                                               selected = "Clustering at the region level"),
                                   
@@ -74,7 +75,11 @@ ui <- bootstrapPage(
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
-                                              selected = "redgrey")
+                                              selected = "redgrey"),
+                                  
+                                  selectInput("vln_joint_points", "Show points in violin plot",
+                                              choices = c(TRUE, FALSE),
+                                              selected = FALSE)
                                   
                  ),
                  
@@ -100,7 +105,7 @@ ui <- bootstrapPage(
                # Display the bubbleplot
                div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
                    fluidRow(plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = TRUE))),
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
                    
                    # UI for tooltip
                    fluidRow(
@@ -134,24 +139,32 @@ ui <- bootstrapPage(
                
                tags$br(),
                
-               # Plot a ribbon plot, showing the proportion of cells in which
-               # each gene is detected, broken down by cell type, across
-               # the time course
                fluidRow(
                  
-                 plotOutput("dr_joint", width = "5.5in", height = "5in",
-                            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
+                 column(4, plotOutput("dr_joint", width = "4.5in", height = "4in",
+                                      hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
+                        
+                        uiOutput("dr_joint_hover_info")
+                 ),
                  
-                 uiOutput("dr_joint_hover_info")
+                 column(4, plotOutput("feature_joint", width = "5.33in", height = "4in",
+                                      hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
+                        
+                        uiOutput("feature_joint_hover_info")    
+                 )
+                 
                  
                ),
                
+               # fluidRow(
+               #   
+               # 
+               #   
+               # ),
+               
                fluidRow(
                  
-                 plotOutput("feature_joint", width = "6.33in", height = "5in",
-                            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
-                            
-                 uiOutput("feature_joint_hover_info")      
+                 plotOutput("vln_joint", width = "13in", height = "4in")
                  
                ),
                

@@ -33,8 +33,9 @@ server <- function(input, output, session) {
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
       "region" = input$region,
-      "label_clusters" = input$label_clusters,
-      "ft_palette"     = input$feature_palette
+      "label_clusters"   = input$label_clusters,
+      "ft_palette"       = input$feature_palette,
+      "vln_joint_points" = input$vln_joint_points
     )
     
     # Get the columns for the appropriate type of dim red
@@ -46,19 +47,24 @@ server <- function(input, output, session) {
     # Option 1: Clustering done at the joint analysis level
     # Option 2: Clustering done per sample (for the forebrain, there was some refinement done so the latest
     # version of labels is different than in the pons)
-    if (input$dr_clustering == "Clustering at the region level") {
+    if (input$dr_clustering == "joint") {
       
       l$clust <- "ID_20190715_joint_clustering"
       
       if       (input$region == "joint_cortex") l$clust_palette <- cortex_palette_joint
       else if (input$region == "joint_pons")    l$clust_palette <- pons_palette_joint
       
-    } else {
+    } else if (input$dr_clustering == "sample") {
       
       l$clust_palette <- joint_mouse_palette_refined
       
       if      (input$region == "joint_cortex") l$clust <- "ID_20190730_with_blacklist_and_refined"
       else if (input$region == "joint_pons")   l$clust <- "ID_20190715_with_blacklist_and_refined"
+      
+    } else if (input$dr_clustering == "timepoint") {
+      
+      l$clust <- "orig.ident"
+      l$clust_palette <- timepoint_palette
       
     }
     
@@ -114,13 +120,11 @@ server <- function(input, output, session) {
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
-    pos <- get_tooltip_pos(hover)
-    
     # Create style property fot tooltip
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
-                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
+                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
@@ -236,19 +240,18 @@ server <- function(input, output, session) {
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
-    pos <- get_tooltip_pos(hover)
-    
     # Create style property fot tooltip
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
+                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
       style = style,
       p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-                    "<b> Cluster: </b>", point$Cluster, "<br/>")))
+                    "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+                    "</b>", point$Cluster, "<br/>")))
     )
   })
   
@@ -315,22 +318,29 @@ server <- function(input, output, session) {
     
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
-    
-    pos <- get_tooltip_pos(hover)
-    
+
     # Create style property fot tooltip
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-                    "left:", pos$left_px + 2, "px; top:", pos$top_px + 2, "px; width: 350px;")
+                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
       style = style,
       p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-                    "<b> Cluster: </b>", point$Cluster, "<br/>",
+                    "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+                    "</b>", point$Cluster, "<br/>",
                     "<b> Expression: </b>", round(point$Expression, 2), "<br/>")))
     )
+  })
+  
+  output$vln_joint <- renderPlot({
+    
+    vln(dr_joint_agg(),
+        palette = input_new()$clust_palette,
+        points  = input_new()$vln_joint_points)
+    
   })
   
   

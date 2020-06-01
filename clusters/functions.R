@@ -29,24 +29,6 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
 # Shiny helpers ----
 
-get_tooltip_pos <- function(hover) {
-  
-  # Create tooltip for mouseover
-  # calculate point position INSIDE the image as percent of total dimensions
-  # from left (horizontal) and from top (vertical)
-  left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
-  top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
-  
-  # calculate distance from left and bottom side of the picture in pixels
-  left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-  top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
-  
-  return(list("left_px" = left_px,
-              "top_px"  = top_px))
-  
-}
-
-
 # Custom functions ----
 
 #' Prepare input for bubble_plot
@@ -299,7 +281,7 @@ dr_plot <- function(embedding,
                     colours = NULL,
                     colour_by_type = "discrete",
                     label = TRUE,
-                    point_size = ifelse(nrow(embedding) > 300, 0.6, 1.3),
+                    point_size = 0.4,
                     alpha = 0.8,
                     legend = ifelse((is.null(colour_by)) && (label), FALSE, TRUE),
                     label_repel = TRUE,
@@ -416,9 +398,6 @@ dr_plot <- function(embedding,
   
   # More aesthetics
   if (!legend) gg <- gg + theme(legend.position = "none")
-  else if (!is.null(colour_by)) {
-    if (colour_by == "orig.ident") gg <- gg + labs(colour = "Sample")
-  }
   
   if (!is.null(title)) gg <- gg + ggtitle(title)
   
@@ -568,6 +547,39 @@ feature_plot <- function(df,
   if (!is.null(title)) gg <- gg + ggtitle(title)
   
   gg <- gg + labs(colour = legend_title)
+  
+  return(gg)
+  
+}
+
+
+vln <- function(df,
+               palette,
+               scale = "width",
+               points = FALSE,
+               point_size = 0.4,
+               y_lab = "Normalized expression") {
+  
+  cluster_order <- df %>% 
+    group_by(Cluster) %>% 
+    summarize(Mean_exp = mean(Expression)) %>% 
+    arrange(desc(Mean_exp)) %>% 
+    pull(Cluster)
+  
+  gg <- df %>% 
+    filter(!grepl("BLACKLIST", Cluster)) %>% 
+    mutate(Cluster = factor(Cluster, levels = cluster_order)) %>% 
+    ggplot(aes(x = Cluster, y = Expression)) +
+    geom_violin(scale = scale, aes(fill = Cluster)) +
+    labs(x = "Cluster",
+         y = y_lab,
+         fill = "Cluster") +
+    scale_fill_manual(values = palette) +
+    theme_min() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1),
+          legend.position = "none")
+  
+  if (points) gg <- gg + geom_jitter(size = point_size)
   
   return(gg)
   
