@@ -326,37 +326,62 @@ server <- function(input, output, session) {
     
   })
   
-  dr_sample <- reactive({
+  dr_sample_embedding <- reactive({
     
-    map(input_new()$samples,
-        ~ get_embedding(sample = .x,
-                        dr_cols = input_new()$dr,
-                        cluster_column = input_new()$clust_sample))
+    region <- str_split(input_new()$region, "_") %>% sapply(getElement, 2)
+    
+    df <- cbind(feather::read_feather(glue("data/joint_{region}/{region}.per_sample_embeddings.feather"),
+                                      columns = c("Cell", "tSNE_1", "tSNE_2")),
+                feather::read_feather(glue("data/joint_{region}/joint_{region}.embedding_and_genes.feather"),
+                                      c(input_new()$clust_sample, "orig.ident")))
+    
+    names(df)[4] <- "Cluster"  
+    
+    df <- df %>% mutate(Cluster = gsub("_BLACKLISTED", "", Cluster)) %>% 
+      tidyr::separate(Cluster, into = c("Prefix", "Cluster"), extra = "drop", sep = "_") %>% 
+      select(-Prefix)
+    
+    dr_sample_list <- split( df, f = df$orig.ident )
+    
+    return(dr_sample_list)
     
   })
   
   output$dr_sample <- renderPlot({
     
-    map(dr_sample(),
+    # Shorten labels for palette
+    pal <- input_new()$clust_palette_sample
+    names(pal) <- str_split(names(pal), "_") %>% sapply(getElement, 2)
+    
+    timepoints <- c("E12.5", "E15.5", "P0", "P3", "P6")
+    
+    map2(dr_sample_embedding(), timepoints,
         ~ dr_plot(.x,
-                  colour_by = "Cluster",
-                  legend    = FALSE,
+                  colour_by  = "Cluster",
+                  legend     = FALSE,
+                  hide_ticks = TRUE,
+                  title      = .y,
+                  label_size = 2,
                   
                   # Parameters available to the user
-                  colours   = input_new()$clust_palette_sample)) %>% 
+                  colours   = pal,
+                  label     = input_new()$label_clusters,)) %>% 
                   {plot_grid(plotlist = ., ncol = 5)}
     
   })
   
   dr_sample_exp <- reactive({
     
-    map2(input_new()$samples, dr_sample(),
-         ~ get_expression(sample    = .x,
-                          embedding = .y,
-                          gene      = input_new()$gene,
-                          
-                          # If more than one gene was provided, compute an aggregate
-                          aggregate = TRUE))
+    region <- input_new()$region
+    
+    df_exp <- cbind(dr_joint_exp() %>% select(Expression),
+                    feather::read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
+                                          c("orig.ident")))
+    
+    df_sample_exp <- split( df_exp, f = df_exp$orig.ident )
+    
+    map2(dr_sample_embedding(), df_sample_exp,
+         ~ cbind(.x, .y %>% select(- orig.ident)))
     
   })
   
@@ -365,10 +390,12 @@ server <- function(input, output, session) {
     map(dr_sample_exp(),
         ~ feature_plot(.x,
                        label = FALSE,
+                       hide_ticks = TRUE,
                        
                        # Parameters available to the user
-                       palette = input_new()$ft_palette)) %>% 
-                       {plot_grid(plotlist = ., ncol = 5)}
+                       palette = input_new()$ft_palette) +
+          theme(legend.position = "bottom")) %>%
+          {plot_grid(plotlist = ., ncol = 5)}
     
   })
   

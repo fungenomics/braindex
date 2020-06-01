@@ -33,12 +33,14 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
 get_embedding <- function(sample,
                           dr_cols,
-                          cluster_column) {
+                          cluster_column,
+                          other_columns = NULL) {
   
   df <- feather::read_feather(glue("data/{sample}/{sample}.embedding_and_genes.feather"),
                               columns = c("Cell",
                                           dr_cols,
-                                          cluster_column))
+                                          cluster_column,
+                                          other_columns))
   
   names(df)[4] <- "Cluster"
   
@@ -424,6 +426,7 @@ dr_plot <- function(embedding,
       group_by(Cluster) %>%
       summarise(mean_x = median(dim1),
                 mean_y = median(dim2))
+    
     gg <- gg + ggrepel::geom_label_repel(data = centers,
                                          aes(x = mean_x, y = mean_y),
                                          label = centers$Cluster,
@@ -447,6 +450,8 @@ dr_plot <- function(embedding,
     labs(x = dr_cols[1],
          y = dr_cols[2],
          colour = "Cluster")
+  
+  if (hide_ticks) gg <- gg + noTicks()
   
   # More aesthetics
   if (!legend) gg <- gg + theme(legend.position = "none")
@@ -593,6 +598,8 @@ feature_plot <- function(df,
   if (hide_axes) gg <- gg + xlab(NULL) + ylab(NULL)
   else gg <- gg + xlab(dr_cols[1]) + ylab(dr_cols[2])
   
+  if (hide_ticks) gg <- gg + noTicks()
+  
   # More aesthetics
   if (!legend) gg <- gg + theme(legend.position = "none")
   
@@ -634,5 +641,14 @@ vln <- function(df,
   if (points) gg <- gg + geom_jitter(size = point_size)
   
   return(gg)
+  
+}
+
+noTicks <- function() {
+  
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
   
 }

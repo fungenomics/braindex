@@ -53,11 +53,6 @@ ui <- bootstrapPage(
                  # Input for joint analysis tab
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
-                                  selectInput("dr", "Dimensionality reduction",
-                                              multiple = FALSE,
-                                              choices = c("tSNE", "PCA", "UMAP"),
-                                              selected = "tSNE"),
-                                  
                                   selectInput("label_clusters", "Label clusters",
                                               choices = c(TRUE, FALSE),
                                               selected = "FALSE"),
@@ -83,7 +78,13 @@ ui <- bootstrapPage(
                                                 "Clustering at the sample level" = "sample",
                                                 "Timepoint"                      = "timepoint"
                                               ),
-                                              selected = "Clustering at the region level")
+                                              selected = "Clustering at the region level"),
+                                  
+                                  selectInput("dr", "Dimensionality reduction",
+                                              multiple = FALSE,
+                                              choices = c("tSNE", "PCA", "UMAP"),
+                                              selected = "tSNE")
+                                  
                                   
                  ),
                  
@@ -179,17 +180,17 @@ ui <- bootstrapPage(
                
                p("Single-sample"),
                
-               # fluidRow(
-               #   
-               #   plotOutput("dr_sample", width = "15in", height = "3in")
-               #   
-               # ),
-               # 
-               # fluidRow(
-               #   
-               #   plotOutput("feature_sample", width = "15in", height = "3in")
-               #   
-               # ),
+               fluidRow(
+
+                 plotOutput("dr_sample", width = "12.5in", height = "2.6in")
+
+               ),
+
+               fluidRow(
+
+                 plotOutput("feature_sample", width = "12.5in", height = "3in")
+
+               ),
                # 
                # fluidRow(
                #   
