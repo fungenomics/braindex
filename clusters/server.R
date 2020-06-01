@@ -12,6 +12,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(DT)
+library(purrr)
 
 source("functions.R")
 source("../style.R")
@@ -361,7 +362,7 @@ server <- function(input, output, session) {
                   legend     = FALSE,
                   hide_ticks = TRUE,
                   title      = .y,
-                  label_size = 2,
+                  label_size = 3,
                   
                   # Parameters available to the user
                   colours   = pal,
