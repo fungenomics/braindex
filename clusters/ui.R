@@ -99,7 +99,15 @@ ui <- bootstrapPage(
                
                tags$br(),
                
-               p("Display up to 6 genes"),
+               p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+
+               p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+               
+               p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
+               
+               p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+               
+               p("• Hover over each bubble, or scroll down to the table, to get additional details about each cluster & its expression level"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -130,6 +138,16 @@ ui <- bootstrapPage(
       
       tabPanel("Timecourse",
                
+               tags$br(),
+               
+               p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse"),
+               
+               p("• Use the side bar to select which brain region to interrogate"),
+               
+               p("• Be aware of the y-axis, which is computed as the max for each gene"),
+               
+               p("• If more than one gene is provided, only the first gene is plot"),
+               
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course
@@ -143,6 +161,14 @@ ui <- bootstrapPage(
       tabPanel("Single-cell expression, by region",
                
                tags$br(),
+               
+               p("Use this tab to explore the expression of one or more genes at the single-cell level per brain region"),
+               
+               p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
+               
+               p("• In the bottom row, violin plots display expression in each cluster, ordered by mean expression"),
+               
+               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
                  
@@ -178,7 +204,15 @@ ui <- bootstrapPage(
       
       tabPanel("Single-cell expression, by sample",
                
-               p("Single-sample"),
+               tags$br(),
+               
+               p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
+               
+               p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
+               
+               p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
+               
+               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
 
