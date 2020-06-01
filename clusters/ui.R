@@ -141,17 +141,16 @@ ui <- bootstrapPage(
                
                fluidRow(
                  
-                 column(4, plotOutput("dr_joint", width = "4.5in", height = "4in",
-                                      hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
-                        
-                        uiOutput("dr_joint_hover_info")
-                 ),
-                 
-                 column(4, plotOutput("feature_joint", width = "5.33in", height = "4in",
-                                      hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
-                        
-                        uiOutput("feature_joint_hover_info")    
-                 )
+                 plotOutput("scatter_joint", width = "10in", height = "4in")
+                 # plotOutput("dr_joint", width = "4.5in", height = "4in",
+                 #            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
+                 # 
+                 # uiOutput("dr_joint_hover_info"),
+                 # 
+                 # plotOutput("feature_joint", width = "5.33in", height = "4in",
+                 #            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
+                 # 
+                 # uiOutput("feature_joint_hover_info")
                  
                  
                ),
@@ -164,7 +163,7 @@ ui <- bootstrapPage(
                
                fluidRow(
                  
-                 plotOutput("vln_joint", width = "13in", height = "4in")
+                 plotOutput("vln_joint", width = "11in", height = "4in")
                  
                ),
                

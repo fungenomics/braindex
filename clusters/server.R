@@ -124,7 +124,7 @@ server <- function(input, output, session) {
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2, "px; width: 350px;")
+                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
@@ -211,7 +211,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$dr_joint <- renderPlot({
+  dr_joint <- reactive({
     
     req(input_new())
     
@@ -292,7 +292,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$feature_joint <- renderPlot({
+  feature_joint <- reactive({
     
     req(input_new())
     
@@ -333,6 +333,12 @@ server <- function(input, output, session) {
                     "</b>", point$Cluster, "<br/>",
                     "<b> Expression: </b>", round(point$Expression, 2), "<br/>")))
     )
+  })
+  
+  output$scatter_joint <- renderPlot({
+    
+    plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
+    
   })
   
   output$vln_joint <- renderPlot({
