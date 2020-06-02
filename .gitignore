@@ -4,6 +4,8 @@
 .RData
 .Ruserdata
 
+README.html
+
 # Exclude cache
 */cache/*
 

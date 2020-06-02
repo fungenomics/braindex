@@ -95,6 +95,14 @@
        "description": "Colour palette for clustering at the joint cortex level, from the 20190715 annotation",
        "contents": "Rds file with character vector, where names are clusters and values are hex codes"
        
+     },
+     {
+       
+       "file": "cortex.per_sample_embeddings.feather",
+       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/cortex.per_sample_embeddings.feather",
+       "description": "Feather file with 2D PCA and tSNE coordinates for all cells included in the joint_cortex object, but from the individual sample space",
+       "contents": "Table with columns 'Cell', 'PC1', 'PC2', 'tSNE_1', 'tSNE_2'"
+       
      }
      
    ],
@@ -123,6 +131,14 @@
        "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds",
        "description": "Colour palette for clustering at the joint pons level, from the 20190715 annotation",
        "contents": "Rds file with character vector, where names are clusters and values are hex codes"
+       
+     },
+     {
+       
+       "file": "pons.per_sample_embeddings.feather",
+       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/pons.per_sample_embeddings.feather",
+       "description": "Feather file with 2D PCA and tSNE coordinates for all cells included in the joint_pons object, but from the individual sample space",
+       "contents": "Table with columns 'Cell', 'PC1', 'PC2', 'tSNE_1', 'tSNE_2'"
        
      }
      
