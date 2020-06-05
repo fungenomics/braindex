@@ -14,8 +14,10 @@ brain developmental gene expression data. Each app is designed for a different t
 In this directory, several resources pertain globally to the portal:
 
 * `www`: Special directory to expose resources for the website, including the CSS
-specification for the index page and individual apps, the portal and lab logos, and
-files containing the HTML inserted into each app for custom styling and navigation
+specification for the index page and individual apps, the portal and lab logos
+* `www/layout`: Files containing the HTML for various page parts (e.g. header, footer)
+inserted into each app for custom styling and navigation, using the helper functions
+in `www/ui_functions.R`
 * `index.html`: Contains the HTML for the homepage, which links to the apps hosted in the directory
 * `style.R`: An R script which can be sourced by each app, containing styles shared
 across apps. Currently contains a ggplot2 theme, `theme_min()`.
