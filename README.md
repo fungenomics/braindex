@@ -92,6 +92,34 @@ Example:
      
 ```
 
+### Reading `.json` file into R
+
+Here's an example of how we can read `data.json` files into R (although
+it could be done in another language), as the basis for creating a
+script to re-populate the `data` directory for the `clusters` app. The object
+returned by `fromJSON` is a list of 3 elements corresponding to folders,
+each element is a data frame which describes the files in that folder.
+
+```r
+
+library(jsonlite)
+
+data_doc <- fromJSON("clusters/data/data.json")
+
+str(data_doc)
+# List of 3
+
+tibble::glimpse(data_doc$joint_mouse)
+# Rows: 8
+# Columns: 5
+# $ file        <chr> "ID_20190715_dendrogram_order.Rda", "mean_expression_per_ID_20190715_cluster.feather", "pct1_per_ID_20190715_cluster.feather", "joi…
+# $ path        <chr> "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda", "sjessa/from_hydra/single_cell/scDev_…
+# $ description <chr> "Cluster names in the short format ('F-e12 DRGC') in the order of the dendrogram in Fig 1 of Jessa et al, Nat Genet, 2019", "Feathe…
+# $ contents    <chr> "R object containing a vector called 'dendrogram_order', where elements are cluster names", "Table with first column 'Cluster' and …
+# $ script      <chr> NA, NA, NA, NA, NA, NA, "data_prep/prep_data.R", "data_prep/prep_data.R"
+
+```
+
 
 ## Server configuration
 
