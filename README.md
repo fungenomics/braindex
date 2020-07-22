@@ -120,6 +120,7 @@ tibble::glimpse(data_doc$joint_mouse)
 
 ```
 
+[Here is a script to do this for another app](https://github.com/fungenomics/brain_TF_app/blob/master/data/populate_data_on_hydra.R), also from a `data.json` file.
 
 ## Server configuration
 
