@@ -5,7 +5,7 @@
    {
      
       "file": "ID_20190715_dendrogram_order.Rda",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda",
       "description": "Cluster names in the short format ('F-e12 DRGC') in the order of the dendrogram in Fig 1 of Jessa et al, Nat Genet, 2019",
       "contents": "R object containing a vector called 'dendrogram_order', where elements are cluster names"
       
@@ -13,7 +13,7 @@
     {
       
       "file": "mean_expression_per_ID_20190715_cluster.feather",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
       "description": "Feather file with mean expression of every gene in every cluster",
       "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the mean expression of each gene in each cluster"
       
@@ -21,7 +21,7 @@
     {
       
       "file": "pct1_per_ID_20190715_cluster.feather",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
       "description": "Feather file with proportion of cells in each cluster where each gene is detected",
       "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the 'Pct1' value for each cluster"
       
@@ -29,7 +29,7 @@
     {
       
       "file": "joint_mouse.gene_names.tsv",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.gene_names.tsv",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.gene_names.tsv",
       "description": "Names of all genes detected in the joint mouse dataset",
       "contents": "Data frame with one column, 'genes', containing gene symbols"
       
@@ -37,7 +37,7 @@
     {
       
       "file": "joint_mouse.embedding_and_genes.feather",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes.feather",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes.feather",
       "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint mouse space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
       
@@ -45,7 +45,7 @@
     {
       
       "file": "joint_mouse.palette_ID_20190715.Rda",
-      "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.palette_ID_20190715.Rda",
+      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.palette_ID_20190715.Rda",
       "description": "Colour palette for clusters derived from individual samples",
       "contents": "R object containing a named vector, where names are cluster names, and values are hex colour codes"
       
@@ -53,7 +53,7 @@
     {
       
      "file": "metadata_20190715_select.tsv",
-     "path": "sjessa/from_hydra/single_cell/scDev_data/data/metadata/metadata_20190715.tsv",
+     "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata/metadata_20190715.tsv",
      "description": "Cluster metadata for all clusters derived from individual samples including Age, Species, full cell type, number of cells, etc; roughly matching Table 2a in Jessa et al, Nat Genet, 2019",
      "contents": "TSV file where columns correspond to metadata features, one row per cluster",
      "script": "data_prep/prep_data.R"
@@ -75,7 +75,7 @@
      {
        
        "file": "joint_cortex.gene_names.tsv",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.gene_names.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.gene_names.tsv",
        "description": "Names of all genes detected in the joint cortex dataset",
        "contents": "Data frame with one column, 'genes', containing gene symbols"
        
@@ -83,7 +83,7 @@
      {
        
        "file": "joint_cortex.embedding_and_genes.feather",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.embedding_and_genes.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.embedding_and_genes.feather",
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint cortex space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
        
@@ -91,7 +91,7 @@
      {
        
        "file": "joint_cortex.palette_ID_20190715_joint_clustering.Rds",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds",
        "description": "Colour palette for clustering at the joint cortex level, from the 20190715 annotation",
        "contents": "Rds file with character vector, where names are clusters and values are hex codes"
        
@@ -99,7 +99,7 @@
      {
        
        "file": "cortex.per_sample_embeddings.feather",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_cortex/cortex.per_sample_embeddings.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/cortex.per_sample_embeddings.feather",
        "description": "Feather file with 2D PCA and tSNE coordinates for all cells included in the joint_cortex object, but from the individual sample space",
        "contents": "Table with columns 'Cell', 'PC1', 'PC2', 'tSNE_1', 'tSNE_2'"
        
@@ -112,7 +112,7 @@
      {
        
        "file": "joint_pons.gene_names.tsv",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.gene_names.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.gene_names.tsv",
        "description": "Names of all genes detected in the joint pons dataset",
        "contents": "Data frame with one column, 'genes', containing gene symbols"
        
@@ -120,7 +120,7 @@
      {
        
        "file": "joint_pons.embedding_and_genes.feather",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes.feather",
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint pons space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
        
@@ -128,7 +128,7 @@
      {
        
        "file": "joint_pons.palette_ID_20190715_joint_clustering.Rds",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds",
        "description": "Colour palette for clustering at the joint pons level, from the 20190715 annotation",
        "contents": "Rds file with character vector, where names are clusters and values are hex codes"
        
@@ -136,7 +136,7 @@
      {
        
        "file": "pons.per_sample_embeddings.feather",
-       "path": "sjessa/from_hydra/single_cell/scDev_data/data/joint_pons/pons.per_sample_embeddings.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/pons.per_sample_embeddings.feather",
        "description": "Feather file with 2D PCA and tSNE coordinates for all cells included in the joint_pons object, but from the individual sample space",
        "contents": "Table with columns 'Cell', 'PC1', 'PC2', 'tSNE_1', 'tSNE_2'"
        
