@@ -1,12 +1,14 @@
 # Script to populate the data directory for this app.
 #   - Reads data.json (metadata on each required file)
-#   - Creates necessary subdirectories
-#   - Identifies which files need to be copied over from elsewhere on the server
-#   - Prints a command to copy the files to the right place (using rsync)
+#   - Creates necessary subdirectories in destination
+#   - Identifies which files need to be copied over from hydra
+#   - Prints a command to copy the files (using rsync)
 #
 # Usage:
 # 1. Run the script from within the destination directory with:
-#    $ Rscript populate_data_small_vers.R
+#    $ Rscript populate_data_small_vers.R <first.last>
+#    where <first.last> is your hydra username (the section 
+#    before @hydra.ladydavis.ca)
 #
 # 2. Copy and execute the rsync commands produced as output
 
@@ -16,6 +18,14 @@ library(magrittr)
 library(rjson)
 library(purrr)
 library(glue)
+
+# Store hydra username - command line argument
+args = commandArgs()
+
+# Check if username was provided
+if (length(args) == 0) {
+  stop("Please supply your username")
+} 
 
 path_to_projects <- "/home/kleinman/"
 
@@ -50,10 +60,8 @@ process_file <- function(file, dir_name) {
     # Produce destination path based on current directory
     dest <- file.path(dir_name, file$file)
     
-    # Copy the file using rsync
-    cmd <- glue("rsync {src} {dest}")
-    
-    # Echo the command
+    # Produce and echo rsync command including hydra username
+    cmd <- glue("rsync {args[1]}@hydra.ladydavis.ca:{src} {dest}")
     message(cmd)
     
   } else {
