@@ -14,7 +14,7 @@
       
       "file": "mean_expression_per_ID_20190715_cluster.feather",
       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster_small.feather"
+      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster_small.feather",
       "description": "Feather file with mean expression of every gene in every cluster",
       "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the mean expression of each gene in each cluster"
       
@@ -23,7 +23,7 @@
       
       "file": "pct1_per_ID_20190715_cluster.feather",
       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster_small.feather"
+      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster_small.feather",
       "description": "Feather file with proportion of cells in each cluster where each gene is detected",
       "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the 'Pct1' value for each cluster"
       
@@ -40,7 +40,7 @@
       
       "file": "joint_mouse.embedding_and_genes.feather",
       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes_small.feather"
+      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes_small.feather",
       "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint mouse space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
       
@@ -87,7 +87,7 @@
        
        "file": "joint_cortex.embedding_and_genes.feather",
        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.embedding_and_genes.feather",
-       "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.embedding_and_genes_small.feather"
+       "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/joint_cortex.embedding_and_genes_small.feather",
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint cortex space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
        
@@ -125,7 +125,7 @@
        
        "file": "joint_pons.embedding_and_genes.feather",
        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes.feather",
-       "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes_small.feather"
+       "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/joint_pons.embedding_and_genes_small.feather",
        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint pons space",
       "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
        
