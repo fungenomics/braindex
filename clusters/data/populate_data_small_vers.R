@@ -6,11 +6,13 @@
 #
 # Usage:
 # 1. Run the script from within the destination directory with:
-#    $ Rscript populate_data_small_vers.R <first.last>
+#    $ Rscript populate_data_small_vers.R "<first.last>"
 #    where <first.last> is your hydra username (the section 
-#    before @hydra.ladydavis.ca)
+#    before @hydra.ladydavis.ca). Don't forget quotes!
+#
 #    Note: you may have to alter the file path of this script
-#    as well as the path to data.json for it to work locally.
+#    when calling it in the above command, and also the
+#    path to data.json in line 37 to match your local system.
 #
 # 2. Copy and execute the rsync commands produced as output
 
@@ -63,7 +65,7 @@ process_file <- function(file, dir_name) {
     dest <- file.path(dir_name, file$file)
     
     # Produce and echo rsync command including hydra username
-    cmd <- glue("rsync {args[1]}@hydra.ladydavis.ca:{src} {dest}")
+    cmd <- glue("rsync {args[0]}@hydra.ladydavis.ca:{src} {dest}")
     message(cmd)
     
   } else {
