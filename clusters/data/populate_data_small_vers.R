@@ -9,6 +9,8 @@
 #    $ Rscript populate_data_small_vers.R <first.last>
 #    where <first.last> is your hydra username (the section 
 #    before @hydra.ladydavis.ca)
+#    Note: you may have to alter the file path of this script
+#    as well as the path to data.json for it to work locally.
 #
 # 2. Copy and execute the rsync commands produced as output
 
@@ -27,10 +29,10 @@ if (length(args) == 0) {
   stop("Please supply your username")
 } 
 
-path_to_projects <- "/home/kleinman/"
+path_to_projects <- "/project/kleinman/"
 
 # Read in data.json, returning a list with one element per folder
-app_data <- rjson::fromJSON(file = "data.json")
+app_data <- rjson::fromJSON(file = "git/braindex/clusters/data/data.json")
 
 # Get the names of the directories
 directories <- names(app_data)
