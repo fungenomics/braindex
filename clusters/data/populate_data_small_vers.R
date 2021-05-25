@@ -5,16 +5,13 @@
 #   - Prints a command to copy the files (using rsync)
 #
 # Usage:
-# 1. Run the script from within the destination directory with:
-#    $ Rscript populate_data_small_vers.R "<first.last>"
-#    where <first.last> is your hydra username (the section 
-#    before @hydra.ladydavis.ca). Don't forget quotes!
+# 1. Replace the contents of username in line 23 with your
+#    hydra username
 #
-#    Note: you may have to alter the file path of this script
-#    when calling it in the above command, and also the
-#    path to data.json in line 37 to match your local system.
+# 2. Run the script from within the destination directory with:
+#    $ Rscript populate_data_small_vers.R 
 #
-# 2. Copy and execute the rsync commands produced as output
+# 3. Copy and execute the rsync commands produced as output
 
 library(dplyr)
 library(tidyr)
@@ -23,18 +20,12 @@ library(rjson)
 library(purrr)
 library(glue)
 
-# Store hydra username - command line argument
-args = commandArgs()
+username = "bhavyaa.chandarana"
 
-# Check if username was provided
-if (length(args) == 0) {
-  stop("Please supply your username")
-} 
-
-path_to_projects <- "/project/kleinman/"
+path_to_projects <- "/project/kleinman"
 
 # Read in data.json, returning a list with one element per folder
-app_data <- rjson::fromJSON(file = "git/braindex/clusters/data/data.json")
+app_data <- rjson::fromJSON(file = "data.json")
 
 # Get the names of the directories
 directories <- names(app_data)
@@ -65,7 +56,7 @@ process_file <- function(file, dir_name) {
     dest <- file.path(dir_name, file$file)
     
     # Produce and echo rsync command including hydra username
-    cmd <- glue("rsync {args[0]}@hydra.ladydavis.ca:{src} {dest}")
+    cmd <- glue("rsync {username}@hydra.ladydavis.ca:{src} {dest}")
     message(cmd)
     
   } else {
