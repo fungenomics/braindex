@@ -6,14 +6,6 @@
 # 2) On the server, give the shiny user permissions, i.e. chmod -R a=rwx cache
 shinyOptions(cache = diskCache("./cache"))
 
-library(cowplot)
-library(glue)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(DT)
-library(purrr)
-
 source("functions.R")
 source("../style.R")
 

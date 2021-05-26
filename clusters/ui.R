@@ -1,5 +1,4 @@
 
-library(readr)
 source("../www/ui_functions.R")
 
 # Load names of genes detected in mouse to provide choices in input
