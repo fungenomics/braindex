@@ -64,6 +64,14 @@
     },
     {
       
+      "file": "metadata_20190715.tsv",
+      "path": "selin.jessa/from_hydra/atlas/data/metadata/metadata_20190715.tsv",
+      "description": "",
+      "contents": ""
+      
+    },
+    {
+      
       "file": "palettes.Rda",
       "description": "Common colour palettes for red-blue gradients and for cortex/pons samples",
       "contents": "R data file with three objects, rdbu (red-blue palette), cortex_palette, and pons_palette",
