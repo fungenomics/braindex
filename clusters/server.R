@@ -200,7 +200,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Joint analysis tab content ----
+  # Joint analysis by region tab content ----
   
   dr_joint_embedding <- reactive({
     
@@ -327,6 +327,8 @@ server <- function(input, output, session) {
     
   })
   
+  # Joint analysis by sample tab content ----
+  
   dr_sample_embedding <- reactive({
     
     region <- str_split(input_new()$region, "_") %>% sapply(getElement, 2)
@@ -400,6 +402,11 @@ server <- function(input, output, session) {
     
   })
   
+  output$vln_sample <- renderPlot({
+    
+    # TODO: violin plots by sample
+    
+  })
   
 }
 

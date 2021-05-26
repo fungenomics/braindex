@@ -225,12 +225,12 @@ ui <- bootstrapPage(
                  plotOutput("feature_sample", width = "12.5in", height = "3in")
 
                ),
-               # 
-               # fluidRow(
-               #   
-               #   plotOutput("vln_sample", width = "15in", height = "3in")
-               #   
-               # ),
+
+               fluidRow(
+
+                 plotOutput("vln_sample", width = "15in", height = "3in")
+
+               ),
                
                value = "sample"
                
