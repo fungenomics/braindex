@@ -121,7 +121,7 @@ server <- function(input, output, session) {
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
-    # Create style property fot tooltip
+    # Create style property for tooltip
     # background color is set to the cluster colour, with the tooltip a bit transparent
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
