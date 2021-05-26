@@ -26,28 +26,32 @@ library(glue)
 args <- commandArgs(trailingOnly = TRUE)
 
 # Produce error messages for missing arguments
-if (length(args) == 0){
+if (length(args) == 0) {
   
-  stop("Please enter username and file length arguments.")
+  stop("Missing username and file length arguments.")
   
-} else if (length(args) == 1){
+} else if (length(args) == 1) {
   
-  stop("Please enter file length argument: -small or -full")
+  stop("Missing file length argument: use -small or -full")
   
 }
 
 # Store command line arguments 
 username <- args[1]
 
-if (args[2] == "-small"){
+if (args[2] == "-small") {
   
   file_full <- FALSE
 
-} else if (args[2] == "-full"){
+} else if (args[2] == "-full") {
   
   file_full <- TRUE
   
-} 
+} else {
+  
+  stop("Please enter valid file length argument: -small or -full")
+  
+}
 
 path_to_projects <- "/project/kleinman"
 
