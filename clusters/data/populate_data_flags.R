@@ -24,7 +24,30 @@ library(purrr)
 library(glue)
 
 args <- commandArgs(trailingOnly = TRUE)
+
+# Produce error messages for missing arguments
+if (length(args) == 0){
+  
+  stop("Please enter username and file length arguments.")
+  
+} else if (length(args) == 1){
+  
+  stop("Please enter file length argument: -small or -full")
+  
+}
+
+# Store command line arguments 
 username <- args[1]
+
+if (args[2] == "-small"){
+  
+  file_full <- FALSE
+
+} else if (args[2] == "-full"){
+  
+  file_full <- TRUE
+  
+} 
 
 path_to_projects <- "/project/kleinman"
 
@@ -45,7 +68,7 @@ process_file <- function(file, dir_name) {
   if (is.null(file$script)) {
     
     # If a small version of the file does not exist, use the path to full file
-    if (is.null(file$small_ver_path)) {
+    if (file_full || is.null(file$small_ver_path)) {
       
       src  <- file.path(path_to_projects, file$path)
       
