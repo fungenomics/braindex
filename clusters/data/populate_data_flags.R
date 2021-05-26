@@ -71,7 +71,8 @@ process_file <- function(file, dir_name) {
   # Copy file locally only if it is not produced by a script
   if (is.null(file$script)) {
     
-    # If a small version of the file does not exist, use the path to full file
+    # If a small version of the file does not exist, or the -full flag is
+    # present, use the path to the full file
     if (file_full || is.null(file$small_ver_path)) {
       
       src  <- file.path(path_to_projects, file$path)
