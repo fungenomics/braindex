@@ -133,10 +133,16 @@ ui <- bootstrapPage(
           
           tabPanel("Expression table", #TODO: confirm a better name
                    
+                   #TODO: confirm if there should be text above the table. 
+                   # it should probably mention download button
+                   
                    fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
                    
-                   fluidRow(
-                     downloadButton("download_bubble", "Download data (TSV)")),
+                   # Only allow download button to display if update button has been pressed 
+                   conditionalPanel(condition='input.update!=0',
+                                    fluidRow(
+                                      downloadButton("download_bubble", "Download data (TSV)"))
+                   )
                    
           )
           
