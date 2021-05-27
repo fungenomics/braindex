@@ -17,7 +17,7 @@ ui <- bootstrapPage(
   titlePanel("Expression in single-cell developmental atlases, by cluster",
              windowTitle = "Clusters"),
   
-  # Sidebar with input
+  #### ---- Sidebar (input) ----
   sidebarLayout(
     sidebarPanel(width = 3,
                  
@@ -94,46 +94,62 @@ ui <- bootstrapPage(
     # Output plots
     mainPanel(tabsetPanel(
       
-      tabPanel("Dendrogram",
+      #### ---- Dendrogram tab output ---- 
+      
+      tabPanel("Expression by cluster", #TODO: confirm a better name
                
-               tags$br(),
-               
-               p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
-
-               p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
-               
-               p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
-               
-               p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
-               
-               p("• Hover over each bubble, or scroll down to the table, to get additional details about each cluster & its expression level"),
-               
-               # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
-               # Nat Genet, 2019
-               div(style = "margin-top: 3em; margin-bottom: -2em !important;",
-                   fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
-               ), 
-               
-               # Display the bubbleplot
-               div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
-                   fluidRow(plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
+        tabsetPanel(
+                 
+          tabPanel("Dendrogram",
+                            
+              tags$br(),
+                        
+              p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+              
+              p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+              
+              p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
+              
+              p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+              
+              p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+              
+              # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
+              # Nat Genet, 2019
+              div(style = "margin-top: 3em; margin-bottom: -2em !important;",
+                fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
+              ), 
+             
+              # Display the bubbleplot
+              div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
+                fluidRow(plotOutput("bubble",
+                                     hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
+                         
+              # UI for tooltip
+              fluidRow(
+                uiOutput("bubble_hover_info"))
+                         
+            ),
+                     
+          ),
                    
-                   # UI for tooltip
-                   fluidRow(
-                     uiOutput("bubble_hover_info"))
+          tabPanel("Expression table", #TODO: confirm a better name
+                     
+            fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
+                     
+            # fluidRow(
+            #   downloadButton("download_bubble", "Download data (TSV)")),
                    
-               ),
+          )
+                 
+        ),
                
-               fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
-               
-               # fluidRow(
-               #   downloadButton("download_bubble", "Download data (TSV)")),
-               
-               # Specify the value to use when checking if this tab is selected
-               value = "dendrogram"
+       # Specify the value to use when checking if this tab is selected
+       value = "dendrogram"
                
       ),
+      
+      #### ---- Timecourse tab output ---- 
       
       tabPanel("Timecourse",
                
@@ -156,6 +172,8 @@ ui <- bootstrapPage(
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
       ),
+      
+      #### ---- Joint Expression by region tab output ----
       
       tabPanel("Single-cell expression, by region",
                
@@ -200,6 +218,8 @@ ui <- bootstrapPage(
                # Specify the value to use when checking if this tab is selected
                value = "joint"
       ),
+      
+      #### ---- Joint Expression by sample tab output ---- 
       
       tabPanel("Single-cell expression, by sample",
                
