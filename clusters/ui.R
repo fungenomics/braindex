@@ -123,10 +123,9 @@ ui <- bootstrapPage(
                    div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
                        fluidRow(plotOutput("bubble",
                                            hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
-                       
-                       # UI for tooltip
-                       fluidRow(
-                         uiOutput("bubble_hover_info"))
+                   # UI for tooltip
+                   fluidRow(
+                     uiOutput("bubble_hover_info"))
                        
                    ),
                    
@@ -136,8 +135,8 @@ ui <- bootstrapPage(
                    
                    fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
                    
-                   # fluidRow(
-                   #   downloadButton("download_bubble", "Download data (TSV)")),
+                   fluidRow(
+                     downloadButton("download_bubble", "Download data (TSV)")),
                    
           )
           

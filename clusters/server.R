@@ -140,11 +140,11 @@ server <- function(input, output, session) {
   })
   
   # Download data in bubbleplot tab as TSV
-  # output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
-  #                                           contentType = "text/tsv",
-  #                                           content = function(file) {
-  #                                             write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-  #                                           })
+  output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
+                                            contentType = "text/tsv",
+                                            content = function(file) {
+                                              write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                                            })
   
   # Show table with cluster & expression info below bubble plot
   output$cluster_table <- renderDataTable({
