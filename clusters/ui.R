@@ -99,49 +99,48 @@ ui <- bootstrapPage(
       tabPanel("Expression by cluster", #TODO: confirm a better name
                
         tabsetPanel(
-                 
+          
           tabPanel("Dendrogram",
-                            
-              tags$br(),
-                        
-              p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
-              
-              p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
-              
-              p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
-              
-              p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
-              
-              p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
-              
-              # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
-              # Nat Genet, 2019
-              div(style = "margin-top: 3em; margin-bottom: -2em !important;",
-                fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
-              ), 
-             
-              # Display the bubbleplot
-              div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
-                fluidRow(plotOutput("bubble",
-                                     hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
-                         
-              # UI for tooltip
-              fluidRow(
-                uiOutput("bubble_hover_info"))
-                         
-            ),
-                     
-          ),
                    
+                   tags$br(),
+                   p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+                   
+                   p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+                   
+                   p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
+                   
+                   p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+                   
+                   p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+                   
+                   # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
+                   # Nat Genet, 2019
+                   div(style = "margin-top: 3em; margin-bottom: -2em !important;",
+                       fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
+                   ), 
+                   
+                   # Display the bubbleplot
+                   div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
+                       fluidRow(plotOutput("bubble",
+                                           hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
+                       
+                       # UI for tooltip
+                       fluidRow(
+                         uiOutput("bubble_hover_info"))
+                       
+                   ),
+                   
+          ),
+          
           tabPanel("Expression table", #TODO: confirm a better name
-                     
-            fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
-                     
-            # fluidRow(
-            #   downloadButton("download_bubble", "Download data (TSV)")),
+                   
+                   fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
+                   
+                   # fluidRow(
+                   #   downloadButton("download_bubble", "Download data (TSV)")),
                    
           )
-                 
+          
         ),
                
        # Specify the value to use when checking if this tab is selected
@@ -223,36 +222,48 @@ ui <- bootstrapPage(
       
       tabPanel("Single-cell expression, by sample",
                
-               tags$br(),
-               
-               p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-               
-               p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
-               
-               p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
-               
-               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-               
-               fluidRow(
-
-                 plotOutput("dr_sample", width = "12.5in", height = "2.6in")
-
-               ),
-
-               fluidRow(
-
-                 plotOutput("feature_sample", width = "12.5in", height = "3in")
-
-               ),
-
-               fluidRow(
-
-                 plotOutput("vln_sample", width = "15in", height = "3in")
-
-               ),
-               
-               value = "sample"
-               
+        tabsetPanel(
+                 
+          tabPanel("tSNE plots",
+                   
+                   tags$br(),
+                   
+                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
+                   
+                   p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
+                   
+                   p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
+                   
+                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
+                   
+                   fluidRow(
+                     
+                     plotOutput("dr_sample", width = "12.5in", height = "2.6in")
+                     
+                   ),
+                   
+                   fluidRow(
+                     
+                     plotOutput("feature_sample", width = "12.5in", height = "3in")
+                     
+                   )
+            
+          ),
+                
+          tabPanel("Violin plots",
+                   
+                   fluidRow(
+                     
+                     plotOutput("vln_sample", width = "15in", height = "3in")
+                     
+                   )
+                   
+          )
+                 
+        ),
+        
+        # Specify the value to use when checking if this tab is selected       
+        value = "sample"
       ),
       
       id = "tabs"
