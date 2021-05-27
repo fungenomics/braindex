@@ -79,7 +79,8 @@ server <- function(input, output, session) {
   bubble_input <- reactive({
     
     # Display up to the first 6 genes input
-    bubble_prep(gene  = head(input_new()$gene, 6),
+    # TODO: test 7 - 12 bubble plots after finding 12 available genes (in small)
+    bubble_prep(gene  = head(input_new()$gene, 12),
                 scale = input_new()$scale)
     
   })
@@ -122,9 +123,9 @@ server <- function(input, output, session) {
     if (nrow(point) == 0) return(NULL)
     
     # Create style property for tooltip
-    # background color is set to the cluster colour, with the tooltip a bit transparent
+    # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
+    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "FF;",
                     "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
     
     # Actual tooltip created as wellPanel, specify info to display
