@@ -128,6 +128,12 @@ server <- function(input, output, session) {
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "FF;",
                     "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
     
+    # text colour set to white if the background colour is dark, else remains default black
+    if (dark(point$Colour)) {
+      style <- paste0(style, "color: #FFFFFF")
+    }
+    
+    
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
       style = style,
