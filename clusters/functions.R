@@ -626,16 +626,18 @@ noTicks <- function() {
 
 #' Determine if a hex color is dark enough to warrant white text
 #' 
-#' @param hex_color a string hex color in the format e.g. #FFFFFF
+#' @param hex_color a string hex color in the format e.g. #000000
 #' @return TRUE if the color is dark enough
 dark <- function(hex_color) {
   
   red <- substr(hex_color, 2, 2)
   green <- substr(hex_color, 4, 4)
   blue <- substr(hex_color, 6, 6)
-  dark_nums <- as.character(c(1:7))
+  dark_nums <- c(0:8)
   
-  if (red %in% dark_nums && blue %in% dark_nums && green %in% dark_nums) {
+  if ((red %in% dark_nums && blue %in% dark_nums) || 
+      (red %in% dark_nums && green %in% dark_nums) ||
+      (green %in% dark_nums && blue %in% dark_nums)) {
     
     return(TRUE)
     
