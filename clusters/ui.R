@@ -141,7 +141,8 @@ ui <- bootstrapPage(
                    # Only allow download button to display if update button has been pressed 
                    conditionalPanel(condition='input.update!=0',
                                     fluidRow(
-                                      downloadButton("download_bubble", "Download data (TSV)"))
+                                      downloadButton("download_bubble", 
+                                                     "Download mean expression data (TSV)"))
                    )
                    
           )
