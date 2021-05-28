@@ -73,9 +73,9 @@ server <- function(input, output, session) {
     
   })
   
-  # Dendrogram tab content ----
+  #### ---- Dendrogram tab content ----
   
-  # Generate the input dataframe for the bubbleplot
+  # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
     # Display up to the first 6 genes input
@@ -102,8 +102,8 @@ server <- function(input, output, session) {
   # are being displayed, after allocating a baseline height for the x-axis & legend
   height = function() 150 + 30 * length(input_new()$gene))
   
-  # Create a tooltip with cluster / expression information that appears when
-  # hovering over a bubble
+  # Create a tooltip with cluster / expression information 
+  # that appears when hovering over a bubble 
   # 
   # This adapted from this example https://gitlab.com/snippets/16220
   output$bubble_hover_info <- renderUI({
@@ -153,7 +153,7 @@ server <- function(input, output, session) {
                                               write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
                                             })
   
-  # Show table with cluster & expression info below bubble plot
+  # Show table with cluster & expression info 
   output$cluster_table <- renderDataTable({
     
     req(bubble_input())
@@ -175,7 +175,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Timecourse tab content ----
+  #### ---- Timecourse tab content ----
   
   # Generate ribbon plot and save the output so that we can later split
   # into the plot itself, and the legend
@@ -199,7 +199,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Joint analysis by region tab content ----
+  #### ---- Joint analysis by region tab content ----
   
   dr_joint_embedding <- reactive({
     
@@ -326,7 +326,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Joint analysis by sample tab content ----
+  # ---- Joint analysis by sample tab content ----
   
   dr_sample_embedding <- reactive({
     
