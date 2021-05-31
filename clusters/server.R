@@ -79,7 +79,7 @@ server <- function(input, output, session) {
   bubble_input <- reactive({
     
     # Display up to the first 6 genes input
-    # TODO: test 7 - 12 bubble plots after finding 12 available genes (in small)
+    # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
     bubble_prep(gene  = head(input_new()$gene, 12),
                 scale = input_new()$scale)
     
@@ -146,13 +146,8 @@ server <- function(input, output, session) {
     )
   })
   
-  # Download data in bubbleplot tab as TSV
-  output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
-                                            contentType = "text/tsv",
-                                            content = function(file) {
-                                              write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-                                            })
-  
+  #### ---- Expression table tab content ----
+
   # Show table with cluster & expression info 
   output$cluster_table <- renderDataTable({
     
@@ -174,6 +169,13 @@ server <- function(input, output, session) {
                   backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
     
   })
+  
+  # Download data in bubbleplot tab and expression table as TSV
+  output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
+                                            contentType = "text/tsv",
+                                            content = function(file) {
+                                              write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                                            })
   
   #### ---- Timecourse tab content ----
   
@@ -241,7 +243,7 @@ server <- function(input, output, session) {
   #   # Hide the tooltip if mouse is not hovering over a bubble
   #   if (nrow(point) == 0) return(NULL)
   #   
-  #   # Create style property fot tooltip
+  #   # Create style property for tooltip
   #   # background color is set to the cluster colour, with the tooltip a bit transparent
   #   # z-index is set so we are sure are tooltip will be on top
   #   style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
