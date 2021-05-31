@@ -139,9 +139,9 @@ ui <- bootstrapPage(
                tags$br(),
                p("This table compares the expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
                
-               p("• The value in each gene column denotes the percent of cells in the cluster that express the gene"),
+               p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                
-               p("• Use the download button below the table to obtain a TSV file with mean expression & percent values for each gene"),
+               p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
                fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
                
@@ -149,7 +149,7 @@ ui <- bootstrapPage(
                conditionalPanel(condition='input.update!=0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
-                                                 "Download mean expression data (TSV)"))
+                                                 "Download data (TSV)"))
                ),
                
                # Specify the value to use when checking if this tab is selected
