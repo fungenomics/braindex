@@ -406,6 +406,11 @@ server <- function(input, output, session) {
   output$vln_sample <- renderPlot({
     
     # TODO: violin plots by sample
+    map(dr_sample_exp(),
+        ~ vln(.x,
+              palette = input_new()$clust_palette,
+              points = input_new()$vln_joint_points)) %>%
+        {plot_grid(plotlist = .)}
     
   })
   
