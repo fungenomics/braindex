@@ -38,8 +38,10 @@ ui <- bootstrapPage(
                                   
                  ),
                  
+                 
+                 
                  # Input for timecourse tab
-                 conditionalPanel(condition = "input.tabs != 'dendrogram'",
+                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -91,67 +93,68 @@ ui <- bootstrapPage(
                  
     ),
     
-    # Output plots
+    # Output plots and tables
     mainPanel(tabsetPanel(
       
       #### ---- Dendrogram tab output ---- 
+          
+      tabPanel("Dendrogram",
+               
+               tags$br(),
+               p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               
+               p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+               
+               p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
+               
+               p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+               
+               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+               
+               # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
+               # Nat Genet, 2019
+               div(style = "margin-top: 3em; margin-bottom: -2em !important;",
+                   fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
+               ), 
+               
+               # Display the bubbleplot
+               div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
+                   fluidRow(plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
+               # UI for tooltip
+               fluidRow(
+                 uiOutput("bubble_hover_info"))
+                   
+               ),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "dendrogram"
+               
+      ),
+        
+      #### ---- Expression table tab output ---- 
       
-      tabPanel("Expression by cluster", #TODO: confirm a better name
+      tabPanel("Expression table", #TODO: confirm a better name
                
-        tabsetPanel(
-          
-          tabPanel("Dendrogram",
-                   
-                   tags$br(),
-                   p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
-                   
-                   p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
-                   
-                   p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
-                   
-                   p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
-                   
-                   p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
-                   
-                   # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
-                   # Nat Genet, 2019
-                   div(style = "margin-top: 3em; margin-bottom: -2em !important;",
-                       fluidRow(tags$img(src = "tree.png", width = "1150", height = "163"))
-                   ), 
-                   
-                   # Display the bubbleplot
-                   div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
-                       fluidRow(plotOutput("bubble",
-                                           hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
-                   # UI for tooltip
-                   fluidRow(
-                     uiOutput("bubble_hover_info"))
-                       
-                   ),
-                   
-          ),
-          
-          tabPanel("Expression table", #TODO: confirm a better name
-                   
-                   #TODO: confirm if there should be text above the table. 
-                   # it should probably mention download button
-                   
-                   fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
-                   
-                   # Only allow download button to display if update button has been pressed 
-                   conditionalPanel(condition='input.update!=0',
-                                    fluidRow(
-                                      downloadButton("download_bubble", 
-                                                     "Download mean expression data (TSV)"))
-                   )
-                   
-          )
-          
-        ),
+               tags$br(),
+               p("This table compares the expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
                
-       # Specify the value to use when checking if this tab is selected
-       value = "dendrogram"
+               p("• The value in each gene column denotes the percent of cells in the cluster that express the gene"),
                
+               p("• Use the download button below the table to obtain a TSV file with mean expression & percent values for each gene"),
+               
+               fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
+               
+               # Only allow download button to display if update button has been pressed 
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_bubble", 
+                                                 "Download mean expression data (TSV)"))
+               ),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "exp_table"
+                   
       ),
       
       #### ---- Timecourse tab output ---- 
