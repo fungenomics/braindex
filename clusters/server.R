@@ -26,7 +26,7 @@ server <- function(input, output, session) {
       "region" = input$region,
       "label_clusters"   = input$label_clusters,
       "ft_palette"       = input$feature_palette,
-      "vln_joint_points" = input$vln_joint_points
+      "vln_points" = input$vln_points
     )
     
     # Get the columns for the appropriate type of dim red
@@ -324,7 +324,7 @@ server <- function(input, output, session) {
     
     vln(dr_joint_exp(),
         palette = input_new()$clust_palette,
-        points  = input_new()$vln_joint_points)
+        points  = input_new()$vln_points)
     
   })
   
@@ -404,13 +404,20 @@ server <- function(input, output, session) {
   })
   
   output$vln_sample <- renderPlot({
+
+    # Shorten labels for palette
+    pal <- input_new()$clust_palette_sample
+    names(pal) <- str_split(names(pal), "_") %>% sapply(getElement, 2)
     
-    # TODO: violin plots by sample
+    timepoints <- c("E12.5", "E15.5", "P0", "P3", "P6")
+    
     map(dr_sample_exp(),
         ~ vln(.x,
-              palette = input_new()$clust_palette,
-              points = input_new()$vln_joint_points)) %>%
-        {plot_grid(plotlist = .)}
+              palette = pal,
+              points = input_new()$vln_points) +
+          theme(plot.margin = unit(c(0.5, 0, 1, 1.5), "cm"))) %>%
+      {plot_grid(plotlist = ., ncol = 1, align = "hv",
+                 labels = timepoints, label_size = 18)}
     
   })
   
