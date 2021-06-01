@@ -77,15 +77,17 @@ ui <- bootstrapPage(
                  
                  conditionalPanel(condition = "input.tabs == 'joint'",
                                   
-                                  selectInput("dr_clustering", "Annotate cells by",
-                                              multiple = FALSE,
-                                              choices = c(
-                                                "Clustering at the region level" = "joint",
-                                                "Clustering at the sample level" = "sample",
-                                                "Timepoint"                      = "timepoint"
-                                              ),
-                                              selected = "Clustering at the region level"),
-                                  
+                                  #conditionalPanel(condition = "input.label_clusters =='TRUE",
+                                                   selectInput("dr_clustering", "Annotate cells by",
+                                                               multiple = FALSE,
+                                                               choices = c(
+                                                                 "Clustering at the region level" = "joint",
+                                                                 "Clustering at the sample level" = "sample",
+                                                                 "Timepoint"                      = "timepoint"
+                                                               ),
+                                                               selected = "Clustering at the region level")
+                                  #)
+                                  ,              
                                   selectInput("dr", "Dimensionality reduction",
                                               multiple = FALSE,
                                               choices = c("tSNE", "PCA", "UMAP"),
