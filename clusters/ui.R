@@ -58,13 +58,13 @@ ui <- bootstrapPage(
                                               choices = c(TRUE, FALSE),
                                               selected = "FALSE"),
                                   
-                                  selectInput("feature_palette", "Colour palette",
+                                  selectInput("feature_palette", "Expression tSNE colour palette",
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
                                               selected = "redgrey"),
                                   
-                                  selectInput("vln_joint_points", "Show points in violin plot",
+                                  selectInput("vln_points", "Show points in violin plot",
                                               choices = c(TRUE, FALSE),
                                               selected = FALSE)
                                   
@@ -261,9 +261,17 @@ ui <- bootstrapPage(
                 
           tabPanel("Violin plots",
                    
+                   tags$br(),
+                   
+                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
+                   
+                   p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
+                   
+                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
+                   
                    fluidRow(
                      
-                     plotOutput("vln_sample", width = "15in", height = "3in")
+                     plotOutput("vln_sample", width = "10in", height = "20in")
                      
                    )
                    
