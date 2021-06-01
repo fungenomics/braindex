@@ -13,6 +13,7 @@ library(ggrepel)
 library(DT)
 library(purrr)
 library(readr)
+library(shinyWidgets)
 
 # Set-up / load common data ----
 
