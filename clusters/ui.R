@@ -55,25 +55,17 @@ ui <- bootstrapPage(
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
                                   # Success status doesn't have any effect other than green color scheme
-                                  materialSwitch("label_clusters", "Label clusters",
+                                  materialSwitch("label_clusters", "Label clusters in tSNE plots",
                                                  status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
-                                  
-                                  # selectInput("label_clusters", "Label clusters",
-                                  #             choices = c(TRUE, FALSE),
-                                  #             selected = "FALSE"),
                                   
                                   
                                   # Success status doesn't have any effect other than green color scheme
-                                  materialSwitch("vln_points", "Show points in violin plot",
+                                  materialSwitch("vln_points", "Show points in violin plots",
                                                  status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
-                                  
-                                  # selectInput("vln_points", "Show points in violin plot",
-                                  #             choices = c(TRUE, FALSE),
-                                  #             selected = FALSE)
                                   
                                   selectInput("feature_palette", "Expression tSNE colour palette",
                                               choices = list("Grey-red"   = "redgrey",
