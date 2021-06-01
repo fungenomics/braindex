@@ -54,19 +54,32 @@ ui <- bootstrapPage(
                  # Input for joint analysis tab
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
-                                  selectInput("label_clusters", "Label clusters",
-                                              choices = c(TRUE, FALSE),
-                                              selected = "FALSE"),
+                                  # Success status doesn't have any effect other than green color scheme
+                                  materialSwitch("label_clusters", "Label clusters",
+                                                 status = "success", 
+                                                 value = FALSE,
+                                                 right = TRUE),
+                                  
+                                  # selectInput("label_clusters", "Label clusters",
+                                  #             choices = c(TRUE, FALSE),
+                                  #             selected = "FALSE"),
+                                  
+                                  
+                                  # Success status doesn't have any effect other than green color scheme
+                                  materialSwitch("vln_points", "Show points in violin plot",
+                                                 status = "success", 
+                                                 value = FALSE,
+                                                 right = TRUE),
+                                  
+                                  # selectInput("vln_points", "Show points in violin plot",
+                                  #             choices = c(TRUE, FALSE),
+                                  #             selected = FALSE)
                                   
                                   selectInput("feature_palette", "Expression tSNE colour palette",
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
                                               selected = "redgrey"),
-                                  
-                                  selectInput("vln_points", "Show points in violin plot",
-                                              choices = c(TRUE, FALSE),
-                                              selected = FALSE)
                                   
                  ),
                  
