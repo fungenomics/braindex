@@ -237,7 +237,7 @@ prep_ribbon_input <- function(gene, region) {
 #'
 #' @examples
 #' ribbon_plot("Pdgfra", "joint_cortex")
-ribbon_plot <- function(gene, region, ymax = NA) {
+ribbon_plot <- function(gene, region, ymax = NA, make_plotly = FALSE) {
   
   # Adapt palette to brain region
   if (region == "joint_cortex") colours <- cortex_palette
@@ -294,9 +294,15 @@ ribbon_plot <- function(gene, region, ymax = NA) {
     labs(x = "age", title = gene) +
     guides(fill = guide_legend(ncol = 2)) +
     ylab(glue("proportion {gene}+ cells")) +
-    ylim(0, ymax) 
+    ylim(0, ymax) +
+    # Grabbing only the plot part, remove the legend
+    theme(legend.position = "none")
   
-  return(p1)
+  if(make_plotly) {
+    return (ggplotly(p1))
+  }  else {
+    return(p1)
+  }
   
 }
 
