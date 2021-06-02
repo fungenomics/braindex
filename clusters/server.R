@@ -195,9 +195,8 @@ server <- function(input, output, session) {
               type = "scatter",
               mode = "markers",
               fill = "toself",
-              hoveron = "points+fills",
-              text = "Points + Fills",
-              hoverinfo = "text") 
+              hoveron = "points+fills") %>%
+      layout(legend = list(x = 1, y = 0))
   })
   
   # Extract the ribbon plot legend to plot separately
@@ -205,7 +204,6 @@ server <- function(input, output, session) {
   #   
   #   leg <- cowplot::get_legend(ribbon())
   #   plot_grid(leg)
-  #   ggarrange(leg)
   # })
   
   #### ---- Joint analysis by region tab content ----
