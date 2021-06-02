@@ -205,6 +205,13 @@ server <- function(input, output, session) {
     plot_grid(leg)
     
   })
+
+  # output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
+  #                                           content = function(file) {
+  #                                             ggsave(file, 
+  #                                                    plot = #???,
+  #                                                    device = "pdf")
+  #                                           })
   
   # INTERACTIVE TIMECOURSE
   

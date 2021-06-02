@@ -162,6 +162,7 @@ ui <- bootstrapPage(
                fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
                
                # Only allow download button to display if update button has been pressed 
+               # TODO: figure out how to do this condition in server.R using req() in reactive()
                conditionalPanel(condition='input.update!=0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
@@ -201,6 +202,11 @@ ui <- bootstrapPage(
                                 plotOutput("plotRibbon"),
                                 plotOutput("ribbonLegend")
                                 ),
+               
+               # fluidRow(
+               #   downloadButton("download_ribbon", 
+               #                  "Download image (PDF)")
+               # ),
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
