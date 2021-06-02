@@ -189,7 +189,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Add hover functionality to the plot
+  # Add hover functionality to the filled regions of the plot
   output$plotRibbon <- renderPlotly({ 
     add_trace(ribbon(),
               type = "scatter",
