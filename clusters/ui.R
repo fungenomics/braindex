@@ -40,7 +40,7 @@ ui <- bootstrapPage(
                  
                  
                  
-                 # Input for timecourse tab
+                 # Input for all tabs other than the first two
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
                                   
                                   # Specify the visible label as well as the internal
@@ -51,6 +51,16 @@ ui <- bootstrapPage(
                                                            "Pons" = "joint_pons"))
                  ),
                  
+                 # Input for timecourse ribbon plot tab
+                 conditionalPanel(condition = "input.tabs == 'timecourse'",
+                                  
+                                  # Success status doesn't have any effect other than green color scheme
+                                  materialSwitch("plotly_ribbon", "Interactive ribbon plot",
+                                                 status = "success", 
+                                                 value = FALSE,
+                                                 right = TRUE)
+                                  ),
+                 
                  # Input for joint analysis tab
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
@@ -59,7 +69,6 @@ ui <- bootstrapPage(
                                                  status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
-                                  
                                   
                                   # Success status doesn't have any effect other than green color scheme
                                   materialSwitch("vln_points", "Show points in violin plots",
@@ -180,10 +189,18 @@ ui <- bootstrapPage(
                
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
-               # the time course
-               plotlyOutput("plotRibbon", height = "5in", width = "12.5in"),
-               #plotlyOutput("ribbonLegend"),
+               # the time course, either interactively or statically
                
+               conditionalPanel(condition = "input.plotly_ribbon",
+                                # Plot the ribbon plot & legend as a plotly (interactive) plot
+                                plotlyOutput("plotlyRibbon", height = "5in", width = "12.5in")
+                                
+                                ),
+               conditionalPanel(condition = "!(input.plotly_ribbon)",
+                                # Plot the ribbon plot & legend as static plots with ggplot2
+                                plotOutput("plotRibbon"),
+                                plotOutput("ribbonLegend")
+                                ),
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"

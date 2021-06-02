@@ -26,7 +26,8 @@ server <- function(input, output, session) {
       "region" = input$region,
       "label_clusters"   = input$label_clusters,
       "ft_palette"       = input$feature_palette,
-      "vln_points" = input$vln_points
+      "vln_points" = input$vln_points,
+      "plotly_ribbon" = input$plotly_ribbon
     )
     
     # Get the columns for the appropriate type of dim red
@@ -179,10 +180,37 @@ server <- function(input, output, session) {
   
   #### ---- Timecourse tab content ----
   
+  # STATIC TIMECOURSE 
+  
   # Generate ribbon plot and save the output so that we can later split
   # into the plot itself, and the legend
   ribbon <- reactive({
     
+    ribbon_plot(gene   = input_new()$gene[1],
+                region = input_new()$region)
+    
+  })
+  
+  # Grabbing only the plot part, remove the legend
+  output$plotRibbon <- renderPlot({
+
+    ribbon() +
+      theme(legend.position = "none")
+  })
+  
+  # Extract the ribbon plot legend to plot separately
+  output$ribbonLegend <- renderPlot({
+
+    leg <- cowplot::get_legend(ribbon())
+    plot_grid(leg)
+    
+  })
+  
+  # INTERACTIVE TIMECOURSE
+  
+  # Generate interactive ribbon plot and save the output
+  ribbon_plotly <- reactive({
+
     ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region,
                 make_plotly = TRUE)
@@ -190,22 +218,17 @@ server <- function(input, output, session) {
   })
   
   # Add hover functionality to the filled regions of the plot
-  output$plotRibbon <- renderPlotly({ 
-    add_trace(ribbon(),
+  output$plotlyRibbon <- renderPlotly({ 
+
+    add_trace(ribbon_plotly(),
               type = "scatter",
-              mode = "markers",
+              mode = "lines+markers",
               fill = "toself",
               hoveron = "points+fills") %>%
+      # Position legend to the right of the plot
       layout(legend = list(x = 1, y = 0))
   })
-  
-  # Extract the ribbon plot legend to plot separately
-  # output$ribbonLegend <- renderPlot({
-  #   
-  #   leg <- cowplot::get_legend(ribbon())
-  #   plot_grid(leg)
-  # })
-  
+
   #### ---- Joint analysis by region tab content ----
   
   dr_joint_embedding <- reactive({
@@ -333,7 +356,7 @@ server <- function(input, output, session) {
     
   })
   
-  # ---- Joint analysis by sample tab content ----
+  #### ---- Joint analysis by sample tab content ----
   
   dr_sample_embedding <- reactive({
     
