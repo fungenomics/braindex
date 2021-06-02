@@ -184,22 +184,29 @@ server <- function(input, output, session) {
   ribbon <- reactive({
     
     ribbon_plot(gene   = input_new()$gene[1],
-                region = input_new()$region)
+                region = input_new()$region,
+                make_plotly = TRUE)
     
   })
   
-  # Grabbing only the plot part, remove the legend
-  output$plotRibbon <- renderPlot({ ribbon() +
-      theme(legend.position = "none")
+  # Add hover functionality to the plot
+  output$plotRibbon <- renderPlotly({ 
+    add_trace(ribbon(),
+              type = "scatter",
+              mode = "markers",
+              fill = "toself",
+              hoveron = "points+fills",
+              text = "Points + Fills",
+              hoverinfo = "text") 
   })
   
   # Extract the ribbon plot legend to plot separately
-  output$ribbonLegend <- renderPlot({
-    
-    leg <- cowplot::get_legend(ribbon())
-    plot_grid(leg)
-    
-  })
+  # output$ribbonLegend <- renderPlot({
+  #   
+  #   leg <- cowplot::get_legend(ribbon())
+  #   plot_grid(leg)
+  #   ggarrange(leg)
+  # })
   
   #### ---- Joint analysis by region tab content ----
   
