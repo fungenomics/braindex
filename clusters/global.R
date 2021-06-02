@@ -14,6 +14,7 @@ library(DT)
 library(purrr)
 library(readr)
 library(shinyWidgets)
+library(plotly)
 
 # Set-up / load common data ----
 
