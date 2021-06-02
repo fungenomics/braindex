@@ -181,8 +181,9 @@ ui <- bootstrapPage(
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course
-               plotOutput("plotRibbon"),
-               plotOutput("ribbonLegend"),
+               plotlyOutput("plotRibbon"),
+               #plotlyOutput("ribbonLegend"),
+               
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
