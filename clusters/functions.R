@@ -294,9 +294,7 @@ ribbon_plot <- function(gene, region, ymax = NA, make_plotly = FALSE) {
     labs(x = "age", title = gene) +
     guides(fill = guide_legend(ncol = 2)) +
     ylab(glue("proportion {gene}+ cells")) +
-    ylim(0, ymax) #+
-    # Grabbing only the plot part, remove the legend
-    # theme(legend.position = "none")
+    ylim(0, ymax) 
   
   if(make_plotly) {
     return (ggplotly(p1))
