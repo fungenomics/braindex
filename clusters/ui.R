@@ -55,7 +55,7 @@ ui <- bootstrapPage(
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
                                   # Success status doesn't have any effect other than green color scheme
-                                  materialSwitch("label_clusters", "Label clusters in tSNE plots",
+                                  materialSwitch("label_clusters", "Label clusters in dimensionality reduction plots (e.g. tSNE)",
                                                  status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
@@ -67,7 +67,7 @@ ui <- bootstrapPage(
                                                  value = FALSE,
                                                  right = TRUE),
                                   
-                                  selectInput("feature_palette", "Expression tSNE colour palette",
+                                  selectInput("feature_palette", "Expression colour palette in dimensionality reduction plots (e.g. tSNE)",
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
@@ -88,7 +88,7 @@ ui <- bootstrapPage(
                                                                selected = "Clustering at the region level")
                                   #)
                                   ,              
-                                  selectInput("dr", "Dimensionality reduction",
+                                  selectInput("dr", "Dimensionality reduction method",
                                               multiple = FALSE,
                                               choices = c("tSNE", "PCA", "UMAP"),
                                               selected = "tSNE")
@@ -181,7 +181,7 @@ ui <- bootstrapPage(
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course
-               plotlyOutput("plotRibbon"),
+               plotlyOutput("plotRibbon", height = "5in", width = "12.5in"),
                #plotlyOutput("ribbonLegend"),
                
                
