@@ -236,7 +236,7 @@ server <- function(input, output, session) {
       layout(legend = list(x = 1, y = 0))
   })
 
-  #### ---- Joint analysis by region tab content ----
+  #### ---- Region joint analysis tab content ----
   
   dr_joint_embedding <- reactive({
     
@@ -363,7 +363,7 @@ server <- function(input, output, session) {
     
   })
   
-  #### ---- Joint analysis by sample tab content ----
+  #### ---- Sample joint analysis tab content ----
   
   dr_sample_embedding <- reactive({
     
