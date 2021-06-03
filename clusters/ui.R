@@ -38,9 +38,8 @@ ui <- bootstrapPage(
                                   
                  ),
                  
-                 
-                 
-                 # Input for all tabs other than the first two
+
+                 # Input for all tabs other than dendrogram & table
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
                                   
                                   # Specify the visible label as well as the internal
@@ -54,56 +53,62 @@ ui <- bootstrapPage(
                  # Input for timecourse ribbon plot tab
                  conditionalPanel(condition = "input.tabs == 'timecourse'",
                                   
-                                  # Success status doesn't have any effect other than green color scheme
                                   materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                                                 status = "success", 
-                                                 value = FALSE,
+                                                 status = "success", # Success status doesn't have any effect other than green color scheme
+                                                 value = FALSE, 
                                                  right = TRUE)
                                   ),
                  
-                 # Input for joint analysis tab
+                 # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
-                                  # Success status doesn't have any effect other than green color scheme
-                                  materialSwitch("label_clusters", "Label clusters in dimensionality reduction plots (e.g. tSNE)",
-                                                 status = "success", 
-                                                 value = FALSE,
-                                                 right = TRUE),
-                                  
-                                  # Success status doesn't have any effect other than green color scheme
                                   materialSwitch("vln_points", "Show points in violin plots",
-                                                 status = "success", 
+                                                 status = "success", # Success status doesn't have any effect other than green color scheme
                                                  value = FALSE,
                                                  right = TRUE),
                                   
-                                  selectInput("feature_palette", "Expression colour palette in dimensionality reduction plots (e.g. tSNE)",
+                                  # Input only in region joint analysis tab
+                                  conditionalPanel(condition = "input.tabs == 'joint'",
+                                                   
+                                                  selectInput("dr_clustering", "Annotate cells by",
+                                                              multiple = FALSE,
+                                                              choices = c(
+                                                                "Clustering at the region level" = "joint",
+                                                                "Clustering at the sample level" = "sample",
+                                                                "Timepoint"                      = "timepoint"
+                                                              ),
+                                                              selected = "Clustering at the region level")
+                                                   ),
+                                                   
+                                  
+                                  # Produce separation in sidebar: all options below are about the plots
+                                  hr(style = "border-top: 1px solid #000000;"),
+                                  h5(strong("Dimensionality reduction plots")),
+                                  br(),
+                                  
+                                  materialSwitch("label_clusters", "Label clusters",
+                                                 status = "success",  # Success status doesn't have any effect other than green color scheme
+                                                 value = FALSE,
+                                                 right = TRUE),
+                                  
+                                  selectInput("feature_palette", "Expression colour palette",
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
                                               selected = "redgrey"),
                                   
+                                  # Input only in region joint analysis tab
+                                  conditionalPanel(condition = "input.tabs == 'joint'",
+                                                   
+                                                   selectInput("dr", "Dimensionality reduction method",
+                                                               multiple = FALSE,
+                                                               choices = c("tSNE", "PCA", "UMAP"),
+                                                               selected = "tSNE")
+                                                   
+                                  ),
                  ),
                  
-                 conditionalPanel(condition = "input.tabs == 'joint'",
-                                  
-                                  #conditionalPanel(condition = "input.label_clusters =='TRUE",
-                                                   selectInput("dr_clustering", "Annotate cells by",
-                                                               multiple = FALSE,
-                                                               choices = c(
-                                                                 "Clustering at the region level" = "joint",
-                                                                 "Clustering at the sample level" = "sample",
-                                                                 "Timepoint"                      = "timepoint"
-                                                               ),
-                                                               selected = "Clustering at the region level")
-                                  #)
-                                  ,              
-                                  selectInput("dr", "Dimensionality reduction method",
-                                              multiple = FALSE,
-                                              choices = c("tSNE", "PCA", "UMAP"),
-                                              selected = "tSNE")
-                                  
-                                  
-                 ),
+
                  
                  actionButton("update", label = "Update")
                  
@@ -193,14 +198,18 @@ ui <- bootstrapPage(
                # the time course, either interactively or statically
                
                conditionalPanel(condition = "input.plotly_ribbon",
+                                
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
                                 plotlyOutput("plotlyRibbon", height = "5in", width = "12.5in")
                                 
                                 ),
+               
                conditionalPanel(condition = "!(input.plotly_ribbon)",
+                                
                                 # Plot the ribbon plot & legend as static plots with ggplot2
                                 plotOutput("plotRibbon"),
                                 plotOutput("ribbonLegend")
+                                
                                 ),
                
                # fluidRow(
