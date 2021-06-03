@@ -206,6 +206,7 @@ server <- function(input, output, session) {
     
   })
 
+  # TODO: allow download of static ribbon plot as pdf, containing legend as well
   # output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
   #                                           content = function(file) {
   #                                             ggsave(file, 
@@ -224,7 +225,8 @@ server <- function(input, output, session) {
     
   })
   
-  # Add hover functionality to the filled regions of the plot
+  # Add hover functionality to the filled regions of the plot & position legend
+  # TODO: Make hover only include cluster & show over the entire filled areas
   output$plotlyRibbon <- renderPlotly({ 
 
     add_trace(ribbon_plotly(),

@@ -108,8 +108,6 @@ ui <- bootstrapPage(
                                   ),
                  ),
                  
-
-                 
                  actionButton("update", label = "Update")
                  
     ),
@@ -197,6 +195,7 @@ ui <- bootstrapPage(
                # each gene is detected, broken down by cell type, across
                # the time course, either interactively or statically
                
+               # TODO: make the plot type change only after update button is pressed
                conditionalPanel(condition = "input.plotly_ribbon",
                                 
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
