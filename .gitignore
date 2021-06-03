@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 # Exclude files produced by R
+=======
+>>>>>>> temp/dev_howard
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 
+<<<<<<< HEAD
 README.html
 
 # Exclude cache
@@ -27,3 +31,13 @@ README.html
 
 # Exclude a toy app used for debugging purposes
 debug-app
+=======
+# Ignore exploratory code
+explore
+
+# Ignore actual data
+data/shared
+data/joint_cortex
+data/joint_pons
+
+>>>>>>> temp/dev_howard
