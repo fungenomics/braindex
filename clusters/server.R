@@ -129,7 +129,7 @@ server <- function(input, output, session) {
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "FF;",
                     "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
     
-    # text colour set to white if the background colour is dark, else remains default black
+    # Set text to white if the background colour is dark, else it's black (default)
     if (dark(point$Colour)) {
       style <- paste0(style, "color: #FFFFFF")
     }
@@ -196,6 +196,7 @@ server <- function(input, output, session) {
 
     ribbon() +
       theme(legend.position = "none")
+    
   })
   
   # Extract the ribbon plot legend to plot separately
