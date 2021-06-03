@@ -221,7 +221,7 @@ ui <- bootstrapPage(
                value = "timecourse"
       ),
       
-      #### ---- Joint Expression by region tab output ----
+      #### ---- Region joint expression tab output ----
       
       tabPanel("Single-cell expression, by region",
                
@@ -267,7 +267,7 @@ ui <- bootstrapPage(
                value = "joint"
       ),
       
-      #### ---- Joint Expression by sample tab output ---- 
+      #### ---- Sample joint expression tab output ---- 
       
       tabPanel("Single-cell expression, by sample",
                
