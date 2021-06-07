@@ -28,10 +28,12 @@ ui <- bootstrapPage(
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
-                                  materialSwitch("mean_exp", "Plot mean expression of genes",
-                                                 status = "success", # Success status doesn't have any effect other than green color scheme
-                                                 value = FALSE,
-                                                 right = TRUE),
+                                  conditionalPanel(condition = "input.gene.length > 1",
+                                                   materialSwitch("mean_exp", "Plot mean expression",
+                                                                  status = "success", # Success status doesn't have any effect other than green color scheme
+                                                                  value = FALSE,
+                                                                  right = TRUE),
+                                  ),
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
@@ -192,9 +194,9 @@ ui <- bootstrapPage(
                
                p("• Use the side bar to select which brain region to interrogate"),
                
-               p("• Use the switch below to toggle the plot's interactivity (immediate response)"),
+               p("• Use the switch below to toggle between static and interactive versions of the plot (immediate response, update button not required)"),
                
-               p("• The download button will store the non-interactive version of the plot as a pdf"),
+               p("• Download the static version of the plot as a pdf using the button above the plot"),
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
