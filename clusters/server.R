@@ -182,40 +182,44 @@ server <- function(input, output, session) {
   
   # STATIC TIMECOURSE 
   
-  # Generate ribbon plot and save the output so that we can later split
-  # into the plot itself, and the legend
-  ribbon <- reactive({
+  # Generate ribbon plot and save the output so that we can allow the
+  # user to download it 
+  ribbon_static <- reactive({
     
-    ribbon_plot(gene   = input_new()$gene[1],
+    p1 <- ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region)
     
-  })
-  
-  # Grabbing only the plot part, remove the legend
-  output$plotRibbon <- renderPlot({
-
-    p1 <- ribbon() +
-      theme(legend.position = "none")
-    leg <- cowplot::get_legend(ribbon())
-    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.7, 0.3))
+    # Get legend using cowplot
+    leg <- cowplot::get_legend(p1)
+    
+    # Grabbing only the plot part, remove the legend
+    p1 <- p1 +
+    theme(legend.position = "none")
+    
+    # Combine plot and custom legend into one plot for output
+    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.6, 0.4))
     
   })
   
-  # Extract the ribbon plot legend to plot separately
-  # output$ribbonLegend <- renderPlot({
-  # 
-  #   leg <- cowplot::get_legend(ribbon())
-  #   plot_grid(leg)
-  #   
-  # })
+  # Plot leaving some space between x-axis and legend
+  output$plotRibbon <- renderPlot({
+    
+    ribbon_static() +
+      theme(plot.margin = unit(c(0, 0, 5, 0), "lines"))
+    
+  })
 
   # TODO: allow download of static ribbon plot as pdf, containing legend as well
-  # output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
-  #                                           content = function(file) {
-  #                                             ggsave(file, 
-  #                                                    plot = #???,
-  #                                                    device = "pdf")
-  #                                           })
+  output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
+                                            content = function(file) {
+                                              ggsave(file, 
+                                                     ribbon_static(),
+                                                     width = 5,
+                                                     height = 5, 
+                                                     units = "in", 
+                                                     scale = 3)
+                                            },
+                                            contentType = "application/pdf")
   
   # INTERACTIVE TIMECOURSE
   

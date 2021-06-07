@@ -191,6 +191,10 @@ ui <- bootstrapPage(
                
                p("• If more than one gene is provided, only the first gene is plot"),
                
+               p("• Use the switch below to toggle plot interactivity (immediate response)"),
+               
+               p("• Use the button at the bottom of the page to download the plot when interactivity is off"),
+               
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
                # the time course, either interactively or statically
@@ -206,15 +210,14 @@ ui <- bootstrapPage(
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon", height = "7in")
+                                plotOutput("plotRibbon", height = "10in")
                                 
                                 ),
                
-               # fluidRow(
-               #   downloadButton("download_ribbon", 
-               #                  
-               #                  "Download image (PDF)")
-               # ),
+               fluidRow(
+                 downloadButton("download_ribbon",
+                                "Download ribbon plot (PDF)")
+               ),
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
