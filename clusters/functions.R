@@ -92,7 +92,7 @@ bubble_prep <- function(gene,
   exp <- exp %>%
     gather(., "Gene", "Expression", 2:ncol(.))
   
-  # Load the prorportion of cells in each cluster in which each gene was detected,
+  # Load the proportion of cells in each cluster in which each gene was detected,
   # and convert to long / tidy format with columns: Cluster, Gene, Pct1
   pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
                        columns = c("Cluster", gene)) %>%
@@ -307,7 +307,7 @@ ribbon_plot <- function(gene, region, ymax = NA, make_plotly = FALSE) {
   
 }
 
-
+# TODO: write documentation for this function
 dr_plot <- function(embedding,
                     colour_by = NULL,
                     colours = NULL,
@@ -461,7 +461,7 @@ dr_plot <- function(embedding,
 #' @param palette String or character vector. If a string,
 #' one of "viridis", "blues", or "redgrey", specifying which gradient
 #' palette to use. Otherwise, a character vector of colours (from low to high)
-#' to interpolate to create the scael. Default: redgrey.
+#' to interpolate to create the scale. Default: redgrey.
 #' @param title (Optional) String specifying the plot title
 #' @param alpha Numeric, fixed alpha for points. Default: 0.6
 #' @param point_size Numeric, size of points in scatterplot. Default: 1. (A smaller
@@ -517,7 +517,7 @@ feature_plot <- function(df,
     
   }
   
-  # Plot
+  # Plot using the palette chosen by the user
   gg <- df %>%
     ggplot(aes(x = dim1, y = dim2)) +
     geom_point(aes(colour = Expression), size = point_size, alpha = alpha)
@@ -589,7 +589,18 @@ feature_plot <- function(df,
   
 }
 
-
+#' Generate a violin plot of cell data
+#' 
+#' TODO: finish writing documentation for this function
+#' @param df Dataframe used as input for plot
+#' @param palette Character vector indicating palette to be used for the plot
+#' @param scale String determining which scale to use for the scale argument
+#' of geom_violin
+#' @param points Logical, about whether to show points in plot or not
+#' @param point_size Numeric, indicating the size of the point in mm
+#' @param y_lab String, label for the y axis of the plot
+#' 
+#' @return a ggplot object
 vln <- function(df,
                 palette,
                 scale = "width",
@@ -634,6 +645,7 @@ noTicks <- function() {
 #' Determine if a hex color is dark enough to warrant white text
 #' 
 #' @param hex_color a string hex color in the format e.g. #000000
+#' 
 #' @return TRUE if the color is dark enough
 dark <- function(hex_color) {
   
