@@ -50,14 +50,14 @@ ui <- bootstrapPage(
                                                            "Pons" = "joint_pons"))
                  ),
                  
-                 # Input for timecourse ribbon plot tab
-                 conditionalPanel(condition = "input.tabs == 'timecourse'",
-                                  
-                                  materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                                                 status = "success", # Success status doesn't have any effect other than green color scheme
-                                                 value = FALSE, 
-                                                 right = TRUE)
-                                  ),
+                 # # Input for timecourse ribbon plot tab
+                 # conditionalPanel(condition = "input.tabs == 'timecourse'",
+                 #                  
+                 #                  materialSwitch("plotly_ribbon", "Interactive ribbon plot",
+                 #                                 status = "success", # Success status doesn't have any effect other than green color scheme
+                 #                                 value = FALSE, 
+                 #                                 right = TRUE)
+                 #                  ),
                  
                  # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
@@ -187,13 +187,28 @@ ui <- bootstrapPage(
                
                p("• Use the side bar to select which brain region to interrogate"),
                
+               p("• Use the switch below to toggle the plot's interactivity (immediate response)"),
+               
+               p("• The download button will store the non-interactive version of the plot as a pdf"),
+               
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
-               p("• If more than one gene is provided, only the first gene is plot"),
+               p("• If more than one gene is provided, only the first gene is plotted"),
                
-               p("• Use the switch below to toggle plot interactivity (immediate response)"),
+               materialSwitch("plotly_ribbon", "Interactive ribbon plot",
+                              status = "success", # Success status doesn't have any effect other than green color scheme
+                              value = FALSE, 
+                              right = TRUE
+               ),
                
-               p("• Use the button at the bottom of the page to download the plot when interactivity is off"),
+               # Only allow download button to display if update button has been pressed 
+               # TODO: figure out how to do this condition in server.R using req() in reactive()
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_ribbon",
+                                                 "Download ribbon plot (PDF)")
+                                )
+               ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
                # each gene is detected, broken down by cell type, across
@@ -210,14 +225,11 @@ ui <- bootstrapPage(
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon", height = "10in")
+                                plotOutput("plotRibbon", height = "10in", width = "10in")
                                 
                                 ),
                
-               fluidRow(
-                 downloadButton("download_ribbon",
-                                "Download ribbon plot (PDF)")
-               ),
+
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
