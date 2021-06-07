@@ -28,6 +28,11 @@ ui <- bootstrapPage(
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
+                                  materialSwitch("mean_exp", "Plot mean expression of genes",
+                                                 status = "success", # Success status doesn't have any effect other than green color scheme
+                                                 value = FALSE,
+                                                 right = TRUE),
+                                  
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
                                                           "Conserve scale across genes" = FALSE),

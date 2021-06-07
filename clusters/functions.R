@@ -64,12 +64,15 @@ get_expression <- function(sample,
 #' @param gene Character vector, one or more genes of interest to plot
 #' @param scale Logical, whether or not to linearly scale gene expression across
 #' clusters to [0,1] to improve visualization. Default: TRUE
-#' TODO: Use this to provide an option to donwload the underlying data.
+#' @param show_mean Logical, whether or not to display the mean expression of
+#' given genes in a new bubble plot line. Default: FALSE
+#' TODO: Use this to provide an option to download the underlying data.
 #' 
 #' @examples 
 #' bubble_prep("Dlx1")
 bubble_prep <- function(gene,
-                        scale = TRUE) {
+                        scale = TRUE,
+                        show_mean = FALSE) {
   
   # Load the mean expression of genes across clusters, given gene of interest
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
@@ -134,6 +137,27 @@ bubble_prep <- function(gene,
     
     # Keep columns
     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
+  
+  # Create & append set of rows containing mean expression and pct values over all selected genes
+  if(show_mean) {
+    
+    mean_exp <- df %>% 
+      group_by(Cluster) %>%
+      summarize(., 
+                Gene = "Mean", 
+                Cluster = Cluster,
+                Sample = Sample,
+                Cell_type = Cell_type,
+                Cell_class = Cell_class,
+                N_cells = sum(N_cells),
+                Expression = mean(Expression), 
+                Pct1 = mean(Pct1),
+                Colour = Colour,
+                Gene_padded = "Mean")
+    df <- bind_rows(df, mean_exp) %>% 
+      distinct()
+    
+  }
   
   return(df)
   
@@ -594,9 +618,8 @@ feature_plot <- function(df,
 #' TODO: finish writing documentation for this function
 #' @param df Dataframe used as input for plot
 #' @param palette Character vector indicating palette to be used for the plot
-#' @param scale String determining which scale to use for the scale argument
-#' of geom_violin
-#' @param points Logical, about whether to show points in plot or not
+#' @param scale String determining input for the scale argument of geom_violin
+#' @param points Logical, whether or not to show points in plot
 #' @param point_size Numeric, indicating the size of the point in mm
 #' @param y_lab String, label for the y axis of the plot
 #' 

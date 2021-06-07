@@ -27,7 +27,8 @@ server <- function(input, output, session) {
       "label_clusters"   = input$label_clusters,
       "ft_palette"       = input$feature_palette,
       "vln_points" = input$vln_points,
-      "plotly_ribbon" = input$plotly_ribbon
+      "plotly_ribbon" = input$plotly_ribbon,
+      "mean_exp" = input$mean_exp
     )
     
     # Get the columns for the appropriate type of dim red
@@ -82,7 +83,8 @@ server <- function(input, output, session) {
     # Display up to the first 12 genes input
     # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
     bubble_prep(gene  = head(input_new()$gene, 12),
-                scale = input_new()$scale)
+                scale = input_new()$scale,
+                show_mean = input_new()$mean_exp)
     
   })
   
@@ -133,7 +135,6 @@ server <- function(input, output, session) {
     if (dark(point$Colour)) {
       style <- paste0(style, "color: #FFFFFF")
     }
-    
     
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
