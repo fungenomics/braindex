@@ -137,6 +137,7 @@ server <- function(input, output, session) {
     }
     
     # Actual tooltip created as wellPanel, specify info to display
+    # TODO: Change the text content of the well Panel to make sense when hovering over the mean expression plot
     wellPanel(
       style = style,
       p(HTML(paste0("<b> Gene: </b>",       point$Gene, "<br/>",

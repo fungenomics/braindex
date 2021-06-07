@@ -139,6 +139,7 @@ bubble_prep <- function(gene,
     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
   
   # Create & append set of rows containing mean expression and pct values over all selected genes
+  # TODO: fix the ordering so that the mean plot always goes at the bottom & other genes preserve user order
   if(show_mean) {
     
     mean_exp <- df %>% 
