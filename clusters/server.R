@@ -79,7 +79,7 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
-    # Display up to the first 6 genes input
+    # Display up to the first 12 genes input
     # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
     bubble_prep(gene  = head(input_new()$gene, 12),
                 scale = input_new()$scale)
@@ -194,18 +194,20 @@ server <- function(input, output, session) {
   # Grabbing only the plot part, remove the legend
   output$plotRibbon <- renderPlot({
 
-    ribbon() +
+    p1 <- ribbon() +
       theme(legend.position = "none")
+    leg <- cowplot::get_legend(ribbon())
+    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.7, 0.3))
     
   })
   
   # Extract the ribbon plot legend to plot separately
-  output$ribbonLegend <- renderPlot({
-
-    leg <- cowplot::get_legend(ribbon())
-    plot_grid(leg)
-    
-  })
+  # output$ribbonLegend <- renderPlot({
+  # 
+  #   leg <- cowplot::get_legend(ribbon())
+  #   plot_grid(leg)
+  #   
+  # })
 
   # TODO: allow download of static ribbon plot as pdf, containing legend as well
   # output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",

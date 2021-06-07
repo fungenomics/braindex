@@ -206,13 +206,13 @@ ui <- bootstrapPage(
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon"),
-                                plotOutput("ribbonLegend")
+                                plotOutput("plotRibbon", height = "7in")
                                 
                                 ),
                
                # fluidRow(
                #   downloadButton("download_ribbon", 
+               #                  
                #                  "Download image (PDF)")
                # ),
                
