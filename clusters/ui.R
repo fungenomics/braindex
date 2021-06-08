@@ -179,8 +179,7 @@ ui <- bootstrapPage(
                           withSpinner(color="#0dc5c1")
                  ),
                
-               # Only allow download button to display if update button has been pressed 
-               # TODO: figure out how to do this condition in server.R using req() in reactive()
+               # Only display download button if update has been pressed at least once
                conditionalPanel(condition='input.update!=0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
@@ -202,9 +201,9 @@ ui <- bootstrapPage(
                
                p("• Use the side bar to select which brain region to interrogate"),
                
-               p("• Use the switch below to toggle between static and interactive versions of the plot (update button not required)"),
+               p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
                
-               p("• Download the static version of the plot as a pdf using the button above the plot"),
+               p("• Download the static version of the plot as a pdf using the button below the plot"),
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
@@ -214,15 +213,6 @@ ui <- bootstrapPage(
                               status = "success", # Success status doesn't have any effect other than green color scheme
                               value = FALSE, 
                               right = TRUE
-               ),
-               
-               # Only allow download button to display if update button has been pressed 
-               # TODO: figure out how to do this condition in server.R using req() in reactive()
-               conditionalPanel(condition='input.update!=0',
-                                fluidRow(
-                                  downloadButton("download_ribbon",
-                                                 "Download ribbon plot (PDF)")
-                                )
                ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
@@ -241,6 +231,14 @@ ui <- bootstrapPage(
                                 plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
                                   withSpinner(color="#0dc5c1")
                                 ),
+               
+               # Only display download button if update has been pressed at least once
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_ribbon",
+                                                 "Download ribbon plot (PDF)")
+                                )
+               ),
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
