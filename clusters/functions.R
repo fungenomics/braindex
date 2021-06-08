@@ -348,6 +348,7 @@ ribbon_plot <- function(gene,
   
 }
 
+#TODO: finish documentation for this function
 #' Generate dimensionality reduction plot from data embedding
 #' 
 #' @param embedding
