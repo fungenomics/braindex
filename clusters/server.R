@@ -183,11 +183,12 @@ server <- function(input, output, session) {
   })
   
   # Download data in bubbleplot tab and expression table as TSV
-  output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
-                                            contentType = "text/tsv",
-                                            content = function(file) {
-                                              write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-                                            })
+  output$download_bubble <- 
+    downloadHandler(filename = "mean_cluster_expression.tsv",
+                    contentType = "text/tsv",
+                    content = function(file) {
+                      write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                    })
   
   #### ---- Timecourse tab content ----
   
@@ -219,17 +220,6 @@ server <- function(input, output, session) {
       theme(plot.margin = unit(c(0, 0, 1, 0), "lines"))
     
   })
-
-  output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
-                                            content = function(file) {
-                                              ggsave(file, 
-                                                     ribbon_static(),
-                                                     width = 5,
-                                                     height = 5, 
-                                                     units = "in", 
-                                                     scale = 3)
-                                            },
-                                            contentType = "application/pdf")
   
   # INTERACTIVE TIMECOURSE
   
@@ -255,6 +245,21 @@ server <- function(input, output, session) {
       layout(legend = list(x = 1, y = 0))
   })
 
+  # DOWNLOAD TIMECOURSE
+  
+  output$download_ribbon <- 
+    downloadHandler(filename = "timecourse_ribbon.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             ribbon_static(),
+                             width = 5,
+                             height = 5, 
+                             units = "in", 
+                             scale = 3)
+                    },
+                    contentType = "application/pdf")
+ 
+  
   #### ---- Region joint analysis tab content ----
   
   dr_joint_embedding <- reactive({
@@ -268,6 +273,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create a dim. red. plot coloured by cluster
   dr_joint <- reactive({
     
     req(input_new())
@@ -312,6 +318,7 @@ server <- function(input, output, session) {
   #   )
   # })
   
+  # Get the gene expression for the gene(s) from user input
   dr_joint_exp <- reactive({
     
     req(input_new())
@@ -325,6 +332,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create a dim. red. plot coloured by expression
   feature_joint <- reactive({
     
     req(input_new())
@@ -332,7 +340,7 @@ server <- function(input, output, session) {
     feature_plot(dr_joint_exp(),
                  label = FALSE,
                  
-                 # Parameters available to the user
+                 # Parameter available to the user
                  palette = input_new()$ft_palette)
     
   })
@@ -368,12 +376,14 @@ server <- function(input, output, session) {
   #   )
   # })
   
+  # Plot the dim. red. plots together
   output$scatter_joint <- renderPlot({
     
     plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
     
   })
   
+  # Create and plot a violin plot coloured by cluster
   output$vln_joint <- renderPlot({
     
     vln(dr_joint_exp(),
@@ -405,6 +415,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot dim. red. plots for each timepoint, coloured by cluster
   output$dr_sample <- renderPlot({
     
     # Shorten labels for palette
@@ -428,6 +439,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Get the gene expression for the gene(s) from user input
   dr_sample_exp <- reactive({
     
     region <- input_new()$region
@@ -443,6 +455,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot dim. red. plots for each timepoint, coloured by expression
   output$feature_sample <- renderPlot({
     
     map(dr_sample_exp(),
@@ -457,6 +470,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot violin plots for each timepoint, coloured by cluster
   output$vln_sample <- renderPlot({
 
     # Shorten labels for palette
