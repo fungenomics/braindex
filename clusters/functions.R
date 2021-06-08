@@ -2,6 +2,7 @@
 
 # Custom functions ----
 
+# TODO: write documentation for this function
 get_embedding <- function(sample,
                           dr_cols,
                           cluster_column,
@@ -19,7 +20,7 @@ get_embedding <- function(sample,
   
 }
 
-
+# TODO: write documentation for this function
 get_expression <- function(sample,
                            embedding,
                            gene,
@@ -150,13 +151,21 @@ bubble_prep <- function(gene,
                 Sample = Sample,
                 Cell_type = Cell_type,
                 Cell_class = Cell_class,
-                N_cells = sum(N_cells),
+                N_cells = N_cells,
                 Expression = mean(Expression), 
                 Pct1 = mean(Pct1),
                 Colour = Colour,
                 Gene_padded = "Mean")
+    
+    # Add the rows containing mean expression to the original dataframe,
+    # removing duplicate rows and ordering them once more by user input,
+    # except mean which is placed at the bottom
     df <- bind_rows(df, mean_exp) %>% 
-      distinct()
+      distinct() 
+    # %>%
+    #   mutate(Gene = factor(Cluster, levels = rev(gene))) %>% 
+    #   arrange(Gene) %>%
+    #   arrange(Gene == "Mean")
     
   }
   
@@ -178,6 +187,8 @@ bubble_prep <- function(gene,
 #'
 #' @examples
 #' bubble_prep("Dlx1") %>% bubbleplot()
+#' 
+#' @export
 bubble_plot <- function(df, max_point_size) {
   
   # Generate plot
@@ -260,12 +271,17 @@ prep_ribbon_input <- function(gene, region) {
 #' @param ymax Numeric, value in [0, 1] specifying the maximum value for the y-axis.
 #' By default, y-axis is scaled to the range of the data (see more at 
 #' https://ggplot2.tidyverse.org/reference/lims.html)
+#' @param make_plotly Logical, whether or not to make an interactive (plotly)
+#' version of the plot
 #'
-#' @return ggplot2 object
+#' @return ggplot2 object or a plotly object, depending on make_plotly param
 #'
 #' @examples
 #' ribbon_plot("Pdgfra", "joint_cortex")
-ribbon_plot <- function(gene, region, ymax = NA, make_plotly = FALSE) {
+ribbon_plot <- function(gene, 
+                        region, 
+                        ymax = NA, 
+                        make_plotly = FALSE) {
   
   # Adapt palette to brain region
   if (region == "joint_cortex") colours <- cortex_palette
@@ -332,7 +348,32 @@ ribbon_plot <- function(gene, region, ymax = NA, make_plotly = FALSE) {
   
 }
 
-# TODO: write documentation for this function
+#' Generate dimensionality reduction plot from data embedding
+#' 
+#' @param embedding
+#' @param colour_by
+#' @param colours
+#' @param colour_by_type
+#' @param label
+#' @param point_size
+#' @param alpha
+#' @param legend
+#' @param label_repel
+#' @param label_size
+#' @param cells
+#' @param order_by
+#' @param clusters_to_label
+#' @param hide_ticks
+#' @param title
+#' @param label_short
+#' @param na_color
+#' @param limits 
+#' @param hide_axes
+#' @param show_n_cells
+#' 
+#' @return A ggplot object
+#' 
+#' @export
 dr_plot <- function(embedding,
                     colour_by = NULL,
                     colours = NULL,
@@ -614,15 +655,17 @@ feature_plot <- function(df,
   
 }
 
-#' Generate a violin plot of cell data
+#' Generate a violin plot of single cell data
 #' 
-#' TODO: finish writing documentation for this function
-#' @param df Dataframe used as input for plot
-#' @param palette Character vector indicating palette to be used for the plot
-#' @param scale String determining input for the scale argument of geom_violin
-#' @param points Logical, whether or not to show points in plot
-#' @param point_size Numeric, indicating the size of the point in mm
-#' @param y_lab String, label for the y axis of the plot
+#' @param df Dataframe, contains data shown in plot
+#' @param palette Character vector, colour palette to be used for the plot
+#' @param scale String, determining the scale input for geom_violin, i.e. 
+#' the parameter that will remain the same between violins. Default: "width",
+#' other possible values are "area" and "count"
+#' @param points Logical, whether or not to show points in plot. Default: FALSE
+#' @param point_size Numeric, indicating the size of points in mm. Default: 0.4
+#' @param y_lab String, label for the y-axis of the plot. Default: "Normalized 
+#' expression"
 #' 
 #' @return a ggplot object
 vln <- function(df,
@@ -657,6 +700,8 @@ vln <- function(df,
   
 }
 
+#' Remove ticks from the axis of a ggplot
+#' 
 noTicks <- function() {
   
   theme(axis.text.x = element_blank(),
@@ -666,11 +711,11 @@ noTicks <- function() {
   
 }
 
-#' Determine if a hex color is dark enough to warrant white text
+#' Determine if a background colour is dark enough to warrant white text
 #' 
-#' @param hex_color a string hex color in the format e.g. #000000
+#' @param hex_color String, colour in hex colour format e.g. #000000
 #' 
-#' @return TRUE if the color is dark enough
+#' @return TRUE if the colour is dark enough (arbitrary)
 dark <- function(hex_color) {
   
   red <- substr(hex_color, 2, 2)
