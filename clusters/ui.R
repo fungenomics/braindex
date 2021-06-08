@@ -115,6 +115,7 @@ ui <- bootstrapPage(
                                   ),
                  ),
                  
+                 # Update button for all sidebar inputs
                  actionButton("update", label = "Update")
                  
     ),
@@ -145,11 +146,15 @@ ui <- bootstrapPage(
                
                # Display the bubbleplot
                div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
-                   fluidRow(plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
-               # UI for tooltip
-               fluidRow(
-                 uiOutput("bubble_hover_info"))
+                   fluidRow(
+                     plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
+                       withSpinner(color="#0dc5c1")
+                     ),
+                   
+                   # UI for tooltip
+                   fluidRow(
+                     uiOutput("bubble_hover_info"))
                    
                ),
                
@@ -169,7 +174,10 @@ ui <- bootstrapPage(
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
-               fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
+               fluidRow(
+                 DT::dataTableOutput("cluster_table", width = 1100) %>% 
+                          withSpinner(color="#0dc5c1")
+                 ),
                
                # Only allow download button to display if update button has been pressed 
                # TODO: figure out how to do this condition in server.R using req() in reactive()
@@ -194,7 +202,7 @@ ui <- bootstrapPage(
                
                p("• Use the side bar to select which brain region to interrogate"),
                
-               p("• Use the switch below to toggle between static and interactive versions of the plot (immediate response, update button not required)"),
+               p("• Use the switch below to toggle between static and interactive versions of the plot (update button not required)"),
                
                p("• Download the static version of the plot as a pdf using the button above the plot"),
                
@@ -218,25 +226,21 @@ ui <- bootstrapPage(
                ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
-               # each gene is detected, broken down by cell type, across
-               # the time course, either interactively or statically
-               
-               # TODO: make the plot type change only after update button is pressed
+               # each gene is detected, broken down by cell type, & across
+               # the time course. Either interactive (plotly) or static (ggpplot)
                conditionalPanel(condition = "input.plotly_ribbon",
                                 
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
-                                plotlyOutput("plotlyRibbon", height = "5in", width = "12.5in")
-                                
+                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% 
+                                  withSpinner(color="#0dc5c1")
                                 ),
                
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon", height = "10in", width = "10in")
-                                
+                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
+                                  withSpinner(color="#0dc5c1")
                                 ),
-               
-
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
@@ -257,8 +261,9 @@ ui <- bootstrapPage(
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
+                 plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
+                   withSpinner(color="#0dc5c1")
                  
-                 plotOutput("scatter_joint", width = "10in", height = "4in")
                  # plotOutput("dr_joint", width = "4.5in", height = "4in",
                  #            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
                  # 
@@ -268,20 +273,11 @@ ui <- bootstrapPage(
                  #            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
                  # 
                  # uiOutput("feature_joint_hover_info")
-                 
-                 
                ),
                
-               # fluidRow(
-               #   
-               # 
-               #   
-               # ),
-               
                fluidRow(
-                 
-                 plotOutput("vln_joint", width = "11in", height = "4in")
-                 
+                 plotOutput("vln_joint", width = "11in", height = "4in") %>% 
+                   withSpinner(color="#0dc5c1")
                ),
                
                # Specify the value to use when checking if this tab is selected
@@ -307,15 +303,13 @@ ui <- bootstrapPage(
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     
-                     plotOutput("dr_sample", width = "12.5in", height = "2.6in")
-                     
+                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% 
+                       withSpinner(color="#0dc5c1")
                    ),
                    
                    fluidRow(
-                     
-                     plotOutput("feature_sample", width = "12.5in", height = "3in")
-                     
+                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% 
+                       withSpinner(color="#0dc5c1")
                    )
             
           ),
@@ -331,11 +325,9 @@ ui <- bootstrapPage(
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     
-                     plotOutput("vln_sample", width = "10in", height = "20in")
-                     
+                     plotOutput("vln_sample", width = "10in", height = "20in") %>% 
+                       withSpinner(color="#0dc5c1")
                    )
-                   
           )
                  
         ),
