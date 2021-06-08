@@ -136,16 +136,25 @@ server <- function(input, output, session) {
       style <- paste0(style, "color: #FFFFFF")
     }
     
-    # Actual tooltip created as wellPanel, specify info to display
-    # TODO: Change the text content of the well Panel to make sense when hovering over the mean expression plot
+    # Specify text content of tooltips - special content for mean expression plot
+    if(identical(point$Gene, "Mean")){
+      tooltip_text <- paste0("Mean expression level of plotted genes <br/>",
+                             "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                             "<b> Cell type: </b>",  point$Cell_type, "<br/>",
+                             "<b> Sample: </b>",     point$Sample, "<br/>")
+    } else {
+      tooltip_text <- paste0("<b> Gene: </b>",       point$Gene, "<br/>",
+                             "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                             "<b> Cell type: </b>",  point$Cell_type, "<br/>",
+                             "<b> Sample: </b>",     point$Sample, "<br/>",
+                             "<b> Expression: </b>", point$Pct1 * point$N_cells, " ",
+                             point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")
+    }
+    
+    # Actual tooltip created as wellPanel
     wellPanel(
       style = style,
-      p(HTML(paste0("<b> Gene: </b>",       point$Gene, "<br/>",
-                    "<b> Cluster: </b>",    point$Cluster, "<br/>",
-                    "<b> Cell type: </b>",  point$Cell_type, "<br/>",
-                    "<b> Sample: </b>",     point$Sample, "<br/>",
-                    "<b> Expression: </b>", point$Pct1 * point$N_cells, " ",
-                    point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")))
+      p(HTML(tooltip_text))
     )
   })
   
@@ -199,7 +208,7 @@ server <- function(input, output, session) {
     theme(legend.position = "none")
     
     # Combine plot and custom legend into one plot for output
-    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.6, 0.4))
+    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.55, 0.45))
     
   })
   
@@ -207,11 +216,10 @@ server <- function(input, output, session) {
   output$plotRibbon <- renderPlot({
     
     ribbon_static() +
-      theme(plot.margin = unit(c(0, 0, 5, 0), "lines"))
+      theme(plot.margin = unit(c(0, 0, 1, 0), "lines"))
     
   })
 
-  # TODO: allow download of static ribbon plot as pdf, containing legend as well
   output$download_ribbon <- downloadHandler(filename = "timecourse_ribbon.pdf",
                                             content = function(file) {
                                               ggsave(file, 
