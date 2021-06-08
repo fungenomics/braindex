@@ -15,6 +15,7 @@ library(purrr)
 library(readr)
 library(shinyWidgets)
 library(plotly)
+library(shinycssloaders)
 
 # Set-up / load common data ----
 
