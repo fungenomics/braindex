@@ -149,7 +149,7 @@ ui <- bootstrapPage(
                    fluidRow(
                      plotOutput("bubble",
                                        hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
-                       withSpinner(color="#0dc5c1")
+                       withSpinner(type = 5)
                      ),
                    
                    # UI for tooltip
@@ -176,7 +176,7 @@ ui <- bootstrapPage(
                
                fluidRow(
                  DT::dataTableOutput("cluster_table", width = 1100) %>% 
-                          withSpinner(color="#0dc5c1")
+                          withSpinner(type = 5)
                  ),
                
                # Only display download button if update has been pressed at least once
@@ -222,14 +222,14 @@ ui <- bootstrapPage(
                                 
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
                                 plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% 
-                                  withSpinner(color="#0dc5c1")
+                                  withSpinner(type = 5)
                                 ),
                
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
                                 plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
-                                  withSpinner(color="#0dc5c1")
+                                  withSpinner(type = 5)
                                 ),
                
                # Only display download button if update has been pressed at least once
@@ -260,7 +260,7 @@ ui <- bootstrapPage(
                
                fluidRow(
                  plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
-                   withSpinner(color="#0dc5c1")
+                   withSpinner(type = 5)
                  
                  # plotOutput("dr_joint", width = "4.5in", height = "4in",
                  #            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
@@ -275,7 +275,7 @@ ui <- bootstrapPage(
                
                fluidRow(
                  plotOutput("vln_joint", width = "11in", height = "4in") %>% 
-                   withSpinner(color="#0dc5c1")
+                   withSpinner(type = 5)
                ),
                
                # Specify the value to use when checking if this tab is selected
@@ -302,12 +302,12 @@ ui <- bootstrapPage(
                    
                    fluidRow(
                      plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% 
-                       withSpinner(color="#0dc5c1")
+                       withSpinner(type = 5)
                    ),
                    
                    fluidRow(
                      plotOutput("feature_sample", width = "12.5in", height = "3in") %>% 
-                       withSpinner(color="#0dc5c1")
+                       withSpinner(type = 5)
                    )
             
           ),
@@ -324,7 +324,7 @@ ui <- bootstrapPage(
                    
                    fluidRow(
                      plotOutput("vln_sample", width = "10in", height = "20in") %>% 
-                       withSpinner(color="#0dc5c1")
+                       withSpinner(type = 5)
                    )
           )
                  
