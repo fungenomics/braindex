@@ -341,12 +341,13 @@ ribbon_plot <- function(gene,
     ylim(0, ymax) 
   
   if(make_plotly) {
-    return (ggplotly(p1) %>%
-              # Remove hovers on specific points, only keeping the ones on fills
-              # Changing it to hoveron="fills" causes a known issue, see link:
-              # https://github.com/ropensci/plotly/issues/1641
-              # TODO: find workaround or figure out a palette with no repeated colours
-              style(hoveron="points+fills")
+    return (ggplotly(p1,
+                     tooltip = "cluster") %>%
+              
+              # Add hovers both on points as well as filled areas of the plot
+              # Changing it to hoveron="fills" only causes a known issue, see:
+              # https://github.com/ropensci/plotly/issues/1641 
+              style(hoveron="points+fills") 
             )
   }  else {
     return(p1)
@@ -357,26 +358,29 @@ ribbon_plot <- function(gene,
 #TODO: finish documentation for this function
 #' Generate dimensionality reduction plot from data embedding
 #' 
-#' @param embedding
-#' @param colour_by
-#' @param colours
-#' @param colour_by_type
-#' @param label
-#' @param point_size
-#' @param alpha
-#' @param legend
-#' @param label_repel
-#' @param label_size
-#' @param cells
-#' @param order_by
-#' @param clusters_to_label
-#' @param hide_ticks
-#' @param title
-#' @param label_short
-#' @param na_color
-#' @param limits 
-#' @param hide_axes
-#' @param show_n_cells
+#' @param embedding ...
+#' @param colour_by String, variable to colour the plot by. Default: NULL
+#' @param colours Character vector, colour palette to use for plot. Default: NULL
+#' @param colour_by_type String, colour palette type, either "continuous" or 
+#' "discrete". Default: "discrete"
+#' @param label Logical, whether or not to label clusters in plot. Default: TRUE
+#' @param point_size Numeric, size of points in mm. Default: 0.4
+#' @param alpha Numeric, transparency of points (from 0 to 1). Default: 0.8
+#' @param legend Logical, whether or not to include a legend in the plot.
+#' Default: FALSE if label = TRUE and colour_by = NULL
+#' NOT USED? @param label_repel Logical, ... Default: TRUE
+#' @param label_size Numeric, font size of cluster labels. Default: 4
+#' @param cells Default: NULL
+#' @param order_by Default: Null
+#' @param clusters_to_label Default: NULL
+#' @param hide_ticks Logical, whether or not to hide axis ticks. Default: TRUE
+#' @param title String, title to be displayed on the plot. Default: NULL
+#' NOTE USED? @param label_short Logical, ... Default: FALSE
+#' @param na_color String, colour of NA values in plot. Default: "gray80"
+#' @param limits Numeric vector, limits used for a continuous colour palette. 
+#' Default: NULL
+#' @param hide_axes Logical, whether or not to hide the plot axes. Default: FALSE
+#' @param show_n_cells Logical, ... Default: FALSE
 #' 
 #' @return A ggplot object
 #' 
@@ -442,7 +446,7 @@ dr_plot <- function(embedding,
     
   } else {
     
-    if (is.null(limits)) lims <- c(NA, NA)
+    if (is.null(limits)) lims <- c(NA, NA) # NAs refer to the current min & max values
     else lims <- limits
     
     gg <- gg +
