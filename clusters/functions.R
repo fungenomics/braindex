@@ -139,10 +139,10 @@ bubble_prep <- function(gene,
     # Keep columns
     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
   
-  # Create & append set of rows containing mean expression and pct values over all selected genes
-  # TODO: fix the ordering so that the mean plot always goes at the bottom & other genes preserve user order
+  # Create & append set of rows containing mean expression over all selected genes
   if(show_mean) {
     
+    # Create mean expression rows, preserving information for tooltip
     mean_exp <- df %>% 
       group_by(Cluster) %>%
       summarize(., 
@@ -153,19 +153,18 @@ bubble_prep <- function(gene,
                 Cell_class = Cell_class,
                 N_cells = N_cells,
                 Expression = mean(Expression), 
-                Pct1 = mean(Pct1),
+                # Pct1 = mean(Pct1),
                 Colour = Colour,
-                Gene_padded = "MEAN")
+                Gene_padded = "MEAN") %>% 
+      mutate(Pct1 = 1) # Remove the Pct1 value from the mean expression
     
     # Add the rows containing mean expression to the original dataframe,
     # removing duplicate rows and ordering them once more by user input,
-    # except mean which is placed at the bottom
+    # except the mean which is placed at the bottom
+    gene_order_padded <- levels(df$Gene_padded)
     df <- bind_rows(df, mean_exp) %>% 
       distinct(.) %>%
-    # %>%
-    # mutate(Gene = factor(Cluster, levels = rev(gene))) %>%
-    # arrange(Gene)
-    arrange(., Gene == "MEAN")
+      mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
     
   }
   
