@@ -30,7 +30,8 @@ ui <- bootstrapPage(
                                   
                                   conditionalPanel(condition = "input.gene.length > 1",
                                                    materialSwitch("mean_exp", "Plot mean expression",
-                                                                  status = "success", # Success status doesn't have any effect other than green color scheme
+                                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                                  status = "success", 
                                                                   value = FALSE,
                                                                   right = TRUE),
                                   ),
@@ -57,20 +58,12 @@ ui <- bootstrapPage(
                                                            "Pons" = "joint_pons"))
                  ),
                  
-                 # # Input for timecourse ribbon plot tab
-                 # conditionalPanel(condition = "input.tabs == 'timecourse'",
-                 #                  
-                 #                  materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                 #                                 status = "success", # Success status doesn't have any effect other than green color scheme
-                 #                                 value = FALSE, 
-                 #                                 right = TRUE)
-                 #                  ),
-                 
                  # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
                                   materialSwitch("vln_points", "Show points in violin plots",
-                                                 status = "success", # Success status doesn't have any effect other than green color scheme
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
                                   
@@ -94,7 +87,8 @@ ui <- bootstrapPage(
                                   br(),
                                   
                                   materialSwitch("label_clusters", "Label clusters",
-                                                 status = "success",  # Success status doesn't have any effect other than green color scheme
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success", 
                                                  value = FALSE,
                                                  right = TRUE),
                                   
@@ -210,7 +204,8 @@ ui <- bootstrapPage(
                p("• If more than one gene is provided, only the first gene is plotted"),
                
                materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                              status = "success", # Success status doesn't have any effect other than green color scheme
+                              # status doesn't have any effect other than color scheme. See bootstrap status values
+                              status = "warning", 
                               value = FALSE, 
                               right = TRUE
                ),
