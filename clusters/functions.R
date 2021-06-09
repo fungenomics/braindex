@@ -146,7 +146,7 @@ bubble_prep <- function(gene,
     mean_exp <- df %>% 
       group_by(Cluster) %>%
       summarize(., 
-                Gene = "Mean", 
+                Gene = "MEAN", 
                 Cluster = Cluster,
                 Sample = Sample,
                 Cell_type = Cell_type,
@@ -155,17 +155,17 @@ bubble_prep <- function(gene,
                 Expression = mean(Expression), 
                 Pct1 = mean(Pct1),
                 Colour = Colour,
-                Gene_padded = "Mean")
+                Gene_padded = "MEAN")
     
     # Add the rows containing mean expression to the original dataframe,
     # removing duplicate rows and ordering them once more by user input,
     # except mean which is placed at the bottom
     df <- bind_rows(df, mean_exp) %>% 
-      distinct() 
+      distinct(.) %>%
     # %>%
-    #   mutate(Gene = factor(Cluster, levels = rev(gene))) %>% 
-    #   arrange(Gene) %>%
-    #   arrange(Gene == "Mean")
+    # mutate(Gene = factor(Cluster, levels = rev(gene))) %>%
+    # arrange(Gene)
+    arrange(., Gene == "MEAN")
     
   }
   
@@ -341,7 +341,13 @@ ribbon_plot <- function(gene,
     ylim(0, ymax) 
   
   if(make_plotly) {
-    return (ggplotly(p1))
+    return (ggplotly(p1) %>%
+              # Remove hovers on specific points, only keeping the ones on fills
+              # Changing it to hoveron="fills" causes a known issue, see link:
+              # https://github.com/ropensci/plotly/issues/1641
+              # TODO: find workaround or figure out a palette with no repeated colours
+              style(hoveron="points+fills")
+            )
   }  else {
     return(p1)
   }

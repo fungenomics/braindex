@@ -137,7 +137,7 @@ server <- function(input, output, session) {
     }
     
     # Specify text content of tooltips - special content for mean expression plot
-    if(identical(point$Gene, "Mean")){
+    if(identical(point$Gene, "MEAN")){
       tooltip_text <- paste0("Mean expression level of plotted genes <br/>",
                              "<b> Cluster: </b>",    point$Cluster, "<br/>",
                              "<b> Cell type: </b>",  point$Cell_type, "<br/>",
@@ -232,17 +232,10 @@ server <- function(input, output, session) {
     
   })
   
-  # Add hover functionality to the filled regions of the plot & position legend
-  # TODO: Make hover only include cluster & show over the entire filled areas
   output$plotlyRibbon <- renderPlotly({ 
 
-    add_trace(ribbon_plotly(),
-              type = "scatter",
-              mode = "lines+markers",
-              fill = "toself",
-              hoveron = "points+fills") %>%
       # Position legend to the right of the plot
-      layout(legend = list(x = 1, y = 0))
+      layout(ribbon_plotly(), legend = list(x = 1, y = 0))
   })
 
   # DOWNLOAD TIMECOURSE
