@@ -138,10 +138,11 @@ server <- function(input, output, session) {
     
     # Specify text content of tooltips - special content for mean expression plot
     if(identical(point$Gene, "MEAN")){
-      tooltip_text <- paste0("Mean expression level of plotted genes <br/>",
+      tooltip_text <- paste0("<b> Mean expression level of plotted genes </b> <br/>",
                              "<b> Cluster: </b>",    point$Cluster, "<br/>",
                              "<b> Cell type: </b>",  point$Cell_type, "<br/>",
-                             "<b> Sample: </b>",     point$Sample, "<br/>")
+                             "<b> Sample: </b>",     point$Sample, "<br/>",
+                             "<b> Mean expression: </b>", round(point$Expression, digits=2), "<br/>")
     } else {
       tooltip_text <- paste0("<b> Gene: </b>",       point$Gene, "<br/>",
                              "<b> Cluster: </b>",    point$Cluster, "<br/>",
@@ -478,7 +479,7 @@ server <- function(input, output, session) {
               points = input_new()$vln_points) +
           theme(plot.margin = unit(c(0.5, 0, 1, 1.5), "cm"))) %>%
       {plot_grid(plotlist = ., ncol = 1, align = "hv",
-                 labels = timepoints, label_size = 18)}
+                 labels = timepoints, label_size = 15)}
     
   })
   
