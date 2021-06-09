@@ -1,4 +1,4 @@
-
+library(janitor)
 library(tidyr)
 library(dplyr)
 library(readr)
@@ -7,6 +7,26 @@ metadata <- data.table::fread("../joint_mouse/metadata_20190715.tsv", data.table
   select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class, N_cells) %>% 
   mutate(Cluster_nounderscore = gsub("_", " ", Cluster)) %>% 
   write_tsv("../joint_mouse/metadata_20190715_select.tsv")
+
+# # Change duplicate colours in the loaded dataframe
+# metadata$Colour[which(metadata$Cell_type %in% dupes$Cell_type)] <- NA
+# for (row in 1:nrow(metadata)){
+#   if(is.na(metadata[row, 8])){
+#     metadata[row, 8] <- randomColor()
+#   }
+# }  
+# 
+# # Check for duplicates: this should return "No duplicate combinations found of: Colour"
+# dupes <- metadata %>% 
+#   select(Colour, Cell_type) %>% 
+#   distinct() %>% 
+#   get_dupes(Colour)
+
+# Alter original metadata file to contain new colours
+# data.table::fwrite(metadata, 
+#                    "data/joint_mouse/metadata_20190715_select.tsv",
+#                    sep = "\t",
+#                    append = FALSE)
 
 # Brain region palettes
 pons_palette <- metadata %>%
