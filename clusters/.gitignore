@@ -27,3 +27,6 @@ README.html
 
 # Exclude a toy app used for debugging purposes
 debug-app
+
+# Exclude R script used for testing
+test.R
