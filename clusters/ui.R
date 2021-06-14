@@ -250,6 +250,8 @@ ui <- bootstrapPage(
                
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
+               p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be inactive if clusters are labeled"),
+               
                p("• In the bottom row, violin plots display expression in each cluster, ordered by mean expression"),
                
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
@@ -258,22 +260,26 @@ ui <- bootstrapPage(
                  # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
                  #   withSpinner(type = 5)
                  
-                 # TODO: Figure out how to display both plots on the same line while 
-                 # preserving the uiOutput for hover (will it work after using plot_grid?)
-                 
-                 plotOutput("dr_joint", width = "4.5in", height = "4in",
-                            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
-                   withSpinner(type = 5),
-                 
-                 plotOutput("feature_joint", width = "5.33in", height = "4in"
-                            #,
-                            #hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
-                            ) %>% 
-                   withSpinner(type = 5)
+                 splitLayout(cellWidths = c("45.5%", "54.5%"), 
+                             #cellArgs = list(style = "padding: 6px"),
+                             
+                             (plotOutput("dr_joint", 
+                                         #width = "4.5in", 
+                                         height = "4in",
+                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
+                                withSpinner(type = 5)),
+                             
+                              (plotOutput("feature_joint", 
+                                         #width = "5.33in", 
+                                         height = "4in"
+                                         #, hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)
+                              ) %>% 
+                               withSpinner(type = 5))
+                         )
                 ),
                  
-                # Only show hover tooltip on clusters if it's a tSNE plot and clusters are unlabeled
-                conditionalPanel(condition = "input.dr == 'tSNE' && !(input.label_clusters)",
+                # Show hover tooltip on clusters if it's not a PCA plot and clusters are unlabeled
+                conditionalPanel(condition = "input.dr!='PCA' && !(input.label_clusters)",
                                  fluidRow(uiOutput("dr_joint_hover_info"))
                                 ),
 

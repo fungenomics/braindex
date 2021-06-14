@@ -288,6 +288,11 @@ server <- function(input, output, session) {
     
     req(input_new())
     
+    # Get colour associated with each cluster
+    palette_df <- enframe(input_new()$clust_palette, 
+                          name = "Cluster", 
+                          value = "Colour")
+    
     dr_plot(dr_joint_embedding(),
             colour_by = "Cluster",
             legend    = FALSE,
@@ -296,7 +301,10 @@ server <- function(input, output, session) {
             colours   = input_new()$clust_palette,
             label     = input_new()$label_clusters) %>% 
       # Get the centers part of list output
-      .$centers 
+      .$centers %>% 
+      # Add cluster colours into the same dataframe
+      left_join(palette_df, by = c("Cluster" = "Cluster")) 
+      
     
   })
   
@@ -311,18 +319,22 @@ server <- function(input, output, session) {
                         yvar = "center_y",
                         threshold = 25,
                         maxpoints = 1) %>%
-      select(Cluster)
+      select(Cluster, Colour)
 
     # Hide the tooltip if the cluster information is blank
     if (nrow(point) == 0) return(NULL)
 
     # Create style property for tooltip
-    # tooltip is set to default opacity
+    # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
-    # TODO: make tooltip colour match the cluster colour in the plot
-    style <- paste0("position:absolute; z-index:100;",
+    style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "FF;",
                     "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 250px;")
-
+    
+    # Set text to white if the background colour is dark, else it's black (default)
+    if (dark(point$Colour)) {
+      style <- paste0(style, "color: #FFFFFF")
+    }
+    
     # Actual tooltip created as wellPanel, specify info to display
     wellPanel(
       style = style,

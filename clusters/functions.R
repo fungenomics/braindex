@@ -474,11 +474,7 @@ dr_plot <- function(embedding,
     }
   }
   
-  # Store the center points (medians) 
-  # TODO: also store the Colours of each cluster
-  # (Tried altering other_columns within get_embeddings but it said the column
-  # did not exist, so I think it might be that Colour isn't present in joint_pons
-  # and joint_cortex files...?)
+  # Store the center points (medians) of each cluster
   centers <- embedding %>%
     group_by(Cluster) %>%
     summarise(center_x = median(dim1),
