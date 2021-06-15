@@ -128,7 +128,7 @@ server <- function(input, output, session) {
     # Create style property for tooltip
     # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "FF;",
+    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
                     "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
     
     # Set text to white if the background colour is dark, else it's black (default)
@@ -289,7 +289,7 @@ server <- function(input, output, session) {
     req(input_new())
     
     # Get colour associated with each cluster
-    palette_df <- enframe(input_new()$clust_palette, 
+    palette_df <- tibble::enframe(input_new()$clust_palette, 
                           name = "Cluster", 
                           value = "Colour")
     
@@ -327,8 +327,9 @@ server <- function(input, output, session) {
     # Create style property for tooltip
     # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "FF;",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 250px;")
+    style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "F2;",
+                    "left:", hover$coords_css$x, "px; top:", hover$coords_css$y + 175,  "px; 
+                    width: auto; height: 60px;")
     
     # Set text to white if the background colour is dark, else it's black (default)
     if (dark(point$Colour)) {
@@ -341,7 +342,7 @@ server <- function(input, output, session) {
       p(HTML(paste0(
         #"<b> Cell: </b>",    point$Cell, "<br/>",
                     #"<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
-                    "<b> Cluster: </b>", point$Cluster)))
+                    "<b>Cluster: </b>", point$Cluster)))
     )
   })
   
@@ -461,8 +462,8 @@ server <- function(input, output, session) {
                   
                   # Parameters available to the user
                   colours   = pal,
-                  label     = input_new()$label_clusters,)) %>% 
-                  {plot_grid(plotlist = ., ncol = 5)}
+                  label     = input_new()$label_clusters,)$plot) %>% 
+            {plot_grid(plotlist = ., ncol = 5)}
     
   })
   
