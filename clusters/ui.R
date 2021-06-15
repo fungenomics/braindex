@@ -260,7 +260,7 @@ ui <- bootstrapPage(
                  # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
                  #   withSpinner(type = 5)
                  
-                 splitLayout(cellWidths = c("45.5%", "54.5%"), 
+                 splitLayout(cellWidths = c(400, 475), 
                              #cellArgs = list(style = "padding: 6px"),
                              
                              (plotOutput("dr_joint", 
