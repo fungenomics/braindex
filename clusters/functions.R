@@ -712,6 +712,8 @@ vln <- function(df,
 
 #' Remove ticks from the axis of a ggplot
 #' 
+#' @example 
+#' gg <- gg + noTicks() 
 noTicks <- function() {
   
   theme(axis.text.x = element_blank(),
