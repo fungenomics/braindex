@@ -268,7 +268,7 @@ server <- function(input, output, session) {
   })
   
   # Create a dim. red. plot coloured by cluster
-  dr_joint <- reactive({
+  output$dr_joint <- renderPlot({
     
     req(input_new())
     
@@ -278,39 +278,72 @@ server <- function(input, output, session) {
             
             # Parameters available to the user
             colours   = input_new()$clust_palette,
-            label     = input_new()$label_clusters)
+            label     = input_new()$label_clusters) %>% 
+      # Get the plot part of list output
+      .$plot 
     
   })
   
-  # output$dr_joint_hover_info <- renderUI({
-  #   
-  #   hover <- input$dr_joint_hover
-  #   
-  #   # Find the nearest data point to the mouse hover position
-  #   point <- nearPoints(dr_joint_embedding(),
-  #                       hover,
-  #                       xvar = input_new()$dr[1],
-  #                       yvar = input_new()$dr[2],
-  #                       maxpoints = 1) %>% 
-  #     select(Cell, Cluster)
-  #   
-  #   # Hide the tooltip if mouse is not hovering over a bubble
-  #   if (nrow(point) == 0) return(NULL)
-  #   
-  #   # Create style property for tooltip
-  #   # background color is set to the cluster colour, with the tooltip a bit transparent
-  #   # z-index is set so we are sure are tooltip will be on top
-  #   style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-  #                   "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 350px;")
-  #   
-  #   # Actual tooltip created as wellPanel, specify info to display
-  #   wellPanel(
-  #     style = style,
-  #     p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-  #                   "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
-  #                   "</b>", point$Cluster, "<br/>")))
-  #   )
-  # })
+  clust_centers <- reactive({
+    
+    req(input_new())
+    
+    # Get colour associated with each cluster
+    palette_df <- enframe(input_new()$clust_palette, 
+                          name = "Cluster", 
+                          value = "Colour")
+    
+    dr_plot(dr_joint_embedding(),
+            colour_by = "Cluster",
+            legend    = FALSE,
+            
+            # Parameters available to the user
+            colours   = input_new()$clust_palette,
+            label     = input_new()$label_clusters) %>% 
+      # Get the centers part of list output
+      .$centers %>% 
+      # Add cluster colours into the same dataframe
+      left_join(palette_df, by = c("Cluster" = "Cluster")) 
+      
+    
+  })
+  
+  output$dr_joint_hover_info <- renderUI({
+
+    hover <- input$dr_joint_hover
+
+    # Find the nearest data point to the mouse hover position
+    point <- nearPoints(clust_centers(),
+                        hover,
+                        xvar = "center_x",
+                        yvar = "center_y",
+                        threshold = 25,
+                        maxpoints = 1) %>%
+      select(Cluster, Colour)
+
+    # Hide the tooltip if the cluster information is blank
+    if (nrow(point) == 0) return(NULL)
+
+    # Create style property for tooltip
+    # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
+    # z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "FF;",
+                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 250px;")
+    
+    # Set text to white if the background colour is dark, else it's black (default)
+    if (dark(point$Colour)) {
+      style <- paste0(style, "color: #FFFFFF")
+    }
+    
+    # Actual tooltip created as wellPanel, specify info to display
+    wellPanel(
+      style = style,
+      p(HTML(paste0(
+        #"<b> Cell: </b>",    point$Cell, "<br/>",
+                    #"<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+                    "<b> Cluster: </b>", point$Cluster)))
+    )
+  })
   
   # Get the gene expression for the gene(s) from user input
   dr_joint_exp <- reactive({
@@ -327,7 +360,7 @@ server <- function(input, output, session) {
   })
   
   # Create a dim. red. plot coloured by expression
-  feature_joint <- reactive({
+  output$feature_joint <- renderPlot({
     
     req(input_new())
     
@@ -370,12 +403,12 @@ server <- function(input, output, session) {
   #   )
   # })
   
-  # Plot the dim. red. plots together
-  output$scatter_joint <- renderPlot({
-    
-    plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
-    
-  })
+  # # Plot the dim. red. plots together
+  # output$scatter_joint <- renderPlot({
+  #   
+  #   plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
+  #   
+  # })
   
   # Create and plot a violin plot coloured by cluster
   output$vln_joint <- renderPlot({

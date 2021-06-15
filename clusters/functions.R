@@ -341,6 +341,7 @@ ribbon_plot <- function(gene,
   
   if(make_plotly) {
     return (ggplotly(p1,
+                     # Only display cluster information within tooltip
                      tooltip = "cluster") %>%
               
               # Add hovers both on points as well as filled areas of the plot
@@ -473,16 +474,17 @@ dr_plot <- function(embedding,
     }
   }
   
-  # Label clusters
+  # Store the center points (medians) of each cluster
+  centers <- embedding %>%
+    group_by(Cluster) %>%
+    summarise(center_x = median(dim1),
+              center_y = median(dim2))
+  
+  # Label clusters at cluster centers
   if (label) {
     
-    centers <- embedding %>%
-      group_by(Cluster) %>%
-      summarise(mean_x = median(dim1),
-                mean_y = median(dim2))
-    
     gg <- gg + ggrepel::geom_label_repel(data = centers,
-                                         aes(x = mean_x, y = mean_y),
+                                         aes(x = center_x, y = center_y),
                                          label = centers$Cluster,
                                          size = label_size,
                                          segment.color = 'grey50',
@@ -512,7 +514,8 @@ dr_plot <- function(embedding,
   
   if (!is.null(title)) gg <- gg + ggtitle(title)
   
-  return(gg)
+  # Return the cluster centers for hover functionality on plot
+  return(list("plot" = gg, "centers" = centers))
   
 }
 

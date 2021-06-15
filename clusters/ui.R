@@ -83,7 +83,8 @@ ui <- bootstrapPage(
                                   
                                   # Produce separation in sidebar: all options below are about the plots
                                   hr(style = "border-top: 1px solid #000000;"),
-                                  h5(strong("Dimensionality reduction plots")),
+                                  h4("Dimensionality reduction plots", 
+                                            style = "font-size:16px;"),
                                   br(),
                                   
                                   materialSwitch("label_clusters", "Label clusters",
@@ -249,32 +250,48 @@ ui <- bootstrapPage(
                
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
+               p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be inactive if clusters are labeled"),
+               
                p("• In the bottom row, violin plots display expression in each cluster, ordered by mean expression"),
                
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
-                 plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
-                   withSpinner(type = 5)
+                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
+                 #   withSpinner(type = 5)
                  
-                 # plotOutput("dr_joint", width = "4.5in", height = "4in",
-                 #            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
-                 # 
-                 # uiOutput("dr_joint_hover_info"),
-                 # 
-                 # plotOutput("feature_joint", width = "5.33in", height = "4in",
-                 #            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
-                 # 
-                 # uiOutput("feature_joint_hover_info")
-               ),
+                 splitLayout(cellWidths = c("45.5%", "54.5%"), 
+                             #cellArgs = list(style = "padding: 6px"),
+                             
+                             (plotOutput("dr_joint", 
+                                         #width = "4.5in", 
+                                         height = "4in",
+                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
+                                withSpinner(type = 5)),
+                             
+                              (plotOutput("feature_joint", 
+                                         #width = "5.33in", 
+                                         height = "4in"
+                                         #, hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)
+                              ) %>% 
+                               withSpinner(type = 5))
+                         )
+                ),
+                 
+                # Show hover tooltip on clusters if it's not a PCA plot and clusters are unlabeled
+                conditionalPanel(condition = "input.dr!='PCA' && !(input.label_clusters)",
+                                 fluidRow(uiOutput("dr_joint_hover_info"))
+                                ),
+
+                #fluidRow(uiOutput("feature_joint_hover_info")),
                
-               fluidRow(
-                 plotOutput("vln_joint", width = "11in", height = "4in") %>% 
-                   withSpinner(type = 5)
-               ),
+                fluidRow(
+                  plotOutput("vln_joint", width = "11in", height = "4in") %>% 
+                    withSpinner(type = 5)
+                ),
                
-               # Specify the value to use when checking if this tab is selected
-               value = "joint"
+                # Specify the value to use when checking if this tab is selected
+                value = "joint"
       ),
       
       #### ---- Sample joint expression tab output ---- 
