@@ -126,10 +126,10 @@ server <- function(input, output, session) {
     if (nrow(point) == 0) return(NULL)
     
     # Create style property for tooltip
-    # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
+    # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
+                    "left: -350px; top: 450px; width: 350px;")
     
     # Set text to white if the background colour is dark, else it's black (default)
     if (dark(point$Colour)) {
@@ -325,7 +325,7 @@ server <- function(input, output, session) {
     if (nrow(point) == 0) return(NULL)
 
     # Create style property for tooltip
-    # background is set to the cluster colour, with opacity = 100% ("FF" at end of hex)
+    # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "F2;",
                     "left:", hover$coords_css$x, "px; top:", hover$coords_css$y + 175,  "px; 
@@ -462,7 +462,10 @@ server <- function(input, output, session) {
                   
                   # Parameters available to the user
                   colours   = pal,
-                  label     = input_new()$label_clusters,)$plot) %>% 
+                  label     = input_new()$label_clusters,
+                  
+                  # Get the plot part of list output
+                  )$plot) %>% 
             {plot_grid(plotlist = ., ncol = 5)}
     
   })
