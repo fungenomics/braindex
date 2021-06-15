@@ -250,7 +250,7 @@ ui <- bootstrapPage(
                
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
-               p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be inactive if clusters are labeled"),
+               p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be disabled if clusters are labeled"),
                
                p("• In the bottom row, violin plots display expression in each cluster, ordered by mean expression"),
                
@@ -260,7 +260,7 @@ ui <- bootstrapPage(
                  # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
                  #   withSpinner(type = 5)
                  
-                 splitLayout(cellWidths = c(400, 475), 
+                 splitLayout(cellWidths = c(432, 512), # 432 = 4.5in, 512px = 5.33in
                              #cellArgs = list(style = "padding: 6px"),
                              
                              (plotOutput("dr_joint", 
