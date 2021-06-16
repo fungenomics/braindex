@@ -1,6 +1,7 @@
 # Libraries
 library(rintrojs)
 library(shiny)
+#library(shinyjs)
 library(tidyr)
 library(stringr)
 library(tibble)
@@ -13,7 +14,13 @@ library(cowplot)
 library(pheatmap)
 library(DT)
 library(rcytoscapejs2) # downloaded from https://github.com/uc-bd2k/rcytoscapejs2
+#could probably get rid of rcytoscape
 library(glue)
+library(GGally)
+library(sna)
+library(igraph)
+library(integraph)
+library(purrr)
 
 # Data
 load("data/joint_cortex/cortex_prep.Rda") # a list, data_cortex

@@ -3,6 +3,7 @@ library(tibble)
 library(stringr)
 library(readr)
 library(dplyr)
+library(feather)
 source("../functions.R")
 
 # ———————————————————————————————————color palette————————————————————————————————————————
@@ -34,7 +35,7 @@ colour_palette <- metadata %>%
 
 # A helper function to prepare a dataframe to annotate the heatmap with colours
 hm_anno <- makePheatmapAnno(colour_palette_cluster, "Cluster")
-# this is used for generating the anno_row, since we need to have the same rownames as
+# this is used for generating the anno_row, since we need to have the same row names as
 # those in t(act_cluster) to color correctly
 
 hm_anno_new <- makePheatmapAnno(colour_palette, "Cluster")
@@ -54,6 +55,9 @@ TF_target_gene <- as_tibble(read_rds("joint_cortex/joint_cortex.regulon_target_i
   select(-logo)
 unique_TF <- unique(TF_target_gene[["TF"]])
 
+#reads metadata file for color palette of clustering by region
+forebrain_cluster_palette <- read_tsv("joint_cortex/Jessa2019_Table_2b_joint_cortex_metadata.tsv")
+forebrain_cluster_palette <- forebrain_cluster_palette %>% select(Cluster, Colour) %>% deframe()
 
 TF_and_ext <- identify_tf(TF_active)
 
@@ -92,6 +96,10 @@ TF_target_gene_pon <- as_tibble(read_rds("joint_pons/joint_pons.regulon_target_i
   select(-logo)
 unique_TF_pon <- unique(TF_target_gene_pon[["TF"]])
 
+#reads metadata file for color palette of clustering by region
+pons_cluster_palette <- read_tsv("joint_pons/Jessa2019_Table_2c_joint_pons_metadata.tsv")
+pons_cluster_palette <- pons_cluster_palette %>% select(Cluster, Colour) %>% deframe()
+
 
 TF_and_ext_pon <- identify_tf(TF_active_pon)
 
@@ -129,7 +137,8 @@ data_cortex <- list(
   "binary_active_TFs" = tf_df,
   "timeseries_input_meta" = timeseries_input_meta_cortex,
   "binary_activity" = binary_activity,
-  "tfs_not_exist_timeseries" = l_nexist_cortex
+  "tfs_not_exist_timeseries" = l_nexist_cortex,
+  "cluster_palette" = forebrain_cluster_palette
 
 )
 
@@ -142,11 +151,38 @@ data_pons <- list(
   "binary_active_TFs" = tf_df_pon,
   "timeseries_input_meta" = timeseries_input_meta_pons,
   "binary_activity" = binary_activity_pon,
-  "tfs_not_exist_timeseries" = l_nexist_pons
-  
+  "tfs_not_exist_timeseries" = l_nexist_pons,
+  "cluster_palette" = pons_cluster_palette
 )
+#-----------------------------forebrain joint cluster regulon activity data for heatmap------------
+forebrain_regulon_activity_data <-
+  read_feather("joint_cortex/joint_cortex.regulon_activity_per_cell.feather")
 
+forebrain_joint_cluster_info <- forebrain_data %>% select(Cell, Joint_cluster)
 
+forebrain_cluster_regulon_data <- 
+  inner_join(forebrain_regulon_activity_data, forebrain_joint_cluster_info, by = "Cell")
+
+forebrain_cluster_regulon_data <- forebrain_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
+  summarize_if(is.numeric, mean)
+
+write_feather(forebrain_cluster_regulon_data, 
+     path = "joint_cortex/joint_cortex.regulon_activity_per_joint_cluster.feather")
+
+#-----------------------------pons joint cluster regulon activity data for heatmap------------
+pons_regulon_activity_data <-
+  read_feather("joint_pons/joint_pons.regulon_activity_per_cell.feather")
+
+pons_joint_cluster_info <- pons_data %>% select(Cell, Joint_cluster)
+
+pons_cluster_regulon_data <- 
+  inner_join(pons_regulon_activity_data, pons_joint_cluster_info, by = "Cell")
+
+pons_cluster_regulon_data <- pons_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
+  summarize_if(is.numeric, mean)
+
+write_feather(pons_cluster_regulon_data, 
+              path = "joint_pons/joint_pons.regulon_activity_per_joint_cluster.feather")
 # ---------------------------cortex data-----------------------------
 save(data_cortex, file = "joint_cortex/cortex_prep.Rda")
 
