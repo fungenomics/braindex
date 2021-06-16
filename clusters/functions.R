@@ -144,19 +144,21 @@ bubble_prep <- function(gene,
     
     # Create mean expression rows, preserving information for tooltip
     mean_exp <- df %>% 
-      group_by(Cluster) %>%
-      summarize(., 
-                Gene = "MEAN", 
-                Cluster = Cluster,
-                Sample = Sample,
-                Cell_type = Cell_type,
-                Cell_class = Cell_class,
-                N_cells = N_cells,
-                Expression = mean(Expression), 
-                # Pct1 = mean(Pct1),
-                Colour = Colour,
-                Gene_padded = "MEAN") %>% 
-      mutate(Pct1 = 1) # Remove the Pct1 value from the mean expression
+      group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
+      summarize(#Gene = "MEAN", 
+                #Cluster = Cluster,
+                #Sample = Sample,
+                #Cell_type = Cell_type,
+                #Cell_class = Cell_class,
+                #N_cells = N_cells,
+                Expression = mean(Expression) 
+                #Pct1 = mean(Pct1),
+                #Colour = Colour,
+                #Gene_padded = "MEAN"
+                ) %>% 
+      # Remove the Pct1 value from the mean expression
+      # and label the mean expression
+      mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
     
     # Add the rows containing mean expression to the original dataframe,
     # removing duplicate rows and ordering them once more by user input,
