@@ -42,13 +42,16 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
     #set_vertex_attr("label_always", index = unique_TF, "yes")
   
   if(labelNodes){
+    set.seed(2)
     ggnet2(net, color = "Gene_Type", label = labelNodes, label.size = 3, size = "Gene_Type",
            size.palette = c("Gene Target" = 6, "TF" = 6, "Input Gene" = 6),  
            palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
       guides(size = FALSE)
   }
   else{
+    set.seed(2)
     ggnet2(net, color = "Gene_Type", label = tf, label.size = 3, size = "Gene_Type",
+           mode = "fruchtermanreingold", laout.par = list(niter = 1000),
            size.palette = c("Gene Target" = 2, "TF" = 6, "Input Gene" = 6),
            palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
       guides(size = FALSE)

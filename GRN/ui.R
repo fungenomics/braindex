@@ -6,7 +6,7 @@ ui <- fluidPage(
     titlePanel("Joint Cortex and Pons Transcription Factor Activity"),
     data.step = 1,
     data.intro = "This app displays transcription factor activity inference data from 
-    a developmental timecourse of the mouse forebrain in pons in three main tabs including:"
+    a developmental timecourse of the mouse Pons and Forebrain."
   ),
   
   sidebarLayout(
@@ -99,7 +99,8 @@ ui <- fluidPage(
                        #              value = 50),
                        checkboxGroupInput("method", "Cluster Method",
                                           choices = c("Joint Cluster" = "joint",
-                                                      "Sample Cluster" = "Cluster")),
+                                                      "Sample Cluster" = "Cluster"),
+                                          selected = "joint"),
                        selectInput(inputId = "time",
                                    label = "Timepoint to Visualize",
                                    choices = c("All","e12", "e15", "p0", "p3", "p6"),
@@ -125,6 +126,10 @@ ui <- fluidPage(
       tabsetPanel(
       
         tabPanel(
+          p("This tab displays information corresponding to the selected transcription factors and their predicted gene targets."),
+          p("- Strength of Association represents "),
+          p("- The top row is colored by cluster and the bottom row is colored by transcription factor activity"),
+          p("- Only the first two transcriptions factors are displayed"),
           title = "Transcription Factor Target Information",
           textOutput("general_desc"),
           introBox(
