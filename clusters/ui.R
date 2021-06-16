@@ -29,9 +29,9 @@ ui <- bootstrapPage(
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
                                   conditionalPanel(condition = "input.gene.length > 1",
-                                                   materialSwitch("mean_exp", "Plot mean expression",
+                                                   materialSwitch("mean_exp", "Plot mean expression over the selected genes",
                                                                   # status doesn't have any effect other than color scheme. See bootstrap status values
-                                                                  status = "success", 
+                                                                  status = "success",
                                                                   value = FALSE,
                                                                   right = TRUE),
                                   ),
@@ -129,9 +129,11 @@ ui <- bootstrapPage(
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
-               p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster"),
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+               
+               p("• When plotting more than one gene, use the sidebar switch to plot the mean expression over the plotted genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
