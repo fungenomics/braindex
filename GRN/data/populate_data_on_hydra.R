@@ -21,7 +21,8 @@ library(rjson)
 library(purrr)
 library(glue)
 
-path_to_projects <- "/mnt/KLEINMAN_JBOD1/SCRATCH/projects/"
+username = "howard.li"
+path_to_projects <- "projects/kleinman"
 
 # Read in data.json, returning a list with one element per folder
 app_data <- rjson::fromJSON(file = "data.json")
@@ -44,7 +45,7 @@ process_file <- function(file, dir_name) {
     dest <- file.path(dir_name, file$file)
     
     # Copy the file
-    cmd <- glue("cp {src} {dest}")
+    cmd <- glue("rsync {username}@hydra.ladydavis.ca:{src} {dest}")
     
     # Echo the command
     message(cmd)
