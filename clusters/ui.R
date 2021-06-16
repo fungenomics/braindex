@@ -129,7 +129,7 @@ ui <- bootstrapPage(
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
-               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster"),
+               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster that express the gene"),
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
                
@@ -165,7 +165,7 @@ ui <- bootstrapPage(
       tabPanel("Expression table", #TODO: confirm a better name
                
                tags$br(),
-               p("This table compares the expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
                
                p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                
