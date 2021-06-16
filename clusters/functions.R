@@ -1,36 +1,8 @@
-
-# Load required packages ----
-library(feather)
-library(tidyr)
-library(dplyr)
-library(cowplot)
-library(glue)
-library(stringr)
-library(ggplot2)
-library(ggrepel)
-
-# Set-up / load common data ----
-
-# Cluster-level metadata
-metadata <- data.table::fread("data/joint_mouse/metadata_20190715_select.tsv",
-                              data.table = FALSE)
-
-# Red-blue gradient and brain region colour palettes
-load("data/joint_mouse/palettes.Rda")
-
-cortex_palette_joint <- readRDS("data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds")
-pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds")
-
-# Joint mouse colour palette
-load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
-
-# Vector specifying the order of clusters in the dendrogram
-load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
-
 # Shiny helpers ----
 
 # Custom functions ----
 
+# TODO: write documentation for this function
 get_embedding <- function(sample,
                           dr_cols,
                           cluster_column,
@@ -48,7 +20,7 @@ get_embedding <- function(sample,
   
 }
 
-
+# TODO: write documentation for this function
 get_expression <- function(sample,
                            embedding,
                            gene,
@@ -93,12 +65,15 @@ get_expression <- function(sample,
 #' @param gene Character vector, one or more genes of interest to plot
 #' @param scale Logical, whether or not to linearly scale gene expression across
 #' clusters to [0,1] to improve visualization. Default: TRUE
-#' TODO: Use this to provide an option to donwload the underlying data.
+#' @param show_mean Logical, whether or not to display the mean expression of
+#' given genes in a new bubble plot line. Default: FALSE
+#' TODO: Use this to provide an option to download the underlying data.
 #' 
 #' @examples 
 #' bubble_prep("Dlx1")
 bubble_prep <- function(gene,
-                        scale = TRUE) {
+                        scale = TRUE,
+                        show_mean = FALSE) {
   
   # Load the mean expression of genes across clusters, given gene of interest
   exp <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
@@ -121,7 +96,7 @@ bubble_prep <- function(gene,
   exp <- exp %>%
     gather(., "Gene", "Expression", 2:ncol(.))
   
-  # Load the prorportion of cells in each cluster in which each gene was detected,
+  # Load the proportion of cells in each cluster in which each gene was detected,
   # and convert to long / tidy format with columns: Cluster, Gene, Pct1
   pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
                        columns = c("Cluster", gene)) %>%
@@ -140,11 +115,14 @@ bubble_prep <- function(gene,
     
     # Pad gene names so that the plot takes up a more standardized
     # width; to roughly the the # of characters in the gene w/ longest name
-    # However, letters take up more pixels thn spaces, so do less padding
+    # However, letters take up more pixels than spaces, so do less padding
     # for genes with longer names
+    # TODO: Test the (commented) third line inside mutate() and adjust padding as required
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
-      str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " "))
+      between(str_length(Gene), 5, 8) ~ str_pad(Gene, 12, side = 'right', pad = " ")
+      #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
+      )
     ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
     
@@ -160,6 +138,37 @@ bubble_prep <- function(gene,
     
     # Keep columns
     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
+  
+  # Create & append set of rows containing mean expression over all selected genes
+  if(show_mean) {
+    
+    # Create mean expression rows, preserving information for tooltip
+    mean_exp <- df %>% 
+      group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
+      summarize(#Gene = "MEAN", 
+                #Cluster = Cluster,
+                #Sample = Sample,
+                #Cell_type = Cell_type,
+                #Cell_class = Cell_class,
+                #N_cells = N_cells,
+                Expression = mean(Expression) 
+                #Pct1 = mean(Pct1),
+                #Colour = Colour,
+                #Gene_padded = "MEAN"
+                ) %>% 
+      # Remove the Pct1 value from the mean expression
+      # and label the mean expression
+      mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
+    
+    # Add the rows containing mean expression to the original dataframe,
+    # removing duplicate rows and ordering them once more by user input,
+    # except the mean which is placed at the bottom
+    gene_order_padded <- levels(df$Gene_padded)
+    df <- bind_rows(df, mean_exp) %>% 
+      distinct(.) %>%
+      mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
+    
+  }
   
   return(df)
   
@@ -179,6 +188,8 @@ bubble_prep <- function(gene,
 #'
 #' @examples
 #' bubble_prep("Dlx1") %>% bubbleplot()
+#' 
+#' @export
 bubble_plot <- function(df, max_point_size) {
   
   # Generate plot
@@ -261,12 +272,17 @@ prep_ribbon_input <- function(gene, region) {
 #' @param ymax Numeric, value in [0, 1] specifying the maximum value for the y-axis.
 #' By default, y-axis is scaled to the range of the data (see more at 
 #' https://ggplot2.tidyverse.org/reference/lims.html)
+#' @param make_plotly Logical, whether or not to make an interactive (plotly)
+#' version of the plot
 #'
-#' @return ggplot2 object
+#' @return ggplot2 object or a plotly object, depending on make_plotly param
 #'
 #' @examples
 #' ribbon_plot("Pdgfra", "joint_cortex")
-ribbon_plot <- function(gene, region, ymax = NA) {
+ribbon_plot <- function(gene, 
+                        region, 
+                        ymax = NA, 
+                        make_plotly = FALSE) {
   
   # Adapt palette to brain region
   if (region == "joint_cortex") colours <- cortex_palette
@@ -325,11 +341,52 @@ ribbon_plot <- function(gene, region, ymax = NA) {
     ylab(glue("proportion {gene}+ cells")) +
     ylim(0, ymax) 
   
-  return(p1)
+  if(make_plotly) {
+    return (ggplotly(p1,
+                     # Only display cluster information within tooltip
+                     tooltip = "cluster") %>%
+              
+              # Add hovers both on points as well as filled areas of the plot
+              # Changing it to hoveron="fills" only causes a known issue, see:
+              # https://github.com/ropensci/plotly/issues/1641 
+              style(hoveron="points+fills") 
+            )
+  }  else {
+    return(p1)
+  }
   
 }
 
-
+#TODO: finish documentation for this function
+#' Generate dimensionality reduction plot from data embedding
+#' 
+#' @param embedding ...
+#' @param colour_by String, variable to colour the plot by. Default: NULL
+#' @param colours Character vector, colour palette to use for plot. Default: NULL
+#' @param colour_by_type String, colour palette type, either "continuous" or 
+#' "discrete". Default: "discrete"
+#' @param label Logical, whether or not to label clusters in plot. Default: TRUE
+#' @param point_size Numeric, size of points in mm. Default: 0.4
+#' @param alpha Numeric, transparency of points (from 0 to 1). Default: 0.8
+#' @param legend Logical, whether or not to include a legend in the plot.
+#' Default: FALSE if label = TRUE and colour_by = NULL
+#' NOT USED? @param label_repel Logical, ... Default: TRUE
+#' @param label_size Numeric, font size of cluster labels. Default: 4
+#' @param cells Default: NULL
+#' @param order_by Default: Null
+#' @param clusters_to_label Default: NULL
+#' @param hide_ticks Logical, whether or not to hide axis ticks. Default: TRUE
+#' @param title String, title to be displayed on the plot. Default: NULL
+#' NOTE USED? @param label_short Logical, ... Default: FALSE
+#' @param na_color String, colour of NA values in plot. Default: "gray80"
+#' @param limits Numeric vector, limits used for a continuous colour palette. 
+#' Default: NULL
+#' @param hide_axes Logical, whether or not to hide the plot axes. Default: FALSE
+#' @param show_n_cells Logical, ... Default: FALSE
+#' 
+#' @return A ggplot object
+#' 
+#' @export
 dr_plot <- function(embedding,
                     colour_by = NULL,
                     colours = NULL,
@@ -391,7 +448,7 @@ dr_plot <- function(embedding,
     
   } else {
     
-    if (is.null(limits)) lims <- c(NA, NA)
+    if (is.null(limits)) lims <- c(NA, NA) # NAs refer to the current min & max values
     else lims <- limits
     
     gg <- gg +
@@ -419,16 +476,17 @@ dr_plot <- function(embedding,
     }
   }
   
-  # Label clusters
+  # Store the center points (medians) of each cluster
+  centers <- embedding %>%
+    group_by(Cluster) %>%
+    summarise(center_x = median(dim1),
+              center_y = median(dim2))
+  
+  # Label clusters at cluster centers
   if (label) {
     
-    centers <- embedding %>%
-      group_by(Cluster) %>%
-      summarise(mean_x = median(dim1),
-                mean_y = median(dim2))
-    
     gg <- gg + ggrepel::geom_label_repel(data = centers,
-                                         aes(x = mean_x, y = mean_y),
+                                         aes(x = center_x, y = center_y),
                                          label = centers$Cluster,
                                          size = label_size,
                                          segment.color = 'grey50',
@@ -458,7 +516,8 @@ dr_plot <- function(embedding,
   
   if (!is.null(title)) gg <- gg + ggtitle(title)
   
-  return(gg)
+  # Return the cluster centers for hover functionality on plot
+  return(list("plot" = gg, "centers" = centers))
   
 }
 
@@ -483,7 +542,7 @@ dr_plot <- function(embedding,
 #' @param palette String or character vector. If a string,
 #' one of "viridis", "blues", or "redgrey", specifying which gradient
 #' palette to use. Otherwise, a character vector of colours (from low to high)
-#' to interpolate to create the scael. Default: redgrey.
+#' to interpolate to create the scale. Default: redgrey.
 #' @param title (Optional) String specifying the plot title
 #' @param alpha Numeric, fixed alpha for points. Default: 0.6
 #' @param point_size Numeric, size of points in scatterplot. Default: 1. (A smaller
@@ -539,7 +598,7 @@ feature_plot <- function(df,
     
   }
   
-  # Plot
+  # Plot using the palette chosen by the user
   gg <- df %>%
     ggplot(aes(x = dim1, y = dim2)) +
     geom_point(aes(colour = Expression), size = point_size, alpha = alpha)
@@ -611,7 +670,19 @@ feature_plot <- function(df,
   
 }
 
-
+#' Generate a violin plot of single cell data
+#' 
+#' @param df Dataframe, contains data shown in plot
+#' @param palette Character vector, colour palette to be used for the plot
+#' @param scale String, determining the scale input for geom_violin, i.e. 
+#' the parameter that will remain the same between violins. Default: "width",
+#' other possible values are "area" and "count"
+#' @param points Logical, whether or not to show points in plot. Default: FALSE
+#' @param point_size Numeric, indicating the size of points in mm. Default: 0.4
+#' @param y_lab String, label for the y-axis of the plot. Default: "Normalized 
+#' expression"
+#' 
+#' @return a ggplot object
 vln <- function(df,
                 palette,
                 scale = "width",
@@ -644,6 +715,10 @@ vln <- function(df,
   
 }
 
+#' Remove ticks from the axis of a ggplot
+#' 
+#' @example 
+#' gg <- gg + noTicks() 
 noTicks <- function() {
   
   theme(axis.text.x = element_blank(),
@@ -651,4 +726,29 @@ noTicks <- function() {
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
   
+}
+
+#' Determine if a background colour is dark enough to warrant white text
+#' 
+#' @param hex_color String, colour in hex colour format e.g. #000000
+#' 
+#' @return TRUE if the colour is dark enough (arbitrary)
+dark <- function(hex_color) {
+  
+  red <- substr(hex_color, 2, 2)
+  green <- substr(hex_color, 4, 4)
+  blue <- substr(hex_color, 6, 6)
+  dark_nums <- c(0:8)
+  
+  if ((red %in% dark_nums && blue %in% dark_nums) || 
+      (red %in% dark_nums && green %in% dark_nums) ||
+      (green %in% dark_nums && blue %in% dark_nums)) {
+    
+    return(TRUE)
+    
+  } else {
+    
+    return(FALSE)
+    
+  }
 }

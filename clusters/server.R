@@ -6,14 +6,6 @@
 # 2) On the server, give the shiny user permissions, i.e. chmod -R a=rwx cache
 shinyOptions(cache = diskCache("./cache"))
 
-library(cowplot)
-library(glue)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(DT)
-library(purrr)
-
 source("functions.R")
 source("../style.R")
 
@@ -34,7 +26,9 @@ server <- function(input, output, session) {
       "region" = input$region,
       "label_clusters"   = input$label_clusters,
       "ft_palette"       = input$feature_palette,
-      "vln_joint_points" = input$vln_joint_points
+      "vln_points" = input$vln_points,
+      "plotly_ribbon" = input$plotly_ribbon,
+      "mean_exp" = input$mean_exp
     )
     
     # Get the columns for the appropriate type of dim red
@@ -81,14 +75,16 @@ server <- function(input, output, session) {
     
   })
   
-  # Dendrogram tab content ----
+  #### ---- Dendrogram tab content ----
   
-  # Generate the input dataframe for the bubbleplot
+  # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
-    # Display up to the first 6 genes input
-    bubble_prep(gene  = head(input_new()$gene, 6),
-                scale = input_new()$scale)
+    # Display up to the first 12 genes input
+    # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
+    bubble_prep(gene  = head(input_new()$gene, 12),
+                scale = input_new()$scale,
+                show_mean = input_new()$mean_exp)
     
   })
   
@@ -109,8 +105,8 @@ server <- function(input, output, session) {
   # are being displayed, after allocating a baseline height for the x-axis & legend
   height = function() 150 + 30 * length(input_new()$gene))
   
-  # Create a tooltip with cluster / expression information that appears when
-  # hovering over a bubble
+  # Create a tooltip with cluster / expression information 
+  # that appears when hovering over a bubble 
   # 
   # This adapted from this example https://gitlab.com/snippets/16220
   output$bubble_hover_info <- renderUI({
@@ -129,32 +125,43 @@ server <- function(input, output, session) {
     # Hide the tooltip if mouse is not hovering over a bubble
     if (nrow(point) == 0) return(NULL)
     
-    # Create style property fot tooltip
-    # background color is set to the cluster colour, with the tooltip a bit transparent
+    # Create style property for tooltip
+    # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "cc;",
-                    "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 1, "px; width: 350px;")
+    style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
+                    "left: -350px; top: 450px; width: 350px;")
     
-    # Actual tooltip created as wellPanel, specify info to display
+    # Set text to white if the background colour is dark, else it's black (default)
+    if (dark(point$Colour)) {
+      style <- paste0(style, "color: #FFFFFF")
+    }
+    
+    # Specify text content of tooltips - special content for mean expression plot
+    if(identical(point$Gene, "MEAN")){
+      tooltip_text <- paste0("<b> Mean expression level of plotted genes </b> <br/>",
+                             "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                             "<b> Cell type: </b>",  point$Cell_type, "<br/>",
+                             "<b> Sample: </b>",     point$Sample, "<br/>",
+                             "<b> Mean expression: </b>", round(point$Expression, digits=2), "<br/>")
+    } else {
+      tooltip_text <- paste0("<b> Gene: </b>",       point$Gene, "<br/>",
+                             "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                             "<b> Cell type: </b>",  point$Cell_type, "<br/>",
+                             "<b> Sample: </b>",     point$Sample, "<br/>",
+                             "<b> Expression: </b>", point$Pct1 * point$N_cells, " ",
+                             point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")
+    }
+    
+    # Actual tooltip created as wellPanel
     wellPanel(
       style = style,
-      p(HTML(paste0("<b> Gene: </b>",       point$Gene, "<br/>",
-                    "<b> Cluster: </b>",    point$Cluster, "<br/>",
-                    "<b> Cell type: </b>",  point$Cell_type, "<br/>",
-                    "<b> Sample: </b>",     point$Sample, "<br/>",
-                    "<b> Expression: </b>", point$Pct1 * point$N_cells, " ",
-                    point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")))
+      p(HTML(tooltip_text))
     )
   })
   
-  # Download data in bubbleplot tab as TSV
-  # output$download_bubble <- downloadHandler(filename = "mean_cluster_expression.tsv",
-  #                                           contentType = "text/tsv",
-  #                                           content = function(file) {
-  #                                             write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-  #                                           })
-  
-  # Show table with cluster & expression info below bubble plot
+  #### ---- Expression table tab content ----
+
+  # Show table with cluster & expression info 
   output$cluster_table <- renderDataTable({
     
     req(bubble_input())
@@ -176,31 +183,78 @@ server <- function(input, output, session) {
     
   })
   
-  # Timecourse tab content ----
+  # Download data in bubbleplot tab and expression table as TSV
+  output$download_bubble <- 
+    downloadHandler(filename = "mean_cluster_expression.tsv",
+                    contentType = "text/tsv",
+                    content = function(file) {
+                      write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                    })
   
-  # Generate ribbon plot and save the output so that we can later split
-  # into the plot itself, and the legend
-  ribbon <- reactive({
+  #### ---- Timecourse tab content ----
+  
+  # STATIC TIMECOURSE 
+  
+  # Generate ribbon plot and save the output so that we can allow the
+  # user to download it 
+  ribbon_static <- reactive({
     
-    ribbon_plot(gene   = input_new()$gene[1],
+    p1 <- ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region)
     
-  })
-  
-  # Grabbing only the plot part, remove the legend
-  output$plotRibbon <- renderPlot({ ribbon() +
-      theme(legend.position = "none")
-  })
-  
-  # Extract the ribbon plot legend to plot separately
-  output$ribbonLegend <- renderPlot({
+    # Get legend using cowplot
+    leg <- cowplot::get_legend(p1)
     
-    leg <- cowplot::get_legend(ribbon())
-    plot_grid(leg)
+    # Grabbing only the plot part, remove the legend
+    p1 <- p1 +
+    theme(legend.position = "none")
+    
+    # Combine plot and custom legend into one plot for output
+    plot_grid(p1, leg, ncol = 1, rel_heights = c(0.55, 0.45))
     
   })
   
-  # Joint analysis tab content ----
+  # Plot leaving some space between x-axis and legend
+  output$plotRibbon <- renderPlot({
+    
+    ribbon_static() +
+      theme(plot.margin = unit(c(0, 0, 1, 0), "lines"))
+    
+  })
+  
+  # INTERACTIVE TIMECOURSE
+  
+  # Generate interactive ribbon plot and save the output
+  ribbon_plotly <- reactive({
+
+    ribbon_plot(gene   = input_new()$gene[1],
+                region = input_new()$region,
+                make_plotly = TRUE)
+    
+  })
+  
+  output$plotlyRibbon <- renderPlotly({ 
+
+      # Position legend to the right of the plot
+      layout(ribbon_plotly(), legend = list(x = 1, y = 0))
+  })
+
+  # DOWNLOAD TIMECOURSE
+  
+  output$download_ribbon <- 
+    downloadHandler(filename = "timecourse_ribbon.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             ribbon_static(),
+                             width = 5,
+                             height = 5, 
+                             units = "in", 
+                             scale = 3)
+                    },
+                    contentType = "application/pdf")
+ 
+  
+  #### ---- Region joint analysis tab content ----
   
   dr_joint_embedding <- reactive({
     
@@ -213,7 +267,8 @@ server <- function(input, output, session) {
     
   })
   
-  dr_joint <- reactive({
+  # Create a dim. red. plot coloured by cluster
+  output$dr_joint <- renderPlot({
     
     req(input_new())
     
@@ -223,40 +278,75 @@ server <- function(input, output, session) {
             
             # Parameters available to the user
             colours   = input_new()$clust_palette,
-            label     = input_new()$label_clusters)
+            label     = input_new()$label_clusters) %>% 
+      # Get the plot part of list output
+      .$plot 
     
   })
   
-  # output$dr_joint_hover_info <- renderUI({
-  #   
-  #   hover <- input$dr_joint_hover
-  #   
-  #   # Find the nearest data point to the mouse hover position
-  #   point <- nearPoints(dr_joint_embedding(),
-  #                       hover,
-  #                       xvar = input_new()$dr[1],
-  #                       yvar = input_new()$dr[2],
-  #                       maxpoints = 1) %>% 
-  #     select(Cell, Cluster)
-  #   
-  #   # Hide the tooltip if mouse is not hovering over a bubble
-  #   if (nrow(point) == 0) return(NULL)
-  #   
-  #   # Create style property fot tooltip
-  #   # background color is set to the cluster colour, with the tooltip a bit transparent
-  #   # z-index is set so we are sure are tooltip will be on top
-  #   style <- paste0("position:absolute; z-index:100; background-color: rgba(245, 245, 245, 0.85); ",
-  #                   "left:", hover$coords_css$x + 2, "px; top:", hover$coords_css$y + 2,  "px; width: 350px;")
-  #   
-  #   # Actual tooltip created as wellPanel, specify info to display
-  #   wellPanel(
-  #     style = style,
-  #     p(HTML(paste0("<b> Cell: </b>",    point$Cell, "<br/>",
-  #                   "<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
-  #                   "</b>", point$Cluster, "<br/>")))
-  #   )
-  # })
+  clust_centers <- reactive({
+    
+    req(input_new())
+    
+    # Get colour associated with each cluster
+    palette_df <- tibble::enframe(input_new()$clust_palette, 
+                          name = "Cluster", 
+                          value = "Colour")
+    
+    dr_plot(dr_joint_embedding(),
+            colour_by = "Cluster",
+            legend    = FALSE,
+            
+            # Parameters available to the user
+            colours   = input_new()$clust_palette,
+            label     = input_new()$label_clusters) %>% 
+      # Get the centers part of list output
+      .$centers %>% 
+      # Add cluster colours into the same dataframe
+      left_join(palette_df, by = c("Cluster" = "Cluster")) 
+      
+    
+  })
   
+  output$dr_joint_hover_info <- renderUI({
+
+    hover <- input$dr_joint_hover
+
+    # Find the nearest data point to the mouse hover position
+    point <- nearPoints(clust_centers(),
+                        hover,
+                        xvar = "center_x",
+                        yvar = "center_y",
+                        threshold = 25,
+                        maxpoints = 1) %>%
+      select(Cluster, Colour)
+
+    # Hide the tooltip if the cluster information is blank
+    if (nrow(point) == 0) return(NULL)
+
+    # Create style property for tooltip
+    # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
+    # z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; background-color:", point$Colour, "F2;",
+                    "left:", hover$coords_css$x, "px; top:", hover$coords_css$y + 175,  "px; 
+                    width: auto; height: 60px;")
+    
+    # Set text to white if the background colour is dark, else it's black (default)
+    if (dark(point$Colour)) {
+      style <- paste0(style, "color: #FFFFFF")
+    }
+    
+    # Actual tooltip created as wellPanel, specify info to display
+    wellPanel(
+      style = style,
+      p(HTML(paste0(
+        #"<b> Cell: </b>",    point$Cell, "<br/>",
+                    #"<b> ", ifelse(input$dr_clustering == "timepoint", "Sample", "Cluster"),
+                    "<b>Cluster: </b>", point$Cluster)))
+    )
+  })
+  
+  # Get the gene expression for the gene(s) from user input
   dr_joint_exp <- reactive({
     
     req(input_new())
@@ -270,14 +360,15 @@ server <- function(input, output, session) {
     
   })
   
-  feature_joint <- reactive({
+  # Create a dim. red. plot coloured by expression
+  output$feature_joint <- renderPlot({
     
     req(input_new())
     
     feature_plot(dr_joint_exp(),
                  label = FALSE,
                  
-                 # Parameters available to the user
+                 # Parameter available to the user
                  palette = input_new()$ft_palette)
     
   })
@@ -313,19 +404,23 @@ server <- function(input, output, session) {
   #   )
   # })
   
-  output$scatter_joint <- renderPlot({
-    
-    plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
-    
-  })
+  # # Plot the dim. red. plots together
+  # output$scatter_joint <- renderPlot({
+  #   
+  #   plot_grid(dr_joint(), feature_joint(), rel_widths = c(0.455, 0.545))
+  #   
+  # })
   
+  # Create and plot a violin plot coloured by cluster
   output$vln_joint <- renderPlot({
     
     vln(dr_joint_exp(),
         palette = input_new()$clust_palette,
-        points  = input_new()$vln_joint_points)
+        points  = input_new()$vln_points)
     
   })
+  
+  #### ---- Sample joint analysis tab content ----
   
   dr_sample_embedding <- reactive({
     
@@ -348,6 +443,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot dim. red. plots for each timepoint, coloured by cluster
   output$dr_sample <- renderPlot({
     
     # Shorten labels for palette
@@ -366,11 +462,15 @@ server <- function(input, output, session) {
                   
                   # Parameters available to the user
                   colours   = pal,
-                  label     = input_new()$label_clusters,)) %>% 
-                  {plot_grid(plotlist = ., ncol = 5)}
+                  label     = input_new()$label_clusters,
+                  
+                  # Get the plot part of list output
+                  )$plot) %>% 
+            {plot_grid(plotlist = ., ncol = 5)}
     
   })
   
+  # Get the gene expression for the gene(s) from user input
   dr_sample_exp <- reactive({
     
     region <- input_new()$region
@@ -386,6 +486,7 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot dim. red. plots for each timepoint, coloured by expression
   output$feature_sample <- renderPlot({
     
     map(dr_sample_exp(),
@@ -400,6 +501,24 @@ server <- function(input, output, session) {
     
   })
   
+  # Create and plot violin plots for each timepoint, coloured by cluster
+  output$vln_sample <- renderPlot({
+
+    # Shorten labels for palette
+    pal <- input_new()$clust_palette_sample
+    names(pal) <- str_split(names(pal), "_") %>% sapply(getElement, 2)
+    
+    timepoints <- c("E12.5", "E15.5", "P0", "P3", "P6")
+    
+    map(dr_sample_exp(),
+        ~ vln(.x,
+              palette = pal,
+              points = input_new()$vln_points) +
+          theme(plot.margin = unit(c(0.5, 0, 1, 1.5), "cm"))) %>%
+      {plot_grid(plotlist = ., ncol = 1, align = "hv",
+                 labels = timepoints, label_size = 15)}
+    
+  })
   
 }
 

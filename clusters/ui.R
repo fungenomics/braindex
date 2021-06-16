@@ -1,5 +1,4 @@
 
-library(readr)
 source("../www/ui_functions.R")
 
 # Load names of genes detected in mouse to provide choices in input
@@ -15,10 +14,10 @@ ui <- bootstrapPage(
   beginPage(),
   
   # Application title
-  titlePanel("Expression in single-cell developmental atlases, by cluster",
+  titlePanel("Expression in single-cell developmental atlases, by cluster [@dev-bhavyaa]",
              windowTitle = "Clusters"),
   
-  # Sidebar with input
+  #### ---- Sidebar (input) ----
   sidebarLayout(
     sidebarPanel(width = 3,
                  
@@ -28,6 +27,14 @@ ui <- bootstrapPage(
                  
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
+                                  
+                                  conditionalPanel(condition = "input.gene.length > 1",
+                                                   materialSwitch("mean_exp", "Plot mean expression",
+                                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                                  status = "success", 
+                                                                  value = FALSE,
+                                                                  right = TRUE),
+                                  ),
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
@@ -39,8 +46,9 @@ ui <- bootstrapPage(
                                   
                  ),
                  
-                 # Input for timecourse tab
-                 conditionalPanel(condition = "input.tabs != 'dendrogram'",
+
+                 # Input for all tabs other than dendrogram & table
+                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -50,64 +58,80 @@ ui <- bootstrapPage(
                                                            "Pons" = "joint_pons"))
                  ),
                  
-                 # Input for joint analysis tab
+                 # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
-                                  selectInput("label_clusters", "Label clusters",
-                                              choices = c(TRUE, FALSE),
-                                              selected = "FALSE"),
+                                  materialSwitch("vln_points", "Show points in violin plots",
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success", 
+                                                 value = FALSE,
+                                                 right = TRUE),
                                   
-                                  selectInput("feature_palette", "Colour palette",
+                                  # Input only in region joint analysis tab
+                                  conditionalPanel(condition = "input.tabs == 'joint'",
+                                                   
+                                                  selectInput("dr_clustering", "Annotate cells by",
+                                                              multiple = FALSE,
+                                                              choices = c(
+                                                                "Clustering at the region level" = "joint",
+                                                                "Clustering at the sample level" = "sample",
+                                                                "Timepoint"                      = "timepoint"
+                                                              ),
+                                                              selected = "Clustering at the region level")
+                                                   ),
+                                                   
+                                  
+                                  # Produce separation in sidebar: all options below are about the plots
+                                  hr(style = "border-top: 1px solid #000000;"),
+                                  h4("Dimensionality reduction plots", 
+                                            style = "font-size:16px;"),
+                                  br(),
+                                  
+                                  materialSwitch("label_clusters", "Label clusters",
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success", 
+                                                 value = FALSE,
+                                                 right = TRUE),
+                                  
+                                  selectInput("feature_palette", "Expression colour palette",
                                               choices = list("Grey-red"   = "redgrey",
                                                              "Blue-red"   = "rdbu",
                                                              "Blues"      = "blues"),
                                               selected = "redgrey"),
                                   
-                                  selectInput("vln_joint_points", "Show points in violin plot",
-                                              choices = c(TRUE, FALSE),
-                                              selected = FALSE)
-                                  
+                                  # Input only in region joint analysis tab
+                                  conditionalPanel(condition = "input.tabs == 'joint'",
+                                                   
+                                                   selectInput("dr", "Dimensionality reduction method",
+                                                               multiple = FALSE,
+                                                               choices = c("tSNE", "PCA", "UMAP"),
+                                                               selected = "tSNE")
+                                                   
+                                  ),
                  ),
                  
-                 conditionalPanel(condition = "input.tabs == 'joint'",
-                                  
-                                  selectInput("dr_clustering", "Annotate cells by",
-                                              multiple = FALSE,
-                                              choices = c(
-                                                "Clustering at the region level" = "joint",
-                                                "Clustering at the sample level" = "sample",
-                                                "Timepoint"                      = "timepoint"
-                                              ),
-                                              selected = "Clustering at the region level"),
-                                  
-                                  selectInput("dr", "Dimensionality reduction",
-                                              multiple = FALSE,
-                                              choices = c("tSNE", "PCA", "UMAP"),
-                                              selected = "tSNE")
-                                  
-                                  
-                 ),
-                 
+                 # Update button for all sidebar inputs
                  actionButton("update", label = "Update")
                  
     ),
     
-    # Output plots
+    # Output plots and tables
     mainPanel(tabsetPanel(
       
+      #### ---- Dendrogram tab output ---- 
+          
       tabPanel("Dendrogram",
                
                tags$br(),
-               
                p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
-
+               
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
                p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
                
-               p("• Hover over each bubble, or scroll down to the table, to get additional details about each cluster & its expression level"),
+               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -117,8 +141,11 @@ ui <- bootstrapPage(
                
                # Display the bubbleplot
                div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
-                   fluidRow(plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE))),
+                   fluidRow(
+                     plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
+                       withSpinner(type = 5)
+                     ),
                    
                    # UI for tooltip
                    fluidRow(
@@ -126,15 +153,40 @@ ui <- bootstrapPage(
                    
                ),
                
-               fluidRow(DT::dataTableOutput("cluster_table", width = 1100)),
-               
-               # fluidRow(
-               #   downloadButton("download_bubble", "Download data (TSV)")),
-               
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
                
       ),
+        
+      #### ---- Expression table tab output ---- 
+      
+      tabPanel("Expression table", #TODO: confirm a better name
+               
+               tags$br(),
+               p("This table compares the expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               
+               p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
+               
+               p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
+               
+               fluidRow(
+                 DT::dataTableOutput("cluster_table", width = 1100) %>% 
+                          withSpinner(type = 5)
+                 ),
+               
+               # Only display download button if update has been pressed at least once
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_bubble", 
+                                                 "Download data (TSV)"))
+               ),
+               
+               # Specify the value to use when checking if this tab is selected
+               value = "exp_table"
+                   
+      ),
+      
+      #### ---- Timecourse tab output ---- 
       
       tabPanel("Timecourse",
                
@@ -144,19 +196,51 @@ ui <- bootstrapPage(
                
                p("• Use the side bar to select which brain region to interrogate"),
                
+               p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
+               
+               p("• Download the static version of the plot as a pdf using the button below the plot"),
+               
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
-               p("• If more than one gene is provided, only the first gene is plot"),
+               p("• If more than one gene is provided, only the first gene is plotted"),
+               
+               materialSwitch("plotly_ribbon", "Interactive ribbon plot",
+                              # status doesn't have any effect other than color scheme. See bootstrap status values
+                              status = "warning", 
+                              value = FALSE, 
+                              right = TRUE
+               ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
-               # each gene is detected, broken down by cell type, across
-               # the time course
-               plotOutput("plotRibbon"),
-               plotOutput("ribbonLegend"),
+               # each gene is detected, broken down by cell type, & across
+               # the time course. Either interactive (plotly) or static (ggpplot)
+               conditionalPanel(condition = "input.plotly_ribbon",
+                                
+                                # Plot the ribbon plot & legend as a plotly (interactive) plot
+                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% 
+                                  withSpinner(type = 5)
+                                ),
+               
+               conditionalPanel(condition = "!(input.plotly_ribbon)",
+                                
+                                # Plot the ribbon plot & legend as static plots with ggplot2
+                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
+                                  withSpinner(type = 5)
+                                ),
+               
+               # Only display download button if update has been pressed at least once
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_ribbon",
+                                                 "Download ribbon plot (PDF)")
+                                )
+               ),
                
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
       ),
+      
+      #### ---- Region joint expression tab output ----
       
       tabPanel("Single-cell expression, by region",
                
@@ -166,74 +250,100 @@ ui <- bootstrapPage(
                
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
+               p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be disabled if clusters are labeled"),
+               
                p("• In the bottom row, violin plots display expression in each cluster, ordered by mean expression"),
                
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
+                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
+                 #   withSpinner(type = 5)
                  
-                 plotOutput("scatter_joint", width = "10in", height = "4in")
-                 # plotOutput("dr_joint", width = "4.5in", height = "4in",
-                 #            hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)),
-                 # 
-                 # uiOutput("dr_joint_hover_info"),
-                 # 
-                 # plotOutput("feature_joint", width = "5.33in", height = "4in",
-                 #            hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)),
-                 # 
-                 # uiOutput("feature_joint_hover_info")
+                 splitLayout(cellWidths = c(432, 512), # 432 = 4.5in, 512px = 5.33in
+                             #cellArgs = list(style = "padding: 6px"),
+                             
+                             (plotOutput("dr_joint", 
+                                         #width = "4.5in", 
+                                         height = "4in",
+                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
+                                withSpinner(type = 5)),
+                             
+                              (plotOutput("feature_joint", 
+                                         #width = "5.33in", 
+                                         height = "4in"
+                                         #, hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)
+                              ) %>% 
+                               withSpinner(type = 5))
+                         )
+                ),
                  
-                 
-               ),
+                # Show hover tooltip on clusters if it's not a PCA plot and clusters are unlabeled
+                conditionalPanel(condition = "input.dr!='PCA' && !(input.label_clusters)",
+                                 fluidRow(uiOutput("dr_joint_hover_info"))
+                                ),
+
+                #fluidRow(uiOutput("feature_joint_hover_info")),
                
-               # fluidRow(
-               #   
-               # 
-               #   
-               # ),
+                fluidRow(
+                  plotOutput("vln_joint", width = "11in", height = "4in") %>% 
+                    withSpinner(type = 5)
+                ),
                
-               fluidRow(
-                 
-                 plotOutput("vln_joint", width = "11in", height = "4in")
-                 
-               ),
-               
-               # Specify the value to use when checking if this tab is selected
-               value = "joint"
+                # Specify the value to use when checking if this tab is selected
+                value = "joint"
       ),
+      
+      #### ---- Sample joint expression tab output ---- 
       
       tabPanel("Single-cell expression, by sample",
                
-               tags$br(),
-               
-               p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-               
-               p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
-               
-               p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
-               
-               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-               
-               fluidRow(
-
-                 plotOutput("dr_sample", width = "12.5in", height = "2.6in")
-
-               ),
-
-               fluidRow(
-
-                 plotOutput("feature_sample", width = "12.5in", height = "3in")
-
-               ),
-               # 
-               # fluidRow(
-               #   
-               #   plotOutput("vln_sample", width = "15in", height = "3in")
-               #   
-               # ),
-               
-               value = "sample"
-               
+        tabsetPanel(
+                 
+          tabPanel("tSNE plots",
+                   
+                   tags$br(),
+                   
+                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
+                   
+                   p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
+                   
+                   p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
+                   
+                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
+                   
+                   fluidRow(
+                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% 
+                       withSpinner(type = 5)
+                   ),
+                   
+                   fluidRow(
+                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% 
+                       withSpinner(type = 5)
+                   )
+            
+          ),
+                
+          tabPanel("Violin plots",
+                   
+                   tags$br(),
+                   
+                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
+                   
+                   p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
+                   
+                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
+                   
+                   fluidRow(
+                     plotOutput("vln_sample", width = "10in", height = "20in") %>% 
+                       withSpinner(type = 5)
+                   )
+          )
+                 
+        ),
+        
+        # Specify the value to use when checking if this tab is selected       
+        value = "sample"
       ),
       
       id = "tabs"
