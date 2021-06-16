@@ -117,11 +117,10 @@ bubble_prep <- function(gene,
     # width; to roughly the the # of characters in the gene w/ longest name
     # However, letters take up more pixels than spaces, so do less padding
     # for genes with longer names
-    # TODO: Test the (commented) third line inside mutate() and adjust padding as required
+    # TODO: Fix alignment of bubble plot w/ dendrogram for long gene names (issue #7)
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
-      between(str_length(Gene), 5, 8) ~ str_pad(Gene, 12, side = 'right', pad = " ")
-      #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
+      str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " ")
       )
     ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
@@ -144,18 +143,10 @@ bubble_prep <- function(gene,
     
     # Create mean expression rows, preserving information for tooltip
     mean_exp <- df %>% 
+      # We mean to group by cluster, but the other variables will be consistent for a given cluster
       group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
-      summarize(#Gene = "MEAN", 
-                #Cluster = Cluster,
-                #Sample = Sample,
-                #Cell_type = Cell_type,
-                #Cell_class = Cell_class,
-                #N_cells = N_cells,
-                Expression = mean(Expression) 
-                #Pct1 = mean(Pct1),
-                #Colour = Colour,
-                #Gene_padded = "MEAN"
-                ) %>% 
+      summarize(Expression = mean(Expression)) %>% 
+      
       # Remove the Pct1 value from the mean expression
       # and label the mean expression
       mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
