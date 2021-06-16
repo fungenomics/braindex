@@ -15,6 +15,7 @@ data/*.Rda
 data/*.Rds
 data/*.tsv
 data/*.feather
+data/*.txt
 
 data/*/*.RData
 data/*/*.Rda
