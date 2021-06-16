@@ -80,9 +80,8 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
-    # Display up to the first 12 genes input
-    # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
-    bubble_prep(gene  = head(input_new()$gene, 12),
+    # Display the first 20 genes provided as input
+    bubble_prep(gene  = head(input_new()$gene, 20),
                 scale = input_new()$scale,
                 show_mean = input_new()$mean_exp)
     
@@ -107,8 +106,7 @@ server <- function(input, output, session) {
   
   # Create a tooltip with cluster / expression information 
   # that appears when hovering over a bubble 
-  # 
-  # This adapted from this example https://gitlab.com/snippets/16220
+  # This was adapted from this example: https://gitlab.com/snippets/16220
   output$bubble_hover_info <- renderUI({
     
     hover <- input$bubble_hover

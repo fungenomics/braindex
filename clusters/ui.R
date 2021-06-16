@@ -123,7 +123,7 @@ ui <- bootstrapPage(
       tabPanel("Dendrogram",
                
                tags$br(),
-               p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               p("This tab displays the mean expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
                
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
