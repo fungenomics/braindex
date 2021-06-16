@@ -56,7 +56,7 @@ TF_target_gene <- as_tibble(read_rds("joint_cortex/joint_cortex.regulon_target_i
 unique_TF <- unique(TF_target_gene[["TF"]])
 
 #reads metadata file for color palette of clustering by region
-forebrain_cluster_palette <- read_tsv("joint_cortex/Jessa2019_Table2b_joint_cortex_metadata.tsv")
+forebrain_cluster_palette <- read_tsv("joint_cortex/Jessa2019_Table_2b_joint_cortex_metadata.tsv")
 forebrain_cluster_palette <- forebrain_cluster_palette %>% select(Cluster, Colour) %>% deframe()
 
 TF_and_ext <- identify_tf(TF_active)

@@ -19,6 +19,7 @@ library(glue)
 library(GGally)
 library(sna)
 library(igraph)
+library(integraph)
 library(purrr)
 
 # Data
