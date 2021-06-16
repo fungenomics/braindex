@@ -80,10 +80,16 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
+    # Only display mean if more than one gene is given AND the user requested it
+    valid_mean <- FALSE
+    if (length(input_new()$gene) > 1 && input_new()$mean_exp){
+      valid_mean <- TRUE
+    } 
+    
     # Display the first 20 genes provided as input
     bubble_prep(gene  = head(input_new()$gene, 20),
                 scale = input_new()$scale,
-                show_mean = input_new()$mean_exp)
+                show_mean = valid_mean)
     
   })
   
