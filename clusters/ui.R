@@ -14,7 +14,7 @@ ui <- bootstrapPage(
   beginPage(),
   
   # Application title
-  titlePanel("Expression in single-cell developmental atlases, by cluster",
+  titlePanel("Expression in single-cell developmental atlases, by cluster [@dev-bhavyaa]",
              windowTitle = "Clusters"),
   
   #### ---- Sidebar (input) ----

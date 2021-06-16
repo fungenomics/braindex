@@ -10,17 +10,17 @@ README.html
 */cache/*
 
 # Exclude any data
-*/data/*.RData
-*/data/*.Rda
-*/data/*.Rds
-*/data/*.tsv
-*/data/*.feather
+data/*.RData
+data/*.Rda
+data/*.Rds
+data/*.tsv
+data/*.feather
 
-*/data/*/*.RData
-*/data/*/*.Rda
-*/data/*/*.Rds
-*/data/*/*.tsv
-*/data/*/*.feather
+data/*/*.RData
+data/*/*.Rda
+data/*/*.Rds
+data/*/*.tsv
+data/*/*.feather
 
 # Exclude illustrator files
 */img/*.ai
