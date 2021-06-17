@@ -108,6 +108,14 @@ ui <- fluidPage(
                                    selected = "e12")
                                           
                        ),
+      conditionalPanel(condition = "input.tabs == 'Clustering'",
+                       
+                       radioButtons("dim_red", "Dimension Reduction Method",
+                                          choices = c("UMAP" = "umap",
+                                                      "TSNE" = "tsne",
+                                                      "PCA" = "pca"),
+                                          selected = "umap")
+                       ),
       # 3. time series plot
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
       
@@ -194,12 +202,12 @@ ui <- fluidPage(
         fluidRow(
           plotOutput("heatmap_joint")
         ),
-        downloadButton("download_hm_joint", "Heatmap by Joint Cluster (PNG)"),
+        downloadButton("download_hm_joint", "Heatmap by Joint Cluster (PDF)"),
         div(style = "margin-left: 1.3em; margin-right: 1.3em;",
         fluidRow(
           plotOutput("heatmap_cluster")
         )),
-        downloadButton("download_hm_cluster", "Heatmap by Timepoint Cluster (PNG)"),
+        downloadButton("download_hm_cluster", "Heatmap by Timepoint Cluster (PDF)"),
         imageOutput("color_hm_palette", width = "6in", height = "4in")
       ),
       
@@ -216,10 +224,10 @@ ui <- fluidPage(
         fluidRow(
   
           column(width = 6, plotOutput("cluster1",width = "4.2in", height = "4in"),
-                 downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PNG)")),
+                 downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PDF)")),
 
           column(width = 6, plotOutput("cluster2", width = "4.2in",height = "4in"),
-                 downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PNG)")),
+                 downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PDF)")),
 
         )
       ),

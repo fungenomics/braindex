@@ -478,8 +478,7 @@ plot_heatmap <- function(tf,method, region, TF_and_ext, brain_data, cell_plot_nu
 #' activity_test_tf1 <- create_activity_data(tf, "Cell","cortex", data_cortex$TF_and_ext)
 #' plot_UMAP(tf_number = 1,data_cortex$overall, activity_test_tf1)
 #' 
-plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, sample_number = 13000,
-                      sample_reduce = TRUE){ #cell_metadata is the tsv with the 
+plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){ #cell_metadata is the tsv with the 
   #embedding coordinates for each cell in the dataset
   # if(tf_number == 1) tf_plot <- 2 # number of col, the first col is Cell, so start from 2
   # else if(tf_number == 2) tf_plot <- 3 
@@ -489,16 +488,16 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, sample_numbe
   
   tf_plot <- tf_number + 1 #replaces the above control flow
 
-  if(! sample_reduce) sample_number <- 27000
   
   activity_tf <- cell_activity_data[,tf_plot][[1]] #extracts the TF activity from the cell_activity_data
   #and appends it to the cell_metadata to make cell meta with activity to plot
   
-  cell_meta_with_activity <- mutate(cell_metadata, activity_tf = activity_tf) %>%
-    sample_n(sample_number)
+  cell_meta_with_activity <- mutate(cell_metadata, activity_tf = activity_tf)
   
+  x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
+  y_axis <- switch(dim_red_type, "umap" = "UMAP2", "tsne" = "tSNE_2", "pca" = "PC2")
   
-  ggplot(data = cell_meta_with_activity, mapping = aes(x=UMAP1,y=UMAP2))+
+  ggplot(data = cell_meta_with_activity, mapping = aes_string(x = x_axis, y = y_axis))+
     geom_point(aes(color = activity_tf))+
     scale_color_gradient(low = "grey", high = "red")+
     theme_bw() + labs(color = 'TF Activity')
@@ -507,10 +506,32 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, sample_numbe
 #if I want to include labeled clusters, then I need to map cells to the clusters 
 #place a label at the mean of the umap coordinates for the cells that belong in that cluster
 
-color_by_cluster <- function(cell_metadata, cluster_palette){
-  ggplot(data = cell_metadata, mapping = aes(x=UMAP1,y=UMAP2))+
+color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type){
+  
+  x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
+  y_axis <- switch(dim_red_type, "umap" = "UMAP2", "tsne" = "tSNE_2", "pca" = "PC2")
+  
+  # Store the center points (medians) of each cluster courtesy of Bhavyaa 
+  centers <- cell_metadata %>%
+    group_by(Joint_cluster) %>%
+    summarise(center_x = median(get(x_axis)),
+              center_y = median(get(y_axis)))
+  
+  ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
     geom_point(aes(color = Joint_cluster)) + theme_bw() + theme(legend.position="bottom") + 
-    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette)
+    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette) +
+    ggrepel::geom_label_repel(data = centers,
+                              aes(x = center_x, y = center_y),
+                              label = centers$Joint_cluster,
+                              size = 4,
+                              segment.color = 'grey50',
+                              fontface = 'bold',
+                              alpha = 0.8,
+                              segment.alpha = 0.8,
+                              label.size = NA,
+                              force = 2,
+                              segment.size = 0.5,
+                              arrow = arrow(length = unit(0.01, 'npc')))
 }
 #need to maybe change the colors, select out the numbers and rename legend, just cosmetic things
 
