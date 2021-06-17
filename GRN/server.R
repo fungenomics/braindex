@@ -48,6 +48,7 @@ server <- function(input, output, session) {
     l$time_point <- temp
     l$gene <- input$gene
     l$label <- input$label
+    l$dim_red <- input$dim_red
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -211,8 +212,8 @@ server <- function(input, output, session) {
       hm_joint_cluster_plot()
     })
 
-    output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.png",
-                                               contentType = "image/png",
+    output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.pdf",
+                                               contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_joint_cluster_plot(),
                                                         width = 20, height = 25)
@@ -224,7 +225,7 @@ server <- function(input, output, session) {
     })
     
     output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.png",
-                                               contentType = "image/png",
+                                               contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_sample_cluster_plot(),
                                                         width = 20, height = 25)
@@ -243,22 +244,22 @@ server <- function(input, output, session) {
     # seems redundant, just needs one umap function here
     Umap_plot_1 <- reactive({
       req(length(input_new()$tf)>0)
-      plot_UMAP(tf_number = 1,input_new()$cell_metadata, activity_data_cluster())
+      plot_UMAP(tf_number = 1,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
     })
     Umap_plot_2 <- reactive({
       req(length(input_new()$tf)>1)
-      plot_UMAP(tf_number = 2,input_new()$cell_metadata, activity_data_cluster())
+      plot_UMAP(tf_number = 2,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
     })
     
     output$color_by_cluster <- renderPlot({
-      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette)
+      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, input_new()$dim_red)
     })
     
     output$cluster1 <- renderPlot({
       Umap_plot_1()
     })
-    output$download_UMAP_1 <- downloadHandler(filename = "UMAP1.png",
-                                              contentType = "image/png",
+    output$download_UMAP_1 <- downloadHandler(filename = "UMAP1.pdf",
+                                              contentType = "application/pdf",
                                               content = function(file){
                                                 ggsave(filename = file, plot = Umap_plot_1(),
                                                        width = 20, height = 20)
@@ -269,8 +270,8 @@ server <- function(input, output, session) {
     })
     
    
-    output$download_UMAP_2 <- downloadHandler(filename = "UMAP2.png",
-                                              contentType = "image/png",
+    output$download_UMAP_2 <- downloadHandler(filename = "UMAP2.pdf",
+                                              contentType = "application/pdf",
                                               content = function(file){
                                                 ggsave(filename = file, plot = Umap_plot_2(),
                                                        width = 20, height = 20)
