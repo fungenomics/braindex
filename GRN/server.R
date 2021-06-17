@@ -62,16 +62,16 @@ server <- function(input, output, session) {
   
   # -----------------------------Tab1:table and network------------------------------------------
   #def need to re-write this at the end 
-   output$general_desc <- renderText({
-      "This app designs for displaying transcription factor and gene data from mice brain (cortex & pons part) in various fancy ways by three main tabs;
-                                             
-       PROBLEM: There are some transcription factors from your input that may not have the corresponding data
-       in the following tabs. (Sometimes you may not see the information of that transcription factor or the plot
-       is not updated, etc. That is unfortunately because of the lack of data in the cell activity data in tab2,
-       or the binary cell activity data in tab3.  
-   "
-      
-    })
+   # output$general_desc <- renderText({
+   #    "This app designs for displaying transcription factor and gene data from mice brain (cortex & pons part) in various fancy ways by three main tabs;
+   #                                           
+   #     PROBLEM: There are some transcription factors from your input that may not have the corresponding data
+   #     in the following tabs. (Sometimes you may not see the information of that transcription factor or the plot
+   #     is not updated, etc. That is unfortunately because of the lack of data in the cell activity data in tab2,
+   #     or the binary cell activity data in tab3.  
+   # "
+   #    
+   #  })
   #filter the data, add a column for logos, then display
     output$table <- renderDataTable({
         # process data, filter the lines with our interested TF
@@ -127,18 +127,27 @@ server <- function(input, output, session) {
       )
     })
     #check if there is a user input gene_list file, if there is, use it, if not, use the selectInput genes 
-    
-    output$network <- renderPlot({
+    network_graph <- reactive ({
       if(is.null(gene_list$data)){
-         gene_into_graph <- input_new()$gene 
+        gene_into_graph <- input_new()$gene 
       }
       else{
         gene_into_graph <- gene_list$data
       }
       make_igraph(input_new()$tf, input_new()$TF_target_gene_info,
                   gene_into_graph, input_new()$label)
-      #plot_ggnet(net, input_new()$gene)
     })
+    output$network <- renderPlot({
+      network_graph()
+      
+    })
+    
+    output$download_network <- downloadHandler(filename = "network.pdf",
+                                                contentType = "application/pdf",
+                                                content = function(file){
+                                                  ggsave(filename = file, plot = network_graph(),
+                                                         width = 8.5, height = 11)
+                                                })
     
     #probably redo this entire part to visualize with ggNet
 #     output$desc <- renderText({
@@ -323,18 +332,16 @@ server <- function(input, output, session) {
       for(tf_n in input_new()$tfs_not_exist_timeseries){
         tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
       }
-      text <- glue("We do not have these followning tfs in this tab: {tf_nexist_string}")
+      text <- glue("We do not have data for the following trancription: {tf_nexist_string}")
       
       
     })
     
     
     output$timeseries_desc <- renderText({
-      text <- "Click option: You may double click the color palatte of cell types at the right side to 
-      display that cell type ONLY; you could also click on one cell type to eliminate that in the
-      plot at left.
-      Mouse over the white vertical line on the plot to see the cell types. 
-      We only support four plots of your first four tfs input for now."
+      text <- "Click option: double clicking a cell type in the legend displays that cell type ONLY;
+      single click removes that cell type from the plot. Mouse over ribbons in the plot to see the cell types. 
+      We only support four plots of your first four transcripton factor inputs."
     
     })
     
@@ -368,7 +375,7 @@ server <- function(input, output, session) {
      })
     
     output$download_ribbon_1 <- downloadHandler(filename = "timeseries_ribbon.png",
-                                                contentType = "image/png",
+                                                contentType = "application/pdf",
                                                 content = function(file){
                                                   ggsave(filename = file, plot = ggplot_list_plot(),
                                                          width = 20, height = 15)
