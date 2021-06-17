@@ -36,24 +36,25 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
   #making a basic igraph object with an attribute for each gene indicating if it is a gene 
   #target or transcription factor
   net <- graph_from_data_frame(d=edges, vertices = nodes) %>% 
-    set_vertex_attr("Gene_Type", index = unique_gene_targets, "Gene Target") %>%
-    set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Gene") %>%
+    set_vertex_attr("Gene_Type", index = unique_gene_targets, "Target Genes") %>%
+    set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Target Genes") %>%
     set_vertex_attr("Gene_Type", index = unique_TF, "TF") #%>% 
     #set_vertex_attr("label_always", index = unique_TF, "yes")
   
   if(labelNodes){
     set.seed(2)
     ggnet2(net, color = "Gene_Type", label = labelNodes, label.size = 3, size = "Gene_Type",
-           size.palette = c("Gene Target" = 6, "TF" = 6, "Input Gene" = 6),  
-           palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
+           mode = "fruchtermanreingold", layout.par = list(niter = 1000),
+           size.palette = c("Target Genes" = 6, "TF" = 6, "Input Target Genes" = 6),  
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange")) +
       guides(size = FALSE)
   }
   else{
     set.seed(2)
     ggnet2(net, color = "Gene_Type", label = tf, label.size = 3, size = "Gene_Type",
-           mode = "fruchtermanreingold", laout.par = list(niter = 1000),
-           size.palette = c("Gene Target" = 2, "TF" = 6, "Input Gene" = 6),
-           palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
+           mode = "fruchtermanreingold", layout.par = list(niter = 1000),
+           size.palette = c("Target Genes" = 2, "TF" = 6, "Input Target Genes" = 6),
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange")) +
       guides(size = FALSE)
   }
   

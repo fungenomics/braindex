@@ -3,7 +3,7 @@ ui <- fluidPage(
   #useShinyjs(),
   # Application title
   introBox(
-    titlePanel("Joint Cortex and Pons Transcription Factor Activity"),
+    titlePanel("Mouse Brain Transcriptional Regulation Atlas"),
     data.step = 1,
     data.intro = "This app displays transcription factor activity inference data from 
     a developmental timecourse of the mouse Pons and Forebrain."
@@ -62,7 +62,7 @@ ui <- fluidPage(
           # ),
           actionButton("reset", label = "Reset File"),
                       
-          checkboxInput(inputId = "label", label = "Label Gene Target Nodes", value = FALSE)
+          checkboxInput(inputId = "label", label = "Label Target Gene Nodes", value = FALSE)
          
       ),
       # conditionalPanel(condition = "input.tabs == 'Table and Network'",
@@ -134,12 +134,12 @@ ui <- fluidPage(
       tabsetPanel(
       
         tabPanel(
-          p("This tab displays information corresponding to the selected transcription factors and their predicted gene targets."),
-          p("- Strength of Association represents "),
-          p("- The top row is colored by cluster and the bottom row is colored by transcription factor activity"),
-          p("- Only the first two transcriptions factors are displayed"),
+          strong("This tab displays information corresponding to the selected transcription factors and their predicted target genes.") %>% p(),
+          p("• Strength of Association represents the weight of the putative regulatory links between transcription factor and a gene target, 
+            as predicted with Genie3, with a higher value indicating a more likely regulatory link."),
+          p("• The number of motifs for each gene is identified via the RcisTarget package. The best motif and its sequence logo is displayed."),
           title = "Transcription Factor Target Information",
-          textOutput("general_desc"),
+          #textOutput("general_desc"),
           introBox(
             dataTableOutput("table"),
             data.step = 3,
@@ -150,10 +150,17 @@ ui <- fluidPage(
         ),
         
         tabPanel(
+          strong("This tab displays a network visualisation of the inferred regulatory relationship between transcripton factors and target genes.") %>% p(),
+          p("• Transcription factors and target genes are represented as nodes with regulatory relationships represented as edges."),
+          p("• User input transcription factors are shown in blue. Target genes that are present in the current
+            network can be highlighted in orange based on user selection or based on a file containing a gene list."),
+          p("• Transcription factors that self regulate are not displayed (i.e no self loops)."),
+          p("• File input format: single column csv file with the first row titled 'Gene' and the remaining rows containing a list of genes of interest."),
           title = "Regulatory Network Visualization",
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
-          textOutput("desc"),
+          #textOutput("desc"),
           plotOutput("network"),
+          downloadButton("download_network", "Network Visualisation Download (PDF)"),
           #need to work on visualization with the ggNet package
           introBox(
             data.step = 4,
@@ -197,6 +204,10 @@ ui <- fluidPage(
         
         
       tabPanel(
+        strong("This tab displays a heatmap of user selected transcription factor activity per cluster") %>% p(),
+        p("• Joint clusters are clusters classified based on the combined data from every developmental 
+          time-point per brain region (forebrain or pons); sample cluster are identified based on data from each 
+          individual time-point per brain region."),
         title = "Heatmap",
         value = "Heatmap",
         fluidRow(
@@ -212,13 +223,13 @@ ui <- fluidPage(
       ),
       
       tabPanel(
-        title = "Clustering",
+        title = "Transcription Factor Activity, by Region",
         value = "Clustering",
         fluidRow( #make each plot smaller to fit more
-          p("This tab displays the activity of selected transcription factors"),
-          p("- Cells are plotted in 2D according to UMAP dimensionality reduction algorithm"),
-          p("- The top row is colored by cluster and the bottom row is colored by transcription factor activity"),
-          p("- Only the first two transcriptions factors are displayed"),
+          p("This tab displays the activity of selected transcription factors") %>% strong(),
+          p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
+          p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
+          p("• Only the first two transcriptions factors are displayed"),
           column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
         ),
         fluidRow(
@@ -252,12 +263,17 @@ ui <- fluidPage(
       #          value = "Heatmap and Clustering"
       # ),
       tabPanel("Time Series",
-               textOutput("tf_timeseries_desc"),
-               textOutput("timeseries_desc"),
+               p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given
+                 transcriptional factor is active, broken down by cell type, to allow for visualizing activity 
+                 across the timecourse") %>% strong(),
                
+               textOutput("timeseries_desc"),
+               br(),
+               textOutput("tf_timeseries_desc"),
+
                fluidRow(
                plotlyOutput("timeseries1"),
-               downloadButton("download_ribbon_1", "Timeseries ribbon plot (Png)"),
+               downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
                plotOutput("timeseries2"),
                imageOutput("timeseries_color"),
                #plotOutput("timeseries3"),
