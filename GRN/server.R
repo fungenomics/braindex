@@ -49,6 +49,7 @@ server <- function(input, output, session) {
     l$gene <- input$gene
     l$label <- input$label
     l$dim_red <- input$dim_red
+    l$cluster_label <- input$cluster_label
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -137,8 +138,9 @@ server <- function(input, output, session) {
       make_igraph(input_new()$tf, input_new()$TF_target_gene_info,
                   gene_into_graph, input_new()$label)
     })
-    output$network <- renderPlot({
-      network_graph()
+    output$network <- renderPlotly({
+      net_plotly <- network_graph() %>% ggplotly()
+      net_plotly
       
     })
     
@@ -261,7 +263,7 @@ server <- function(input, output, session) {
     })
     
     output$color_by_cluster <- renderPlot({
-      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, input_new()$dim_red)
+      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, input_new()$dim_red, input_new()$cluster_label)
     })
     
     output$cluster1 <- renderPlot({
