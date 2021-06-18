@@ -589,6 +589,19 @@ feature_plot <- function(df,
     
   }
   
+  # If ALL gene expression values = 0, change all expression values to NA
+  # to control their colour via the na.value parameter of ggplot
+  non_zero_exp <- df %>% 
+    filter(Expression != 0)
+  
+  if (dim(non_zero_exp)[1] == 0 && # TRUE if non_zero_exp has no rows
+      palette != "viridis"){ # Don't set NA for viridis palette
+    
+    df <- df %>% 
+      mutate(Expression = as.numeric(NA))
+    
+  }
+  
   # Plot using the palette chosen by the user
   gg <- df %>%
     ggplot(aes(x = dim1, y = dim2)) +
@@ -602,7 +615,9 @@ feature_plot <- function(df,
     
     gg <- gg + scale_colour_gradientn(
       colours = RColorBrewer::brewer.pal(n = 8, name = "Blues"),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "#F7FBFF") 
     
   } else if (palette == "redgrey") {
     
@@ -610,13 +625,28 @@ feature_plot <- function(df,
     # but sets a midpoint at a lighter colour
     gg <- gg + scale_color_gradientn(
       colours = grDevices::colorRampPalette(colors = c("gray83", "#E09797", "red"))(n = 200),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "grey83") 
     
   } else if (palette == "rdbu") {
     
     gg <- gg + scale_color_gradientn(
       colours = tail(rdbu, 70),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "#99C8E0") 
+    
+  }
+  
+  # If all expression values equaled 0, they were set to NA, and 
+  # the colour palette legend disappeared.
+  # Add caption below the plot to clarify that all expression = 0 
+  if (dim(non_zero_exp)[1] == 0){ # TRUE if non_zero_exp has no rows
+
+    gg <- gg + labs(
+      # Newlines (\n) to fill same space as legend, for plot alignment purposes
+      caption = "Gene expression = 0 for all cells in this plot. \n \n \n \n")
     
   }
   
