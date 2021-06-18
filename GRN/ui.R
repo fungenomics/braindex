@@ -114,7 +114,9 @@ ui <- fluidPage(
                                           choices = c("UMAP" = "umap",
                                                       "TSNE" = "tsne",
                                                       "PCA" = "pca"),
-                                          selected = "umap")
+                                          selected = "umap"),
+                       
+                       checkboxInput(inputId = "cluster_label", label = "Show Cluster Labels", value = TRUE)
                        ),
       # 3. time series plot
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
@@ -159,7 +161,7 @@ ui <- fluidPage(
           title = "Regulatory Network Visualization",
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
           #textOutput("desc"),
-          plotOutput("network"),
+          plotlyOutput("network"),
           downloadButton("download_network", "Network Visualisation Download (PDF)"),
           #need to work on visualization with the ggNet package
           introBox(

@@ -507,7 +507,7 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type
 #if I want to include labeled clusters, then I need to map cells to the clusters 
 #place a label at the mean of the umap coordinates for the cells that belong in that cluster
 
-color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type){
+color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, cluster_label){
   
   x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
   y_axis <- switch(dim_red_type, "umap" = "UMAP2", "tsne" = "tSNE_2", "pca" = "PC2")
@@ -518,21 +518,25 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type){
     summarise(center_x = median(get(x_axis)),
               center_y = median(get(y_axis)))
   
-  ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
+  gg <- ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
     geom_point(aes(color = Joint_cluster)) + theme_bw() + theme(legend.position="bottom") + 
-    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette) +
-    ggrepel::geom_label_repel(data = centers,
-                              aes(x = center_x, y = center_y),
-                              label = centers$Joint_cluster,
-                              size = 4,
-                              segment.color = 'grey50',
-                              fontface = 'bold',
-                              alpha = 0.8,
-                              segment.alpha = 0.8,
-                              label.size = NA,
-                              force = 2,
-                              segment.size = 0.5,
-                              arrow = arrow(length = unit(0.01, 'npc')))
+    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette) 
+  
+  if(cluster_label){
+    gg <- gg + ggrepel::geom_label_repel(data = centers,
+                                         aes(x = center_x, y = center_y),
+                                         label = centers$Joint_cluster,
+                                         size = 4,
+                                         segment.color = 'grey50',
+                                         fontface = 'bold',
+                                         alpha = 0.8,
+                                         segment.alpha = 0.8,
+                                         label.size = NA,
+                                         force = 2,
+                                         segment.size = 0.5,
+                                         arrow = arrow(length = unit(0.01, 'npc')))
+  }
+  return(gg)
 }
 #need to maybe change the colors, select out the numbers and rename legend, just cosmetic things
 
