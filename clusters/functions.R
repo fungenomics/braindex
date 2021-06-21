@@ -117,7 +117,6 @@ bubble_prep <- function(gene,
     # width; to roughly the the # of characters in the gene w/ longest name
     # However, letters take up more pixels than spaces, so do less padding
     # for genes with longer names
-    # TODO: Fix alignment of bubble plot w/ dendrogram for long gene names (issue #7)
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
       str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " ")
