@@ -29,9 +29,9 @@ ui <- bootstrapPage(
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
                                   conditionalPanel(condition = "input.gene.length > 1",
-                                                   materialSwitch("mean_exp", "Plot mean expression",
+                                                   materialSwitch("mean_exp", "Plot mean expression over the selected genes",
                                                                   # status doesn't have any effect other than color scheme. See bootstrap status values
-                                                                  status = "success", 
+                                                                  status = "success",
                                                                   value = FALSE,
                                                                   right = TRUE),
                                   ),
@@ -123,15 +123,17 @@ ui <- bootstrapPage(
       tabPanel("Dendrogram",
                
                tags$br(),
-               p("This tab displays the mean expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               p("This tab displays the mean expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
                
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
-               p("• Bubble colour encodes the mean expression, and bubble size encodes the proportion of cells within each cluster"),
+               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster that express the gene"),
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+               
+               p("• When plotting more than one gene, use the sidebar switch to plot the mean expression over the plotted genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -140,17 +142,26 @@ ui <- bootstrapPage(
                ), 
                
                # Display the bubbleplot
-               div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
+               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;",
+                   
                    fluidRow(
-                     plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
-                       withSpinner(type = 5)
-                     ),
+                     splitLayout(cellWidths = c(1103, 200),
+                       # Bubble plot(s)
+                       (plotOutput("bubble",
+                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
+                          withSpinner(type = 5)),
+                       
+                       # Gene labels
+                       #No spinner to prevent confusing user, because there is only 1 plot
+                       (plotOutput("bubble_labels")) 
+                     )
+                     
+                   ),
                    
                    # UI for tooltip
                    fluidRow(
-                     uiOutput("bubble_hover_info"))
-                   
+                     uiOutput("bubble_hover_info")),
+  
                ),
                
                # Specify the value to use when checking if this tab is selected
@@ -163,7 +174,7 @@ ui <- bootstrapPage(
       tabPanel("Expression table", #TODO: confirm a better name
                
                tags$br(),
-               p("This table compares the expression of up to 6 genes in each cluster from the mouse scRNAseq development atlas"),
+               p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
                
                p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                

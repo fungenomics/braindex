@@ -117,11 +117,10 @@ bubble_prep <- function(gene,
     # width; to roughly the the # of characters in the gene w/ longest name
     # However, letters take up more pixels than spaces, so do less padding
     # for genes with longer names
-    # TODO: Test the (commented) third line inside mutate() and adjust padding as required
+    # TODO: Fix alignment of bubble plot w/ dendrogram for long gene names (issue #7)
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
-      between(str_length(Gene), 5, 8) ~ str_pad(Gene, 12, side = 'right', pad = " ")
-      #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
+      str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " ")
       )
     ) %>% 
     mutate(Gene_padded = factor(Gene_padded, levels = unique(.$Gene_padded))) %>% 
@@ -144,18 +143,10 @@ bubble_prep <- function(gene,
     
     # Create mean expression rows, preserving information for tooltip
     mean_exp <- df %>% 
+      # We mean to group by cluster, but the other variables will be consistent for a given cluster
       group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
-      summarize(#Gene = "MEAN", 
-                #Cluster = Cluster,
-                #Sample = Sample,
-                #Cell_type = Cell_type,
-                #Cell_class = Cell_class,
-                #N_cells = N_cells,
-                Expression = mean(Expression) 
-                #Pct1 = mean(Pct1),
-                #Colour = Colour,
-                #Gene_padded = "MEAN"
-                ) %>% 
+      summarize(Expression = mean(Expression)) %>% 
+      
       # Remove the Pct1 value from the mean expression
       # and label the mean expression
       mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
@@ -210,9 +201,13 @@ bubble_plot <- function(df, max_point_size) {
           # dendrogram image displayed above the bubbleplot
           legend.position = "bottom") +
     # Put gene labels on the right hand side to improve alignment
-    scale_y_discrete(position = "right")
+    scale_y_discrete(position = "right") #REMOVE GENE LABELS FROM PLOT - they will be separate
   
-  return(p1)
+  gene_labels <- cowplot::get_y_axis(plot = p1, position = "right")
+  
+  p1 <- p1 + scale_y_discrete(labels = NULL)
+  
+  return(list(plot = p1, labels = gene_labels))
   
 }
 
@@ -598,6 +593,19 @@ feature_plot <- function(df,
     
   }
   
+  # If ALL gene expression values = 0, change all expression values to NA
+  # to control their colour via the na.value parameter of ggplot
+  non_zero_exp <- df %>% 
+    filter(Expression != 0)
+  
+  if (dim(non_zero_exp)[1] == 0 && # TRUE if non_zero_exp has no rows
+      palette != "viridis"){ # Don't set NA for viridis palette
+    
+    df <- df %>% 
+      mutate(Expression = as.numeric(NA))
+    
+  }
+  
   # Plot using the palette chosen by the user
   gg <- df %>%
     ggplot(aes(x = dim1, y = dim2)) +
@@ -611,7 +619,9 @@ feature_plot <- function(df,
     
     gg <- gg + scale_colour_gradientn(
       colours = RColorBrewer::brewer.pal(n = 8, name = "Blues"),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "#F7FBFF") 
     
   } else if (palette == "redgrey") {
     
@@ -619,13 +629,28 @@ feature_plot <- function(df,
     # but sets a midpoint at a lighter colour
     gg <- gg + scale_color_gradientn(
       colours = grDevices::colorRampPalette(colors = c("gray83", "#E09797", "red"))(n = 200),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "grey83") 
     
   } else if (palette == "rdbu") {
     
     gg <- gg + scale_color_gradientn(
       colours = tail(rdbu, 70),
-      limits = limits)
+      limits = limits,
+      # NA values set to the colour assigned to 0 in this palette
+      na.value = "#99C8E0") 
+    
+  }
+  
+  # If all expression values equaled 0, they were set to NA, and 
+  # the colour palette legend disappeared.
+  # Add caption below the plot to clarify that all expression = 0 
+  if (dim(non_zero_exp)[1] == 0){ # TRUE if non_zero_exp has no rows
+
+    gg <- gg + labs(
+      # Newlines (\n) to fill same space as legend, for plot alignment purposes
+      caption = "Gene expression = 0 for all cells in this plot. \n \n \n \n")
     
   }
   

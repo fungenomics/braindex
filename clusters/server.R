@@ -80,11 +80,16 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
-    # Display up to the first 12 genes input
-    # TODO: test 7 - 12 bubble plots. Goal is to display up to 20 together
-    bubble_prep(gene  = head(input_new()$gene, 12),
+    # Only display mean if more than one gene is given AND the user requested it
+    valid_mean <- FALSE
+    if (length(input_new()$gene) > 1 && input_new()$mean_exp){
+      valid_mean <- TRUE
+    } 
+    
+    # Display the first 20 genes provided as input
+    bubble_prep(gene  = head(input_new()$gene, 20),
                 scale = input_new()$scale,
-                show_mean = input_new()$mean_exp)
+                show_mean = valid_mean)
     
   })
   
@@ -94,12 +99,12 @@ server <- function(input, output, session) {
     req(bubble_input())
     
     bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)
+                max_point_size = input_new()$size)$plot
     
   },
   
   # Choose width to align horizontally with dendrogram image
-  width = 1175,
+  width = 1103,
   
   # Customize the height of the bubbleplot to scale with the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis & legend
@@ -107,8 +112,7 @@ server <- function(input, output, session) {
   
   # Create a tooltip with cluster / expression information 
   # that appears when hovering over a bubble 
-  # 
-  # This adapted from this example https://gitlab.com/snippets/16220
+  # This was adapted from this example: https://gitlab.com/snippets/16220
   output$bubble_hover_info <- renderUI({
     
     hover <- input$bubble_hover
@@ -158,6 +162,19 @@ server <- function(input, output, session) {
       p(HTML(tooltip_text))
     )
   })
+  
+  output$bubble_labels <- renderPlot({
+    
+    ggdraw(bubble_plot(df = bubble_input(),
+                max_point_size = input_new()$size)$labels)
+    
+  },
+  
+  height = function() 20 + 28 * length(input_new()$gene),
+  
+  width = 200
+  
+  )
   
   #### ---- Expression table tab content ----
 
