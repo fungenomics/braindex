@@ -170,7 +170,7 @@ server <- function(input, output, session) {
     
   },
   
-  height = function() 20 + 28 * length(input_new()$gene),
+  height = function() 25 + 30 * length(input_new()$gene),
   
   width = 200
   
