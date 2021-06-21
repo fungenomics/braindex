@@ -142,7 +142,8 @@ ui <- bootstrapPage(
                ), 
                
                # Display the bubbleplot
-               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;",
+               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;
+                   overflow-x: visible; overflow-y: visible;",
                    
                    fluidRow(
                      splitLayout(cellWidths = c(1103, 200),
