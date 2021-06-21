@@ -201,9 +201,13 @@ bubble_plot <- function(df, max_point_size) {
           # dendrogram image displayed above the bubbleplot
           legend.position = "bottom") +
     # Put gene labels on the right hand side to improve alignment
-    scale_y_discrete(position = "right")
+    scale_y_discrete(position = "right") #REMOVE GENE LABELS FROM PLOT - they will be separate
   
-  return(p1)
+  gene_labels <- cowplot::get_y_axis(plot = p1, position = "right")
+  
+  p1 <- p1 + scale_y_discrete(labels = NULL)
+  
+  return(list(plot = p1, labels = gene_labels))
   
 }
 

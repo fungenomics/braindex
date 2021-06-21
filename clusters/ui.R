@@ -142,17 +142,26 @@ ui <- bootstrapPage(
                ), 
                
                # Display the bubbleplot
-               div(style = "margin-top: 2em; margin-left: 1.3em; margin-bottom: -5em;",
+               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;",
+                   
                    fluidRow(
-                     plotOutput("bubble",
-                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
-                       withSpinner(type = 5)
-                     ),
+                     splitLayout(cellWidths = c(1103, 200),
+                       # Bubble plot(s)
+                       (plotOutput("bubble",
+                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
+                          withSpinner(type = 5)),
+                       
+                       # Gene labels
+                       #No spinner to prevent confusing user, because there is only 1 plot
+                       (plotOutput("bubble_labels")) 
+                     )
+                     
+                   ),
                    
                    # UI for tooltip
                    fluidRow(
-                     uiOutput("bubble_hover_info"))
-                   
+                     uiOutput("bubble_hover_info")),
+  
                ),
                
                # Specify the value to use when checking if this tab is selected

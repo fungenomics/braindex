@@ -99,12 +99,12 @@ server <- function(input, output, session) {
     req(bubble_input())
     
     bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)
+                max_point_size = input_new()$size)$plot
     
   },
   
   # Choose width to align horizontally with dendrogram image
-  width = 1175,
+  width = 1103,
   
   # Customize the height of the bubbleplot to scale with the number of genes which
   # are being displayed, after allocating a baseline height for the x-axis & legend
@@ -162,6 +162,19 @@ server <- function(input, output, session) {
       p(HTML(tooltip_text))
     )
   })
+  
+  output$bubble_labels <- renderPlot({
+    
+    ggdraw(bubble_plot(df = bubble_input(),
+                max_point_size = input_new()$size)$labels)
+    
+  },
+  
+  height = function() 20 + 28 * length(input_new()$gene),
+  
+  width = 200
+  
+  )
   
   #### ---- Expression table tab content ----
 
