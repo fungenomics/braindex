@@ -99,7 +99,7 @@ server <- function(input, output, session) {
     req(bubble_input())
     
     bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)$plot
+                max_point_size = input_new()$size)$plot # Get plot part of output
     
   },
   
@@ -163,15 +163,20 @@ server <- function(input, output, session) {
     )
   })
   
+  # Render the bubble plot gene labels separately with ggdraw
   output$bubble_labels <- renderPlot({
     
     ggdraw(bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)$labels)
+                max_point_size = input_new()$size)$labels) # Get labels part of output
     
   },
   
+  # Set height of bubble plot gene labels to (hopefully) align with plots
   height = function() 25 + 30 * length(input_new()$gene),
   
+  # Max length of a gene is 200px
+  # NOTE: If altering this, also change the corresponding cellWidth for 
+  # splitLayout in ui.R
   width = 200
   
   )
@@ -183,20 +188,40 @@ server <- function(input, output, session) {
     
     req(bubble_input())
     
-    bubble_input() %>%
+    gene_table_order <- rev(unique(bubble_input()$Gene))
+    gene_table_order
+    
+    table <- bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
       spread(Gene, Expression) %>% 
-      DT::datatable(options = list(
-        columnDefs = list(list(visible = FALSE,
-                               # Hide the Colour column
-                               targets = c(6))),
+      select(Cluster, 
+             Sample, 
+             "Cell type" = Cell_type, 
+             "Cell class" = Cell_class, 
+             "Number of cells" = N_cells, 
+             all_of(gene_table_order))
+    
+    if ("MEAN" %in% gene_table_order) {
+      table <- table %>% relocate("MEAN",
+                                 .after = last_col())
+    }
+    
+    DT::datatable(table, options = list(
+        # columnDefs = list(list(visible = FALSE,
+        #                        # Hide the Colour column
+        #                        targets = c(6))),
         selection = "none")
-      ) %>%
+    ) %>% 
       
-      # Colour the cluster column based on the palette
-      formatStyle("Cluster",
-                  backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
+    # Colour the cluster column based on the palette
+    formatStyle("Cluster",
+                backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
+      
+    # # Set cluster column text to white if the background colour is dark, else it's black (default)
+    # if (dark(point$Colour)) {
+    #   style <- paste0(style, "color: #FFFFFF")
+    # }
     
   })
   
@@ -256,7 +281,7 @@ server <- function(input, output, session) {
       layout(ribbon_plotly(), legend = list(x = 1, y = 0))
   })
 
-  # DOWNLOAD TIMECOURSE
+  # DOWNLOAD TIMECOURSE (static plot) AS A PDF
   
   output$download_ribbon <- 
     downloadHandler(filename = "timecourse_ribbon.pdf",
