@@ -29,3 +29,6 @@ load("data/shared/common_prep.Rda") # metadata and colour_palettes
 
 # Custom functions
 source("functions.R")
+
+#allows server side save states
+enableBookmarking(store = "server")

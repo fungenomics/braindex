@@ -74,7 +74,7 @@ server <- function(input, output, session) {
    #    
    #  })
   #filter the data, add a column for logos, then display
-    output$table <- renderDataTable({
+    output$table1 <- renderDataTable({
         # process data, filter the lines with our interested TF
       subset_data <- input_new()$TF_target_gene_info %>% dplyr::filter(TF %in% input_new()$tf) %>% select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
       
@@ -84,7 +84,8 @@ server <- function(input, output, session) {
                 colnames = c('Gene' = 'gene', 'Number of Motifs' = 'nMotifs',
                              'Best Motif' = 'bestMotif', 
                              'Strength of Association' = 'Genie3Weight.weight',
-                             'Logo' = 'motif_logo'))
+                             'Logo' = 'motif_logo'),
+                rownames = FALSE)
     })
     # observeEvent(input$reset, {
     #   reset("file_gene")
@@ -128,18 +129,24 @@ server <- function(input, output, session) {
       )
     })
     #check if there is a user input gene_list file, if there is, use it, if not, use the selectInput genes 
-    network_graph <- reactive ({
+    igraph_network <- reactive ({
       if(is.null(gene_list$data)){
-        gene_into_graph <- input_new()$gene 
+        gene_to_highlight <- input_new()$gene 
       }
       else{
-        gene_into_graph <- gene_list$data
+        gene_to_highlight <- gene_list$data
       }
-      make_igraph(input_new()$tf, input_new()$TF_target_gene_info,
-                  gene_into_graph, input_new()$label)
+      make_network(input_new()$tf, input_new()$TF_target_gene_info,
+                  gene_to_highlight) #returns an igraph network object
     })
+    network_ggplot <- reactive({
+      plot_network(igraph_network(), input_new()$label, input_new()$tf)
+    })
+    
     output$network <- renderPlotly({
-      net_plotly <- network_graph() %>% ggplotly()
+      net_plotly <- network_ggplot() %>% ggplotly(height = 700, tooltip = "text") %>% 
+        layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE),
+               hovermode = "x", hoverdistance = 100)
       net_plotly
       
     })
@@ -147,7 +154,7 @@ server <- function(input, output, session) {
     output$download_network <- downloadHandler(filename = "network.pdf",
                                                 contentType = "application/pdf",
                                                 content = function(file){
-                                                  ggsave(filename = file, plot = network_graph(),
+                                                  ggsave(filename = file, plot = network_ggplot(),
                                                          width = 8.5, height = 11)
                                                 })
     
@@ -220,7 +227,8 @@ server <- function(input, output, session) {
     })
  
     output$heatmap_joint <- renderPlot({
-      hm_joint_cluster_plot()
+      hm_joint <- hm_joint_cluster_plot()
+      hm_joint
     })
 
     output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.pdf",
@@ -231,7 +239,8 @@ server <- function(input, output, session) {
                                                })
     
     output$heatmap_cluster <- renderPlot({
-      hm_sample_cluster_plot() 
+      hm_sample <- hm_sample_cluster_plot() 
+      hm_sample
 
     })
     
