@@ -174,7 +174,7 @@ bubble_prep <- function(gene,
 #' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
 #' Gene_padded, Pct1, and Expression
 #'
-#' @return ggplot2 object
+#' @return A list containing a ggplot2 object and its legend (extracted with cowplot)
 #'
 #' @examples
 #' bubble_prep("Dlx1") %>% bubbleplot()
@@ -293,9 +293,9 @@ ribbon_plot <- function(gene,
     mutate(total = n()) %>% 
     group_by(Age, Cell_type) %>% 
     mutate(frac = sum(gene > 0) / total) %>% 
-    distinct(Age, Cell_type, frac) %>% 
+    distinct(Age, Cell_type, frac, total) %>% 
     ungroup()
-  
+
   # For each timepoint, calculate the proportion of cells in which the gene 
   # is detected
   ribbon_df_cum_frac <- ribbon_df %>% 
@@ -315,7 +315,7 @@ ribbon_plot <- function(gene,
   df$ranking = match(df$cluster, names(colours))
   df = df[order(df$stage, df$ranking),]
   
-  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = Age, frac)) %>% 
+  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = Age, frac, total)) %>% 
     # Complete cases when genes were not detected in certain timepoints/clusters
     # by replacing with a zero
     mutate(frac = replace_na(frac, 0)) %>% 
@@ -324,7 +324,8 @@ ribbon_plot <- function(gene,
   df$xpos = match(df$stage, unique(timepoints2))
   
   p1 <- df %>%
-    ggplot(aes(x = xpos, y = frac, fill = cluster)) +
+    ggplot(aes(x = xpos, y = frac, fill = cluster, group = cluster,
+               text = glue("{total*frac} {gene}+ cells"))) +
     geom_area(stat = "identity") +
     scale_fill_manual(values = colours, drop = FALSE, name = "") +
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
@@ -338,7 +339,7 @@ ribbon_plot <- function(gene,
   if(make_plotly) {
     return (ggplotly(p1,
                      # Only display cluster information within tooltip
-                     tooltip = "cluster") %>%
+                     tooltip = c("group", "text")) %>%
               
               # Add hovers both on points as well as filled areas of the plot
               # Changing it to hoveron="fills" only causes a known issue, see:
@@ -378,7 +379,7 @@ ribbon_plot <- function(gene,
 #' @param hide_axes Logical, whether or not to hide the plot axes. Default: FALSE
 #' @param show_n_cells Logical, ... Default: FALSE
 #' 
-#' @return A ggplot object
+#' @return A list containing a ggplot object and a list of cluster centers
 #' 
 #' @export
 dr_plot <- function(embedding,
