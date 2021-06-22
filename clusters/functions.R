@@ -324,6 +324,7 @@ ribbon_plot <- function(gene,
   df$xpos = match(df$stage, unique(timepoints2))
   
   p1 <- df %>%
+    # Need to specify group or the text attribute with glue causes errors
     ggplot(aes(x = xpos, y = frac, fill = cluster, group = cluster,
                text = glue("{total*frac} {gene}+ cells"))) +
     geom_area(stat = "identity") +
@@ -338,7 +339,7 @@ ribbon_plot <- function(gene,
   
   if(make_plotly) {
     return (ggplotly(p1,
-                     # Only display cluster information within tooltip
+                     # Display cluster (group) and info on number of cells (text) in tooltips
                      tooltip = c("group", "text")) %>%
               
               # Add hovers both on points as well as filled areas of the plot
