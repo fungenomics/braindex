@@ -17,7 +17,7 @@ addMotifPic <- function(subset_data){ #need to comment this and test to see if i
 #' @param tf_target_gene_info a data frame containing information for each association 
 #' between a TF and a target gene; created in data_prep.R, loaded in global.R and used depending 
 #' on the region input in input_new()
-make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
+make_network <- function(tf, tf_target_gene_info, gene_list){
   #add a step to select only the transcription factors that are in the list 
   #create edgelist
   edges <- data_cortex$TF_target_gene_info %>% select(TF, gene, nMotifs, Genie3Weight.weight) %>%
@@ -38,24 +38,27 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
   net <- graph_from_data_frame(d=edges, vertices = nodes) %>% 
     set_vertex_attr("Gene_Type", index = unique_gene_targets, "Target Genes") %>%
     set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Target Genes") %>%
-    set_vertex_attr("Gene_Type", index = unique_TF, "TF") #%>% 
-    #set_vertex_attr("label_always", index = unique_TF, "yes")
+    set_vertex_attr("Gene_Type", index = unique_TF, "TF") 
   
+}  
+plot_network <- function(net, labelNodes, tf){ 
   if(labelNodes){
-    set.seed(2)
+    set.seed(0.926)
     ggnet2(net, color = "Gene_Type", label = labelNodes, label.size = 3, size = "Gene_Type",
            mode = "fruchtermanreingold", layout.par = list(niter = 1000),
-           size.palette = c("Target Genes" = 6, "TF" = 6, "Input Target Genes" = 6),  
-           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange")) +
-      guides(size = FALSE)
+           size.palette = c("Target Genes" = 6, "TF" = 6, "Input Target Genes" = 6),
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange"),
+           group = 1, text = names(V(net))) +
+      guides(size = FALSE, color = guide_legend(title= "Gene Type"))
   }
   else{
-    set.seed(2)
+    set.seed(0.926)
     ggnet2(net, color = "Gene_Type", label = tf, label.size = 3, size = "Gene_Type",
            mode = "fruchtermanreingold", layout.par = list(niter = 1000),
            size.palette = c("Target Genes" = 2, "TF" = 6, "Input Target Genes" = 6),
-           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange")) +
-      guides(size = FALSE)
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange"),
+           group = 1, text = names(V(net))) +
+      guides(size = FALSE, color = guide_legend(title = "Gene Type")) 
   }
   
 }
@@ -84,55 +87,55 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
 #' network <- createCytoscapeJsNetwork(nodeData, edgeData)
 #' rcytoscapejs2(network$nodes, network$edges)
 #' 
-create_network <- function(tf, TF_target_gene, unique_TF, pathway_genes = c(),
-                           shrink_gray = FALSE){ 
-  TF_interest <- filter(TF_target_gene, TF %in% tf)[["TF"]]
-  gene_target <- filter(TF_target_gene, TF %in% tf)[["gene"]]
-  
-  source <- TF_interest
-  target <- gene_target
-  
-  id <- c(TF_interest, gene_target)
-  name <- id
-  nodeData <- data.frame(id,name, stringsAsFactors = FALSE)
-  edgeData <- data.frame(source, target, stringsAsFactors = FALSE)
-  
-  #unique_TF <- unique(TF_target_gene[["TF"]])
-  
-  mutual_target <- edgeData %>% 
-    # a character vector that indicates the nodes that are target of multiple selected TFs
-    count(target) %>%
-    filter(n > 1 & !target %in% tf ) %>%
-    .[[1]]
-  
-  nodeData <- nodeData %>%
-    # you can customize the color using the case_when structure easily,
-    # check the tfs in id column that exist in your vector, then you can control its size,
-    # shape and color easily
-    mutate(color = case_when(id %in% tf ~ "#9d4097", # orange
-                             # orange nodes are tfs that are active in this region
-                             id %in% pathway_genes ~ "green",
-                             id %in% unique_TF ~ "#D6604D", 
-                             id %in% mutual_target ~ "#4fafc6",
-                             TRUE ~ "lightgrey")) %>%
-    mutate(height = case_when(id %in% tf ~ "100",
-                           TRUE ~ "70")) %>%
-    mutate(width = case_when(id %in% tf ~ "100",
-                            TRUE ~ "70"))
-  
-  if(shrink_gray){
-    nodeData <- nodeData %>%
-      mutate(height = case_when(color %in% "lightgrey" ~ "40",
-                                TRUE ~ "70")) %>%
-      mutate(width = case_when(color %in% "lightgrey" ~ "40",
-                               TRUE ~ "70"))
-    
-  }
-  
-  return(list(nodes = nodeData,
-              edges = edgeData
-  ))
-}
+# create_network <- function(tf, TF_target_gene, unique_TF, pathway_genes = c(),
+#                            shrink_gray = FALSE){ 
+#   TF_interest <- filter(TF_target_gene, TF %in% tf)[["TF"]]
+#   gene_target <- filter(TF_target_gene, TF %in% tf)[["gene"]]
+#   
+#   source <- TF_interest
+#   target <- gene_target
+#   
+#   id <- c(TF_interest, gene_target)
+#   name <- id
+#   nodeData <- data.frame(id,name, stringsAsFactors = FALSE)
+#   edgeData <- data.frame(source, target, stringsAsFactors = FALSE)
+#   
+#   #unique_TF <- unique(TF_target_gene[["TF"]])
+#   
+#   mutual_target <- edgeData %>% 
+#     # a character vector that indicates the nodes that are target of multiple selected TFs
+#     count(target) %>%
+#     filter(n > 1 & !target %in% tf ) %>%
+#     .[[1]]
+#   
+#   nodeData <- nodeData %>%
+#     # you can customize the color using the case_when structure easily,
+#     # check the tfs in id column that exist in your vector, then you can control its size,
+#     # shape and color easily
+#     mutate(color = case_when(id %in% tf ~ "#9d4097", # orange
+#                              # orange nodes are tfs that are active in this region
+#                              id %in% pathway_genes ~ "green",
+#                              id %in% unique_TF ~ "#D6604D", 
+#                              id %in% mutual_target ~ "#4fafc6",
+#                              TRUE ~ "lightgrey")) %>%
+#     mutate(height = case_when(id %in% tf ~ "100",
+#                            TRUE ~ "70")) %>%
+#     mutate(width = case_when(id %in% tf ~ "100",
+#                             TRUE ~ "70"))
+#   
+#   if(shrink_gray){
+#     nodeData <- nodeData %>%
+#       mutate(height = case_when(color %in% "lightgrey" ~ "40",
+#                                 TRUE ~ "70")) %>%
+#       mutate(width = case_when(color %in% "lightgrey" ~ "40",
+#                                TRUE ~ "70"))
+#     
+#   }
+#   
+#   return(list(nodes = nodeData,
+#               edges = edgeData
+#   ))
+# }
 # ------------------------------------------------------------------------------------
 #' Identify transcription factor data type
 #' 

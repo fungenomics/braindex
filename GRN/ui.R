@@ -1,19 +1,23 @@
+source("../www/ui_functions.R")
+
 ui <- fluidPage(
-  introjsUI(),
+  #introjsUI(),
   #useShinyjs(),
+  includeCSS("../www/minimal.css"),
+   
+  navigation(),
+   
+  beginPage(),
+  
   # Application title
-  introBox(
-    titlePanel("Mouse Brain Transcriptional Regulation Atlas"),
-    data.step = 1,
-    data.intro = "This app displays transcription factor activity inference data from 
-    a developmental timecourse of the mouse Pons and Forebrain."
-  ),
+  
+  titlePanel("Transcription Factor Activity in Single-cell Developmental Atlas",
+             windowTitle = "GRN"),
   
   sidebarLayout(
     sidebarPanel(
       width = 3,
       # choose which datasets to analyze for the whole app
-      actionButton("help", label = "See Instructions"),
       radioButtons("region", "Brain region",
                    # use the names in the vector to display
                    # use the character "joint_cortex" to match the path to import data
@@ -121,16 +125,9 @@ ui <- fluidPage(
       # 3. time series plot
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
       
-      introBox(
       # Update everything
       actionButton("update", label = "Update"),
-      data.hint = "click me to update everything!",
-      data.step = 2,
-      data.intro = "click it to update everything! Do this after you changed your 
-      transcription factor input and options. Feel free to QUIT the intro first and update it to see the 
-      table and plots",
-      data.position = "right"
-      ),
+      bookmarkButton(),
     ),
     mainPanel(
       tabsetPanel(
@@ -142,12 +139,7 @@ ui <- fluidPage(
           p("• The number of motifs for each gene is identified via the RcisTarget package. The best motif and its sequence logo is displayed."),
           title = "Transcription Factor Target Information",
           #textOutput("general_desc"),
-          introBox(
-            dataTableOutput("table"),
-            data.step = 3,
-            data.intro = "This table displays the gene targets of the selected transcription factors
-              along with information about the genes."
-          ),
+          dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
         ),
         
@@ -156,19 +148,34 @@ ui <- fluidPage(
           p("• Transcription factors and target genes are represented as nodes with regulatory relationships represented as edges."),
           p("• User input transcription factors are shown in blue. Target genes that are present in the current
             network can be highlighted in orange based on user selection or based on a file containing a gene list."),
+          p("• Click on the \"Label Target Gene Nodes\" option to see the label of every gene target and enable a hover option.
+            Currently, hover only displays gene name but more information to come soon!"),
           p("• Transcription factors that self regulate are not displayed (i.e no self loops)."),
           p("• File input format: single column csv file with the first row titled 'Gene' and the remaining rows containing a list of genes of interest."),
           title = "Regulatory Network Visualization",
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
           #textOutput("desc"),
           plotlyOutput("network"),
+          br(),#so the plotly doesn't overlap with the download button
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
+          br(),
           downloadButton("download_network", "Network Visualisation Download (PDF)"),
           #need to work on visualization with the ggNet package
-          introBox(
-            data.step = 4,
-            data.intro = "This table displays a network of your selected transcription factors and
-              their top gene targets."
-          ),
+         
           value = "Regulatory Network Visualization"
         ),
         # tabPanel(
@@ -286,5 +293,6 @@ ui <- fluidPage(
     ))
   ),
   
-  
+  # Custom styling
+  endPage()
 )
