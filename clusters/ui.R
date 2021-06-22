@@ -28,16 +28,18 @@ ui <- function(request){
                  selectInput("gene", "Gene", choices = genes_mouse,
                              multiple = TRUE),
                  
+                 # Input for dendrogram tab and expression tabletab
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')
+                                  && input.gene.length > 1",
+                                  materialSwitch("mean_exp", "Display mean expression over the selected genes",
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success",
+                                                 value = FALSE,
+                                                 right = TRUE),
+                 ),
+                 
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
-                                  
-                                  conditionalPanel(condition = "input.gene.length > 1",
-                                                   materialSwitch("mean_exp", "Plot mean expression over the selected genes",
-                                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
-                                                                  status = "success",
-                                                                  value = FALSE,
-                                                                  right = TRUE),
-                                  ),
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
@@ -144,7 +146,7 @@ ui <- function(request){
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
                
-               p("• When plotting more than one gene, use the sidebar switch to plot the mean expression over the plotted genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
+               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over the selected genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -190,6 +192,8 @@ ui <- function(request){
                p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
                
                p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
+               
+               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over the selected genes in a new column of the table"),
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
