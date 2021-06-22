@@ -114,7 +114,7 @@ ui <- function(request){
                  ),
                  
                  # Update button for all sidebar inputs. Coloured to differentiate
-                 # from the bookmark button.
+                 # from the bookmark button beside it
                  tags$head(
                    tags$style(HTML('#update{background-color:#4863A0; 
                                    color:#FFFFFF;}'))
@@ -162,8 +162,7 @@ ui <- function(request){
                        
                        # Bubble plot(s)
                        (plotOutput("bubble",
-                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
-                          withSpinner(type = 5)),
+                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% ws),
                        
                        # Gene labels
                        # No spinner to prevent confusing user, because there is only 1 plot
@@ -195,8 +194,7 @@ ui <- function(request){
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
                fluidRow(
-                 DT::dataTableOutput("cluster_table", width = 1100) %>% 
-                          withSpinner(type = 5)
+                 DT::dataTableOutput("cluster_table", width = 1100) %>% ws
                  ),
                
                # Only display download button if update has been pressed at least once
@@ -242,15 +240,13 @@ ui <- function(request){
                conditionalPanel(condition = "input.plotly_ribbon",
                                 
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
-                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% 
-                                  withSpinner(type = 5)
+                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% ws
                                 ),
                
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
-                                  withSpinner(type = 5)
+                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% ws
                                 ),
                
                # Only display download button if update has been pressed at least once
@@ -282,8 +278,7 @@ ui <- function(request){
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
-                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
-                 #   withSpinner(type = 5)
+                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% ws
                  
                  splitLayout(cellWidths = c(432, 512), # 432 = 4.5in, 512px = 5.33in
                              #cellArgs = list(style = "padding: 6px"),
@@ -291,15 +286,13 @@ ui <- function(request){
                              (plotOutput("dr_joint", 
                                          #width = "4.5in", 
                                          height = "4in",
-                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
-                                withSpinner(type = 5)),
+                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% ws),
                              
                               (plotOutput("feature_joint", 
                                          #width = "5.33in", 
                                          height = "4in"
                                          #, hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)
-                              ) %>% 
-                               withSpinner(type = 5))
+                              ) %>% ws)
                          )
                 ),
                  
@@ -311,8 +304,7 @@ ui <- function(request){
                 #fluidRow(uiOutput("feature_joint_hover_info")),
                
                 fluidRow(
-                  plotOutput("vln_joint", width = "11in", height = "4in") %>% 
-                    withSpinner(type = 5)
+                  plotOutput("vln_joint", width = "11in", height = "4in") %>% ws
                 ),
                
                 # Specify the value to use when checking if this tab is selected
@@ -338,13 +330,11 @@ ui <- function(request){
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
                    ),
                    
                    fluidRow(
-                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
                    )
             
           ),
@@ -360,8 +350,7 @@ ui <- function(request){
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     plotOutput("vln_sample", width = "10in", height = "20in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
                    )
           )
                  
