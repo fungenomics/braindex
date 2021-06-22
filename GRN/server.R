@@ -9,22 +9,22 @@ server <- function(input, output, session) {
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
   observeEvent(input$region,{
     if(input$region == "cortex"){
-      updateSelectInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
-                        selected = c("Arx","Lef1"))
-      updateSelectInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
-                          selected = c("Dlx6","Sox6") )
+      updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
+                           selected = c("Arx","Lef1"), server = TRUE)
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
+                           selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
-      updateSelectInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
-                        selected = c("Lhx5","Pax7"))
-      updateSelectInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
-                        selected = c("Gad2"))
+      updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
+                           selected = c("Lhx5","Pax7"), server = TRUE)
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
+                           selected = c("Gad2"), server = TRUE)
       
     }
     #updateRadioButtons(session, "show", selected = "stop") #resets the network visualization 
   })
-  
+
   
   #uses the input update button to update a list of the parameters of the app for the following functions
   input_new <- eventReactive(input$update,{

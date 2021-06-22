@@ -26,11 +26,16 @@ ui <- fluidPage(
                    selected = "cortex"),
       
       #actionButton("update_tf", label = "Update transcription factors to see the plots"),
-      selectInput(inputId = "TF",
-                  label = "Transcription Factor",
-                  choices = data_cortex$unique_active_TFs_bare,
-                  multiple = TRUE,
-                  selected = c("Arx","Lef1")),
+      selectizeInput(inputId = "TF",
+                     label = "Transcription Factor Input",
+                     choices = NULL,
+                     multiple = TRUE,
+                     selected = c("Arx", "Lef1")),
+      # selectInput(inputId = "TF",
+      #             label = "Transcription Factor",
+      #             choices = data_cortex$unique_active_TFs_bare,
+      #             multiple = TRUE,
+      #             selected = c("Arx","Lef1")),
       # fileInput("file_tf", "Choose CSV File containing your tf list",
       #           accept = c(
       #             "text/csv",
@@ -45,11 +50,11 @@ ui <- fluidPage(
       ),
       conditionalPanel(
           condition = "input.tabs == 'Regulatory Network Visualization'",
-          selectInput(inputId = "gene",
-                      label = "Genes of Interest",
-                      choices = unique(data_cortex$TF_target_gene_info$gene),
-                      multiple = TRUE,
-                      selected = c("Dlx6","Sox6")),
+          selectizeInput(inputId = "gene",
+                         label = "Genes of Interest",
+                         choices = NULL,
+                         multiple = TRUE,
+                         selected = c("Dlx6","Sox6")),
           #allows user to input a file containing a list of genes to query
           #this input returns a dataframe with 4 columns: name, size, type, datapath
           #each file entered is one row
@@ -137,7 +142,7 @@ ui <- fluidPage(
           p("• Strength of Association represents the weight of the putative regulatory links between transcription factor and a gene target, 
             as predicted with Genie3, with a higher value indicating a more likely regulatory link."),
           p("• The number of motifs for each gene is identified via the RcisTarget package. The best motif and its sequence logo is displayed."),
-          title = "Transcription Factor Target Information",
+          title = "TF Target Information",
           #textOutput("general_desc"),
           dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
@@ -152,7 +157,7 @@ ui <- fluidPage(
             Currently, hover only displays gene name but more information to come soon!"),
           p("• Transcription factors that self regulate are not displayed (i.e no self loops)."),
           p("• File input format: single column csv file with the first row titled 'Gene' and the remaining rows containing a list of genes of interest."),
-          title = "Regulatory Network Visualization",
+          title = "GRN Visualization",
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
           #textOutput("desc"),
           plotlyOutput("network"),
@@ -217,7 +222,7 @@ ui <- fluidPage(
         p("• Joint clusters are clusters classified based on the combined data from every developmental 
           time-point per brain region (forebrain or pons); sample cluster are identified based on data from each 
           individual time-point per brain region."),
-        title = "Heatmap",
+        title = "TF Activity Heatmap",
         value = "Heatmap",
         fluidRow(
           plotOutput("heatmap_joint")
@@ -232,7 +237,7 @@ ui <- fluidPage(
       ),
       
       tabPanel(
-        title = "Transcription Factor Activity, by Region",
+        title = "TF Activity, by Region",
         value = "Clustering",
         fluidRow( #make each plot smaller to fit more
           p("This tab displays the activity of selected transcription factors") %>% strong(),
