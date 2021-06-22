@@ -4,7 +4,9 @@ source("../www/ui_functions.R")
 # Load names of genes detected in mouse to provide choices in input
 genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
 
-ui <- bootstrapPage(
+ui <- function(request){
+  
+  bootstrapPage(
   
   # Custom styling
   includeCSS("../www/minimal.css"),
@@ -19,6 +21,7 @@ ui <- bootstrapPage(
   
   #### ---- Sidebar (input) ----
   sidebarLayout(
+    
     sidebarPanel(width = 3,
                  
                  # Gene input field, shared across tabs
@@ -110,8 +113,16 @@ ui <- bootstrapPage(
                                   ),
                  ),
                  
-                 # Update button for all sidebar inputs
-                 actionButton("update", label = "Update")
+                 # Update button for all sidebar inputs. Coloured to differentiate
+                 # from the bookmark button.
+                 tags$head(
+                   tags$style(HTML('#update{background-color:#4863A0; 
+                                   color:#FFFFFF;}'))
+                 ),
+                 actionButton("update", label = "Update"),
+                 
+                 # Bookmark button to store current inputs / state of app
+                 bookmarkButton()
                  
     ),
     
@@ -146,14 +157,16 @@ ui <- bootstrapPage(
                    overflow-x: visible; overflow-y: visible;",
                    
                    fluidRow(
+                     # Set cellWidths equal to the actual width of each plot (server.R)
                      splitLayout(cellWidths = c(1103, 200),
+                       
                        # Bubble plot(s)
                        (plotOutput("bubble",
                                   hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
                           withSpinner(type = 5)),
                        
                        # Gene labels
-                       #No spinner to prevent confusing user, because there is only 1 plot
+                       # No spinner to prevent confusing user, because there is only 1 plot
                        (plotOutput("bubble_labels")) 
                      )
                      
@@ -172,7 +185,7 @@ ui <- bootstrapPage(
         
       #### ---- Expression table tab output ---- 
       
-      tabPanel("Expression table", #TODO: confirm a better name
+      tabPanel("Expression table", 
                
                tags$br(),
                p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
@@ -365,4 +378,4 @@ ui <- bootstrapPage(
   # Custom styling
   endPage()
   
-)
+)}
