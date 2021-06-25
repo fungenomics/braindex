@@ -326,7 +326,7 @@ ribbon_plot <- function(gene,
   p1 <- df %>%
     # Need to specify group or the text attribute with glue causes errors
     ggplot(aes(x = xpos, y = frac, fill = cluster, group = cluster,
-               text = glue("{total*frac} {gene}+ cells"))) +
+               text = glue("{total*frac} {gene}+ cells out of {total} cells in timepoint"))) +
     geom_area(stat = "identity") +
     scale_fill_manual(values = colours, drop = FALSE, name = "") +
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
@@ -338,7 +338,7 @@ ribbon_plot <- function(gene,
     ylim(0, ymax) 
   
   if(make_plotly) {
-    return (ggplotly(p1,
+    return ((ggplotly(p1,
                      # Display cluster (group) and info on number of cells (text) in tooltips
                      tooltip = c("group", "text")) %>%
               
@@ -346,7 +346,20 @@ ribbon_plot <- function(gene,
               # Changing it to hoveron="fills" only causes a known issue, see:
               # https://github.com/ropensci/plotly/issues/1641 
               style(hoveron="points+fills") 
-            )
+            ) %>% 
+              
+              # Customize the modebar on the plotly object to hide certain buttons, 
+              # remove the plotly logo, and toggle spike lines on by default
+              config(modeBarButtonsToRemove = c("hoverCompareCartesian", 
+                                                "hoverClosestCartesian",
+                                                "toImage"),
+                     displaylogo = FALSE) %>% 
+              layout(yaxis = list(showspikes = FALSE,
+                                  spikethickness = 1.5,
+                                  spikedash = "solid"),
+                     xaxis = list(showspikes = FALSE,
+                                  spikethickness = 1.5,
+                                  spikedash = "solid")))
   }  else {
     return(p1)
   }
