@@ -326,7 +326,7 @@ ribbon_plot <- function(gene,
   p1 <- df %>%
     # Need to specify group or the text attribute with glue causes errors
     ggplot(aes(x = xpos, y = frac, fill = cluster, group = cluster,
-               text = glue("{total*frac} {gene}+ cells out of {total} cells in timepoint"))) +
+               text = glue("{total*frac} {gene}+ cells out of {total} cells at this time point"))) +
     geom_area(stat = "identity") +
     scale_fill_manual(values = colours, drop = FALSE, name = "") +
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
@@ -790,4 +790,54 @@ dark <- function(hex_color) {
     return(FALSE)
     
   }
+}
+
+#' Add ticks below a bar plot to categorize x axis into less granular categories
+#' 
+#' @param df Dataframe, containing the data to use
+#' [...]
+#' 
+#' @example 
+#' plot + add_class_ticks(df, unique(df$Cell_class), palette = palettes$Cell_class,
+#'                        start = -50, sep = 100, height = 500, label_x_pos = -9, fontsize = 3.5)
+#'
+add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palette = NULL, fontsize = 3) {
+  
+  # Set up our limits
+  n <- length(classes)
+  tops     <- seq(start, by = - (height + sep), length.out = n)
+  bottoms  <- seq(start - height, by = - (height + sep), length.out = n)
+  mids     <- map2_dbl(tops, bottoms, ~ mean(c(.x, .y)))
+  betweens <- seq(start - (height + sep/2), by = - (height + sep), length.out = n - 1)
+  
+  if (is.null(palette)) palette <- rep("black", n)
+  
+  # Make a dataframe for tick positions
+  df$y_top <- NA
+  df$y_bottom <- NA
+  
+  for (i in seq_along(classes)) {
+    
+    df[df$Cell_class == classes[i], ]$y_top <- tops[i]
+    df[df$Cell_class == classes[i], ]$y_bottom <- bottoms[i]
+    
+  }
+  
+  # Make a dataframe for class labels
+  df2 <- data.frame(Class = classes,
+                    x = label_x_pos,
+                    y = mids)
+  
+  # Adding ggplot2 elements together
+  # https://stackoverflow.com/questions/56405904/how-to-add-ggproto-objects-together-and-save-for-later-without-call-to-ggplot
+  list(geom_segment(data = df,
+                    mapping = aes(x = Cluster, y = y_top,
+                                  xend = Cluster, yend = y_bottom),
+                    size = 1,
+                    colour = "gray50"),
+       geom_hline(yintercept = 0, colour = "gray90"),
+       geom_hline(yintercept = betweens, linetype = "dotted", size = 0.4, colour = "gray60"),
+       geom_text(data = df2, mapping = aes(x = x, y = y, label = Class, colour = Class), size = fontsize, fontface = "bold", hjust = "left"),
+       scale_colour_manual(values = palette))
+  
 }

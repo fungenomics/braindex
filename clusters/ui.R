@@ -52,8 +52,9 @@ ui <- function(request){
                  ),
                  
 
-                 # Input for all tabs other than dendrogram & table
-                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
+                 # Input for all tabs other than dendrogram, ranked plot, & table
+                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
+                                  && input.tabs != 'rank_exp'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -362,6 +363,18 @@ ui <- function(request){
         
         # Specify the value to use when checking if this tab is selected       
         value = "sample"
+      ),
+      
+      #### ---- Clusters ranked by expression tab output ---- 
+      
+      tabPanel("Clusters ranked by expression",
+               
+               fluidRow(
+                 plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
+               ), 
+               
+               # Specify the value to use when checking if this tab is selected       
+               value = "rank_exp"
       ),
       
       id = "tabs"

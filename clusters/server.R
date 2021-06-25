@@ -565,5 +565,63 @@ server <- function(input, output, session) {
     
   })
   
+  #### ---- Clusters ranked by expression tab content ----
+  
+  output$rank_tick_plot <- renderPlot({
+    
+    # Lists & palette to use for more general cell class labels
+    # neuron_list = list("RGC", "RGC (prolif.)", "Excitatory neurons",
+    #                 "Other neurons", "Inhibitory neurons")
+    # progenitor_list = list("Neuronal progenitors", "Oligodendrocyte precursors",
+    #                     "Glial progenitors")
+    # others_list = list("Other", "Non-neuroectoderm", "Immune")
+    
+    palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
+                             "Oligodendrocytes" = "#b7dd5f",
+                             "Astrocytes" = "#00a385",
+                             "Ependymal" = "#8ee5cf",
+                             "Neurons" = "#840200",
+                             "Non-neuroect." = "gray40",
+                             "Other" = "gray90")
+    
+    df <- bubble_prep(gene = input_new()$gene[1]) %>% 
+      # Order from highest to lowest by expression (ranked)
+      arrange(desc(Expression)) %>% 
+      mutate(Cluster = factor(Cluster, levels = .$Cluster)) %>% 
+      # Rename cell classes to more general names
+      mutate(Cell_class = case_when(
+        grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
+        grepl("Olig", Cell_class) ~ "Oligodendrocytes",
+        grepl("Epen", Cell_class) ~ "Ependymal",
+        grepl("Astr", Cell_class) ~ "Astrocytes",
+        grepl("[Nn]euron", Cell_class) ~ "Neurons",
+        grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
+        TRUE ~ "Other"
+      ))
+    
+    p1 <- df %>% ggplot(aes(x = Cluster, y = Expression)) +
+      geom_bar(aes(fill = Cluster), stat = "identity") +
+      scale_fill_manual(values = df$Colour) +
+      theme_min() +
+      theme(legend.position = "none",
+            axis.title.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank()) +
+      expand_limits(x = -18) 
+
+    ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
+                             palette = palette_tick_plot,
+                             start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3.5) +
+      # Make sure to expand to the same value that's in p1
+      expand_limits(x = -18) +
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 10),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank()) 
+    
+    plot_grid(p1, ticks, ncol = 1, align = "v")
+  })
+  
 }
 
