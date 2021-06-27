@@ -1,11 +1,5 @@
 server <- function(input, output, session) {
-  # help message 
-  observeEvent(input$help,
-               introjs(session, options = list("nextLabel"="Next",
-                                               "prevLabel"="Previous",
-                                               "skipLabel"="Exit Tutorial"),
-                       events = list("oncomplete"=I('alert("All Done!")')))
-  )
+
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
   observeEvent(input$region,{
     if(input$region == "cortex"){
