@@ -56,154 +56,154 @@ addMotifPic <- function(subset_data){ #need to comment this and test to see if i
 #' 
 #' @examples 
 #' bubble_prep("Dlx1")
-bubble_prep <- function(tf,
-                        scale = TRUE,
-                        show_mean = FALSE,
-                        region) {
-  
-  # Load the mean expression of genes across clusters, given gene of interest
-  file_path <- glue("data/joint_{region}/joint_cortex.regulon_activity_per_cluster.feather")
-  exp <- read_feather(path = file_path,
-                      columns = c("Cluster", tf)) #%>% 
-    #dendogram_order from hydra file, commented out for now because no dendogram
-    #filter(Cluster %in% dendrogram_order)
-  
-  # Scale expression of each gene linearly across clusters to [0, 1]
-  if (scale) {
-    
-    exp <- exp %>%
-      as.data.frame() %>%
-      tibble::column_to_rownames(var = "Cluster") %>%
-      apply(2, scales::rescale, to = c(0, 1)) %>%
-      as.data.frame %>%
-      tibble::rownames_to_column(var = "Cluster")
-    
-  }
-  
-  # Convert to long / tidy format with columns: Cluster, Gene, Expression
-  exp <- exp %>%
-    gather(., "TF", "Activity", 2:ncol(.))
-  
-  # Probably don't need this in the TF plot
-  # # Load the proportion of cells in each cluster in which each gene was detected,
-  # # and convert to long / tidy format with columns: Cluster, Gene, Pct1
-  # pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
-  #                      columns = c("Cluster", gene)) %>%
-  #   gather(., "Gene", "Pct1", 2:ncol(.))
-  
-  # # Join with cluster metadata
-  # df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
-  #   left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
-  
-  # Tidy data for plotting
-  df <- df %>%
-    
-    # Order genes to match order input by user
-    mutate(TF = factor(TF, levels = rev(TF))) %>% 
-    arrange(TF) %>% 
-    
-    # Pad gene names so that the plot takes up a more standardized
-    # width; to roughly the the # of characters in the gene w/ longest name
-    # However, letters take up more pixels than spaces, so do less padding
-    # for genes with longer names
-    # TODO: Test the (commented) third line inside mutate() and adjust padding as required
-    mutate(TF_padded = case_when(
-      str_length(TF) <= 5 ~ str_pad(TF, 15, side = 'right', pad = " "),
-      between(str_length(TF), 5, 8) ~ str_pad(TF, 12, side = 'right', pad = " ")
-      #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
-    )
-    ) %>% 
-    mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
-    
-    # Order the clusters on the x-axis to match the dendrogram image
-    mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
-    
-    filter(!is.na(Cluster)) %>% 
-    
-    # Convert NAs (undetected genes) to 0s -- this ensures all
-    # clusters have a value for all genes, so that all clusters are plot,
-    # even if the gene was undetected
-    replace_na(list(Expression = 0, Pct1 = 0)) %>% 
-    
-    # Keep columns
-    select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
-  
-  # Create & append set of rows containing mean expression over all selected genes
-  if(show_mean) {
-    
-    # Create mean expression rows, preserving information for tooltip
-    mean_exp <- df %>% 
-      group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
-      summarize(#Gene = "MEAN", 
-        #Cluster = Cluster,
-        #Sample = Sample,
-        #Cell_type = Cell_type,
-        #Cell_class = Cell_class,
-        #N_cells = N_cells,
-        Expression = mean(Expression) 
-        #Pct1 = mean(Pct1),
-        #Colour = Colour,
-        #Gene_padded = "MEAN"
-      ) %>% 
-      # Remove the Pct1 value from the mean expression
-      # and label the mean expression
-      mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
-    
-    # Add the rows containing mean expression to the original dataframe,
-    # removing duplicate rows and ordering them once more by user input,
-    # except the mean which is placed at the bottom
-    gene_order_padded <- levels(df$Gene_padded)
-    df <- bind_rows(df, mean_exp) %>% 
-      distinct(.) %>%
-      mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
-    
-  }
-  
-  return(df)
-  
-}
-
-
-#' Bubbleplot of gene expression
+#' bubble_prep <- function(tf,
+#'                         scale = TRUE,
+#'                         show_mean = FALSE,
+#'                         region) {
+#'   
+#'   # Load the mean expression of genes across clusters, given gene of interest
+#'   file_path <- glue("data/joint_{region}/joint_cortex.regulon_activity_per_cluster.feather")
+#'   exp <- read_feather(path = file_path,
+#'                       columns = c("Cluster", tf)) #%>% 
+#'     #dendogram_order from hydra file, commented out for now because no dendogram
+#'     #filter(Cluster %in% dendrogram_order)
+#'   
+#'   # Scale expression of each gene linearly across clusters to [0, 1]
+#'   if (scale) {
+#'     
+#'     exp <- exp %>%
+#'       as.data.frame() %>%
+#'       tibble::column_to_rownames(var = "Cluster") %>%
+#'       apply(2, scales::rescale, to = c(0, 1)) %>%
+#'       as.data.frame %>%
+#'       tibble::rownames_to_column(var = "Cluster")
+#'     
+#'   }
+#'   
+#'   # Convert to long / tidy format with columns: Cluster, Gene, Expression
+#'   exp <- exp %>%
+#'     gather(., "TF", "Activity", 2:ncol(.))
+#'   
+#'   # Probably don't need this in the TF plot
+#'   # # Load the proportion of cells in each cluster in which each gene was detected,
+#'   # # and convert to long / tidy format with columns: Cluster, Gene, Pct1
+#'   # pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
+#'   #                      columns = c("Cluster", gene)) %>%
+#'   #   gather(., "Gene", "Pct1", 2:ncol(.))
+#'   
+#'   # # Join with cluster metadata
+#'   # df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
+#'   #   left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
+#'   
+#'   # Tidy data for plotting
+#'   df <- df %>%
+#'     
+#'     # Order genes to match order input by user
+#'     mutate(TF = factor(TF, levels = rev(TF))) %>% 
+#'     arrange(TF) %>% 
+#'     
+#'     # Pad gene names so that the plot takes up a more standardized
+#'     # width; to roughly the the # of characters in the gene w/ longest name
+#'     # However, letters take up more pixels than spaces, so do less padding
+#'     # for genes with longer names
+#'     # TODO: Test the (commented) third line inside mutate() and adjust padding as required
+#'     mutate(TF_padded = case_when(
+#'       str_length(TF) <= 5 ~ str_pad(TF, 15, side = 'right', pad = " "),
+#'       between(str_length(TF), 5, 8) ~ str_pad(TF, 12, side = 'right', pad = " ")
+#'       #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
+#'     )
+#'     ) %>% 
+#'     mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
+#'     
+#'     # Order the clusters on the x-axis to match the dendrogram image
+#'     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
+#'     
+#'     filter(!is.na(Cluster)) %>% 
+#'     
+#'     # Convert NAs (undetected genes) to 0s -- this ensures all
+#'     # clusters have a value for all genes, so that all clusters are plot,
+#'     # even if the gene was undetected
+#'     replace_na(list(Expression = 0, Pct1 = 0)) %>% 
+#'     
+#'     # Keep columns
+#'     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
+#'   
+#'   # Create & append set of rows containing mean expression over all selected genes
+#'   if(show_mean) {
+#'     
+#'     # Create mean expression rows, preserving information for tooltip
+#'     mean_exp <- df %>% 
+#'       group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
+#'       summarize(#Gene = "MEAN", 
+#'         #Cluster = Cluster,
+#'         #Sample = Sample,
+#'         #Cell_type = Cell_type,
+#'         #Cell_class = Cell_class,
+#'         #N_cells = N_cells,
+#'         Expression = mean(Expression) 
+#'         #Pct1 = mean(Pct1),
+#'         #Colour = Colour,
+#'         #Gene_padded = "MEAN"
+#'       ) %>% 
+#'       # Remove the Pct1 value from the mean expression
+#'       # and label the mean expression
+#'       mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
+#'     
+#'     # Add the rows containing mean expression to the original dataframe,
+#'     # removing duplicate rows and ordering them once more by user input,
+#'     # except the mean which is placed at the bottom
+#'     gene_order_padded <- levels(df$Gene_padded)
+#'     df <- bind_rows(df, mean_exp) %>% 
+#'       distinct(.) %>%
+#'       mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
+#'     
+#'   }
+#'   
+#'   return(df)
+#'   
+#' }
 #' 
-#' Generate a bubble plot for genes of interest across clusters in the mouse
-#' dendrogram, where bubble colour encodes the mean expression in each cluster
-#' and bubble size encodes the proportion of cells where each gene is detected
-#'
-#' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
-#' Gene_padded, Pct1, and Expression
-#'
-#' @return ggplot2 object
-#'
-#' @examples
-#' bubble_prep("Dlx1") %>% bubbleplot()
 #' 
-#' @export
-bubble_plot <- function(df, max_point_size) {
-  
-  # Generate plot
-  p1 <- df %>% 
-    ggplot(aes(x = Cluster, y = Gene_padded)) +
-    geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
-    scale_size_area(max_size = max_point_size) +
-    scale_color_gradientn(colours = tail(rdbu, 70)) +
-    theme_min() +
-    ylab(NULL) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5,
-                                     colour = joint_mouse_palette, size = rel(0.7)),
-          panel.grid.major.x = element_line(colour = "grey90"),
-          panel.border = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.ticks.y = element_blank(),
-          # Do not show the legend because it is included in the static
-          # dendrogram image displayed above the bubbleplot
-          legend.position = "bottom") +
-    # Put gene labels on the right hand side to improve alignment
-    scale_y_discrete(position = "right")
-  
-  return(p1)
-  
-}
+#' #' Bubbleplot of gene expression
+#' #' 
+#' #' Generate a bubble plot for genes of interest across clusters in the mouse
+#' #' dendrogram, where bubble colour encodes the mean expression in each cluster
+#' #' and bubble size encodes the proportion of cells where each gene is detected
+#' #'
+#' #' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
+#' #' Gene_padded, Pct1, and Expression
+#' #'
+#' #' @return ggplot2 object
+#' #'
+#' #' @examples
+#' #' bubble_prep("Dlx1") %>% bubbleplot()
+#' #' 
+#' #' @export
+#' bubble_plot <- function(df, max_point_size) {
+#'   
+#'   # Generate plot
+#'   p1 <- df %>% 
+#'     ggplot(aes(x = Cluster, y = Gene_padded)) +
+#'     geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
+#'     scale_size_area(max_size = max_point_size) +
+#'     scale_color_gradientn(colours = tail(rdbu, 70)) +
+#'     theme_min() +
+#'     ylab(NULL) +
+#'     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5,
+#'                                      colour = joint_mouse_palette, size = rel(0.7)),
+#'           panel.grid.major.x = element_line(colour = "grey90"),
+#'           panel.border = element_blank(),
+#'           axis.ticks.x = element_blank(),
+#'           axis.ticks.y = element_blank(),
+#'           # Do not show the legend because it is included in the static
+#'           # dendrogram image displayed above the bubbleplot
+#'           legend.position = "bottom") +
+#'     # Put gene labels on the right hand side to improve alignment
+#'     scale_y_discrete(position = "right")
+#'   
+#'   return(p1)
+#'   
+#' }
 #----------------------------ggNet visualisation---------------------------------------------
 #function to create an igraph object
 #' @param tf the user input vector of transcription factors
