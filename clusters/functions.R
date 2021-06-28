@@ -52,6 +52,8 @@ get_expression <- function(sample,
     
   }
   
+  # Output a flag if all expression values in the region are 0
+  # used for an informative error message in the app
   is_zero = FALSE
   
   non_zero_exp <- df %>% 
@@ -298,6 +300,17 @@ ribbon_plot <- function(gene,
   ribbon_df <- prep_ribbon_input(gene, region)
   ribbon_df$gene <- ribbon_df[[gene]]
   
+  # Output a flag if all expression values in the region are 0
+  # used for an informative error message in the app
+  is_zero = FALSE
+  non_zero_exp <- ribbon_df %>% 
+    filter(gene != 0)
+  
+  # TRUE if non_zero_exp has no rows i.e. i.e. all zero expression
+  if (dim(non_zero_exp)[1] == 0){ 
+    is_zero = TRUE    
+  }
+  
   # For each cluster at each timepoint, calculate the proportion of cells in
   # which the gene is detected
   ribbon_df_celltype_frac <- ribbon_df %>% 
@@ -350,7 +363,7 @@ ribbon_plot <- function(gene,
     ylim(0, ymax) 
   
   if(make_plotly) {
-    return ((ggplotly(p1,
+    return (list(zero = is_zero, plot = (ggplotly(p1,
                      # Display cluster (group) and info on number of cells (text) in tooltips
                      tooltip = c("group", "text")) %>%
               
@@ -371,9 +384,9 @@ ribbon_plot <- function(gene,
                                   spikedash = "solid"),
                      xaxis = list(showspikes = FALSE,
                                   spikethickness = 1.5,
-                                  spikedash = "solid")))
+                                  spikedash = "solid"))))
   }  else {
-    return(p1)
+    return(list(zero = is_zero, plot = p1))
   }
   
 }
