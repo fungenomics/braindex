@@ -200,7 +200,7 @@ ui <- function(request){
                
                fluidRow(
                  DT::dataTableOutput("cluster_table", width = 1100) %>% ws
-                 ),
+               ),
                
                # Only display download button if update has been pressed at least once
                conditionalPanel(condition='input.update!=0',
@@ -368,6 +368,14 @@ ui <- function(request){
       #### ---- Clusters ranked by expression tab output ---- 
       
       tabPanel("Clusters ranked by expression",
+               
+               tags$br(),
+               
+               p("This plot displays the expression of the selected gene in each cluster ranked from highest to lowest"),
+               
+               p("• The ticks below the plot x-axis provide categorization by general cell type"),
+               
+               p("• If more than one gene is provided, only the first gene is plotted"),
                
                fluidRow(
                  plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
