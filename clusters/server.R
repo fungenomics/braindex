@@ -245,7 +245,7 @@ server <- function(input, output, session) {
   ribbon_static <- reactive({
     
     p1 <- ribbon_plot(gene   = input_new()$gene[1],
-                region = input_new()$region)
+                      region = input_new()$region)
     
     # Get legend using cowplot
     leg <- cowplot::get_legend(p1)
@@ -396,12 +396,18 @@ server <- function(input, output, session) {
     
     req(input_new())
     
-    get_expression(sample    = input_new()$region,
-                   embedding = dr_joint_embedding(),
-                   gene      = input_new()$gene,
-                   
-                   # If more than one gene was provided, compute an aggregate
-                   aggregate = TRUE)
+    express <- get_expression(sample    = input_new()$region,
+                              embedding = dr_joint_embedding(),
+                              gene      = input_new()$gene,
+                              # If more than one gene was provided, compute an aggregate
+                              aggregate = TRUE)
+    
+    # Display message to the user if there is 0 expression throughout region
+    validate(
+      need(express$zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
+    express$data
     
   })
   
