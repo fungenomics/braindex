@@ -188,46 +188,39 @@ server <- function(input, output, session) {
   #### ---- Expression table tab content ----
 
   # Show table with cluster & expression info 
-  output$cluster_table <- renderDataTable({
+  output$cluster_table <- DT::renderDataTable({
     req(bubble_input())
     
     # Use the order from bubble_input except reversed 
     gene_table_order <- rev(unique(bubble_input()$Gene))
     
-    table <- bubble_input() %>%
+    #table <- 
+      bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
       spread(Gene, Expression) %>% 
-      # Select all except Colour column, rename some variables for clarity, and 
+      # Select all except Colour column, rename some variables for clarity, and
       # follow bubble_input order for gene columns (saved above)
-      select(Cluster, 
-             Sample, 
-             "Cell type" = Cell_type, 
-             "Cell class" = Cell_class, 
-             "Number of cells" = N_cells, 
-             all_of(gene_table_order))
+      select(Cluster,
+             Sample,
+             "Cell type" = Cell_type,
+             "Cell class" = Cell_class,
+             "Number of cells" = N_cells,
+             all_of(gene_table_order)) %>% 
     
     # Move mean expression to the rightmost column
-    if ("MEAN" %in% gene_table_order) {
-      table <- table %>% relocate("MEAN",
-                                 .after = last_col())
-    }
+    # if ("MEAN" %in% gene_table_order) {
+    #   table <- table %>% relocate("MEAN",
+    #                              .after = last_col())
+    # }
     
     # Produce a datatable
-    DT::datatable(table, options = list(
-        # columnDefs = list(list(visible = FALSE,
-        #                        # Hide the Colour column
-        #                        targets = c(6))),
-        selection = "none")
-    ) %>% 
+    DT::datatable() %>% 
+        #selection = "none")
+        
     # Colour the cluster column based on the palette
     formatStyle("Cluster",
-                backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
-      
-    # # Set cluster column text to white if the background colour is dark, else it's black (default)
-    # if (dark(point$Colour)) {
-    #   style <- paste0(style, "color: #FFFFFF")
-    # }
+                 backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
     
   })
   
