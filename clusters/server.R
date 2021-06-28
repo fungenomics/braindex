@@ -244,8 +244,16 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
+    all_zero <- ribbon_plot(gene   = input_new()$gene[1],
+                      region = input_new()$region)$zero
+    
+    # Display message to the user if there is 0 expression throughout region
+    validate(
+      need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
     p1 <- ribbon_plot(gene   = input_new()$gene[1],
-                      region = input_new()$region)
+                      region = input_new()$region)$plot
     
     # Get legend using cowplot
     leg <- cowplot::get_legend(p1)
@@ -276,9 +284,17 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
     
+    all_zero = ribbon_plot(gene   = input_new()$gene[1],
+                           region = input_new()$region)$zero
+    
+    # Display message to the user if there is 0 expression throughout region
+    validate(
+      need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
     ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region,
-                make_plotly = TRUE)
+                make_plotly = TRUE)$plot
     
   })
   
