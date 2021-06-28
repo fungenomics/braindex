@@ -188,13 +188,13 @@ server <- function(input, output, session) {
   #### ---- Expression table tab content ----
 
   # Show table with cluster & expression info 
-  output$cluster_table <- DT::renderDataTable({
+  output$cluster_table <- DT::renderDT({
     req(bubble_input())
     
     # Use the order from bubble_input except reversed 
     gene_table_order <- rev(unique(bubble_input()$Gene))
     
-    #table <- 
+    table<- 
       bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
@@ -206,7 +206,7 @@ server <- function(input, output, session) {
              "Cell type" = Cell_type,
              "Cell class" = Cell_class,
              "Number of cells" = N_cells,
-             all_of(gene_table_order)) %>% 
+             all_of(gene_table_order))
     
     # Move mean expression to the rightmost column
     # if ("MEAN" %in% gene_table_order) {
@@ -215,14 +215,21 @@ server <- function(input, output, session) {
     # }
     
     # Produce a datatable
-    DT::datatable() %>% 
-        #selection = "none")
+    DT::datatable(table, rownames= FALSE) %>% 
         
     # Colour the cluster column based on the palette
     formatStyle("Cluster",
                  backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
     
   })
+  
+  # output$x4 = renderPrint({
+  #   s = input$cluster_table_rows_selected
+  #   if (length(s)) {
+  #     cat('These clusters were selected:\n\n')
+  #     cat(bubble_input()$Cluster[s], sep = ', ')
+  #   }
+  # })
   
   # Download data in bubbleplot tab and expression table as TSV
   output$download_bubble <- 
