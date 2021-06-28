@@ -13,7 +13,7 @@ library(ggplot2)
 library(cowplot)
 library(pheatmap)
 library(DT)
-library(rcytoscapejs2) # downloaded from https://github.com/uc-bd2k/rcytoscapejs2
+#library(rcytoscapejs2) # downloaded from https://github.com/uc-bd2k/rcytoscapejs2
 #could probably get rid of rcytoscape
 library(glue)
 library(GGally)
@@ -29,3 +29,6 @@ load("data/shared/common_prep.Rda") # metadata and colour_palettes
 
 # Custom functions
 source("functions.R")
+
+#allows server side save states
+enableBookmarking(store = "server")

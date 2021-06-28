@@ -26,10 +26,24 @@
         
      },
      {
+      "file": "joint_cortex.regulon_activity_per_joint_cluster.feather",
+      "description": "feather file containing average TF activity per joint cluster instead of per sample cluster in the forebrain.",
+      "contents": "a data frame with a joint cluster column and columns corresponding to TFs and their activity in each cluster.",
+      "script": "data_prep.R"
+     
+     },
+     {
        "file": "Forebrain_join.2D.tsv",
        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex/Forebrain_join.2D.tsv",
        "description": "Cell-level information for forebrain data, including corresponding clusters and UMAP/tSNE/PCA coordinates, used to plot scatterplots",
        "contents": "Data frame with columns, 'Cell' 'Sample' 'Sample_cluster', followed by columns for embedding coordinates."     
+        
+     },
+     {
+       "file": "Jessa2019_Table_2b_joint_cortex_metadata.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata/Jessa2019_Table_2b_joint_cortex_metadata.tsv",
+       "description": "Joint_cluster-level information for forebrain data, including color palatte for each cluster, used to color scatter plots",
+       "contents": "Data frame with columns, 'Cluster_number' 'Color' 'Cell_type' 'Sample' etc., followed by summary info for each cluster."     
         
      },
      {
@@ -82,6 +96,20 @@
        "script": "data_prep.R"
         
      },
+     {
+      "file": "joint_pons.regulon_activity_per_joint_cluster.feather",
+      "description": "feather file containing average TF activity per joint cluster instead of per sample cluster in the pons.",
+      "contents": "a data frame with a joint cluster column and columns corresponding to TFs and their activity in each cluster.",
+      "script": "data_prep.R"
+     
+     },
+     {
+       "file": "Jessa2019_Table_2c_joint_pons_metadata.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata/Jessa2019_Table_2c_joint_pons_metadata.tsv",
+       "description": "Joint_cluster-level information for forebrain data, including color palatte for each cluster, used to color scatter plots",
+       "contents": "Data frame with columns, 'Cluster_number' 'Color' 'Cell_type' 'Sample' etc., followed by summary info for each cluster."     
+        
+     },	
      {
        "file": "Pons_join.2D.tsv",
        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons/Pons_join.2D.tsv",

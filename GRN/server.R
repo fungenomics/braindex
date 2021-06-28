@@ -1,30 +1,24 @@
 server <- function(input, output, session) {
-  # help message 
-  observeEvent(input$help,
-               introjs(session, options = list("nextLabel"="Next",
-                                               "prevLabel"="Previous",
-                                               "skipLabel"="Exit Tutorial"),
-                       events = list("oncomplete"=I('alert("All Done!")')))
-  )
+
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
   observeEvent(input$region,{
     if(input$region == "cortex"){
-      updateSelectInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
-                        selected = c("Arx","Lef1"))
-      updateSelectInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
-                          selected = c("Dlx6","Sox6") )
+      updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
+                           selected = c("Arx","Lef1"), server = TRUE)
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
+                           selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
-      updateSelectInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
-                        selected = c("Lhx5","Pax7"))
-      updateSelectInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
-                        selected = c("Gad2"))
+      updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
+                           selected = c("Lhx5","Pax7"), server = TRUE)
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
+                           selected = c("Gad2"), server = TRUE)
       
     }
     #updateRadioButtons(session, "show", selected = "stop") #resets the network visualization 
   })
-  
+
   
   #uses the input update button to update a list of the parameters of the app for the following functions
   input_new <- eventReactive(input$update,{
@@ -48,6 +42,8 @@ server <- function(input, output, session) {
     l$time_point <- temp
     l$gene <- input$gene
     l$label <- input$label
+    l$dim_red <- input$dim_red
+    l$cluster_label <- input$cluster_label
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -61,18 +57,18 @@ server <- function(input, output, session) {
   
   # -----------------------------Tab1:table and network------------------------------------------
   #def need to re-write this at the end 
-   output$general_desc <- renderText({
-      "This app designs for displaying transcription factor and gene data from mice brain (cortex & pons part) in various fancy ways by three main tabs;
-                                             
-       PROBLEM: There are some transcription factors from your input that may not have the corresponding data
-       in the following tabs. (Sometimes you may not see the information of that transcription factor or the plot
-       is not updated, etc. That is unfortunately because of the lack of data in the cell activity data in tab2,
-       or the binary cell activity data in tab3.  
-   "
-      
-    })
+   # output$general_desc <- renderText({
+   #    "This app designs for displaying transcription factor and gene data from mice brain (cortex & pons part) in various fancy ways by three main tabs;
+   #                                           
+   #     PROBLEM: There are some transcription factors from your input that may not have the corresponding data
+   #     in the following tabs. (Sometimes you may not see the information of that transcription factor or the plot
+   #     is not updated, etc. That is unfortunately because of the lack of data in the cell activity data in tab2,
+   #     or the binary cell activity data in tab3.  
+   # "
+   #    
+   #  })
   #filter the data, add a column for logos, then display
-    output$table <- renderDataTable({
+    output$table1 <- renderDataTable({
         # process data, filter the lines with our interested TF
       subset_data <- input_new()$TF_target_gene_info %>% dplyr::filter(TF %in% input_new()$tf) %>% select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
       
@@ -82,7 +78,8 @@ server <- function(input, output, session) {
                 colnames = c('Gene' = 'gene', 'Number of Motifs' = 'nMotifs',
                              'Best Motif' = 'bestMotif', 
                              'Strength of Association' = 'Genie3Weight.weight',
-                             'Logo' = 'motif_logo'))
+                             'Logo' = 'motif_logo'),
+                rownames = FALSE)
     })
     # observeEvent(input$reset, {
     #   reset("file_gene")
@@ -126,18 +123,34 @@ server <- function(input, output, session) {
       )
     })
     #check if there is a user input gene_list file, if there is, use it, if not, use the selectInput genes 
-    
-    output$network <- renderPlot({
+    igraph_network <- reactive ({
       if(is.null(gene_list$data)){
-         gene_into_graph <- input_new()$gene 
+        gene_to_highlight <- input_new()$gene 
       }
       else{
-        gene_into_graph <- gene_list$data
+        gene_to_highlight <- gene_list$data
       }
-      make_igraph(input_new()$tf, input_new()$TF_target_gene_info,
-                  gene_into_graph, input_new()$label)
-      #plot_ggnet(net, input_new()$gene)
+      make_network(input_new()$tf, input_new()$TF_target_gene_info,
+                  gene_to_highlight) #returns an igraph network object
     })
+    network_ggplot <- reactive({
+      plot_network(igraph_network(), input_new()$label, input_new()$tf)
+    })
+    
+    output$network <- renderPlotly({
+      net_plotly <- network_ggplot() %>% ggplotly(height = 700, tooltip = "text") %>% 
+        layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE),
+               hovermode = "x", hoverdistance = 100)
+      net_plotly
+      
+    })
+    
+    output$download_network <- downloadHandler(filename = "network.pdf",
+                                                contentType = "application/pdf",
+                                                content = function(file){
+                                                  ggsave(filename = file, plot = network_ggplot(),
+                                                         width = 8.5, height = 11)
+                                                })
     
     #probably redo this entire part to visualize with ggNet
 #     output$desc <- renderText({
@@ -208,23 +221,25 @@ server <- function(input, output, session) {
     })
  
     output$heatmap_joint <- renderPlot({
-      hm_joint_cluster_plot()
+      hm_joint <- hm_joint_cluster_plot()
+      hm_joint
     })
 
-    output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.png",
-                                               contentType = "image/png",
+    output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.pdf",
+                                               contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_joint_cluster_plot(),
                                                         width = 20, height = 25)
                                                })
     
     output$heatmap_cluster <- renderPlot({
-      hm_sample_cluster_plot() 
+      hm_sample <- hm_sample_cluster_plot() 
+      hm_sample
 
     })
     
     output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.png",
-                                               contentType = "image/png",
+                                               contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_sample_cluster_plot(),
                                                         width = 20, height = 25)
@@ -243,22 +258,22 @@ server <- function(input, output, session) {
     # seems redundant, just needs one umap function here
     Umap_plot_1 <- reactive({
       req(length(input_new()$tf)>0)
-      plot_UMAP(tf_number = 1,input_new()$cell_metadata, activity_data_cluster())
+      plot_UMAP(tf_number = 1,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
     })
     Umap_plot_2 <- reactive({
       req(length(input_new()$tf)>1)
-      plot_UMAP(tf_number = 2,input_new()$cell_metadata, activity_data_cluster())
+      plot_UMAP(tf_number = 2,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
     })
     
     output$color_by_cluster <- renderPlot({
-      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette)
+      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, input_new()$dim_red, input_new()$cluster_label)
     })
     
     output$cluster1 <- renderPlot({
       Umap_plot_1()
     })
-    output$download_UMAP_1 <- downloadHandler(filename = "UMAP1.png",
-                                              contentType = "image/png",
+    output$download_UMAP_1 <- downloadHandler(filename = "UMAP1.pdf",
+                                              contentType = "application/pdf",
                                               content = function(file){
                                                 ggsave(filename = file, plot = Umap_plot_1(),
                                                        width = 20, height = 20)
@@ -269,8 +284,8 @@ server <- function(input, output, session) {
     })
     
    
-    output$download_UMAP_2 <- downloadHandler(filename = "UMAP2.png",
-                                              contentType = "image/png",
+    output$download_UMAP_2 <- downloadHandler(filename = "UMAP2.pdf",
+                                              contentType = "application/pdf",
                                               content = function(file){
                                                 ggsave(filename = file, plot = Umap_plot_2(),
                                                        width = 20, height = 20)
@@ -322,18 +337,16 @@ server <- function(input, output, session) {
       for(tf_n in input_new()$tfs_not_exist_timeseries){
         tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
       }
-      text <- glue("We do not have these followning tfs in this tab: {tf_nexist_string}")
+      text <- glue("We do not have data for the following trancription: {tf_nexist_string}")
       
       
     })
     
     
     output$timeseries_desc <- renderText({
-      text <- "Click option: You may double click the color palatte of cell types at the right side to 
-      display that cell type ONLY; you could also click on one cell type to eliminate that in the
-      plot at left.
-      Mouse over the white vertical line on the plot to see the cell types. 
-      We only support four plots of your first four tfs input for now."
+      text <- "Click option: double clicking a cell type in the legend displays that cell type ONLY;
+      single click removes that cell type from the plot. Mouse over ribbons in the plot to see the cell types. 
+      We only support four plots of your first four transcripton factor inputs."
     
     })
     
@@ -367,7 +380,7 @@ server <- function(input, output, session) {
      })
     
     output$download_ribbon_1 <- downloadHandler(filename = "timeseries_ribbon.png",
-                                                contentType = "image/png",
+                                                contentType = "application/pdf",
                                                 content = function(file){
                                                   ggsave(filename = file, plot = ggplot_list_plot(),
                                                          width = 20, height = 15)

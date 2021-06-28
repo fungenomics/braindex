@@ -1,3 +1,33 @@
+##----------------------------ggplot style---------------------------------------------
+theme_min <- function(base_size = 11, base_family = "",
+                      border_colour = "black",
+                      border_size = 1) {
+  
+  theme_light(base_size = 11, base_family = "") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      panel.border = element_rect(fill = NA, colour = border_colour, size = border_size),
+      axis.ticks = element_line(colour = border_colour),
+      strip.background = element_rect(fill = NA, colour = NA),
+      strip.text.x = element_text(colour = "black", size = rel(1.2)),
+      strip.text.y = element_text(colour = "black", size = rel(1.2)),
+      title = element_text(size = rel(0.9)),
+      axis.text = element_text(colour = "black", size = rel(1.2)),
+      axis.title = element_text(colour = "black", size = rel(1.5)),
+      legend.title = element_text(colour = "black", size = rel(1.2)),
+      legend.key.size = unit(0.9, "lines"),
+      legend.text = element_text(size = rel(0.7), colour = "black"),
+      legend.key = element_rect(colour = NA, fill = NA),
+      legend.background = element_rect(colour = NA, fill = NA)
+    )
+}
+
+
+
+
+#----------------------------TF information table---------------------------------------------
 #function to add a column to data-table containing the HTML code necessary to display the motif logo
 addMotifPic <- function(subset_data){ #need to comment this and test to see if it works when I have wifi
   subset_data <- mutate(subset_data, motif_logo = bestMotif)
@@ -11,13 +41,176 @@ addMotifPic <- function(subset_data){ #need to comment this and test to see if i
   return(subset_data)
 }
 
+#------------------------------Bubble plot--------------------------------------
+#' Prepare input for bubble_plot
+#' 
+#' Load gene expression data from feather, tidy & optionally scale expression,
+#' and return the dataframe required as input for the bubble_plot() function
+#' 
+#' @param gene Character vector, one or more genes of interest to plot
+#' @param scale Logical, whether or not to linearly scale gene expression across
+#' clusters to [0,1] to improve visualization. Default: TRUE
+#' @param show_mean Logical, whether or not to display the mean expression of
+#' given genes in a new bubble plot line. Default: FALSE
+#' TODO: Use this to provide an option to download the underlying data.
+#' 
+#' @examples 
+#' bubble_prep("Dlx1")
+#' bubble_prep <- function(tf,
+#'                         scale = TRUE,
+#'                         show_mean = FALSE,
+#'                         region) {
+#'   
+#'   # Load the mean expression of genes across clusters, given gene of interest
+#'   file_path <- glue("data/joint_{region}/joint_cortex.regulon_activity_per_cluster.feather")
+#'   exp <- read_feather(path = file_path,
+#'                       columns = c("Cluster", tf)) #%>% 
+#'     #dendogram_order from hydra file, commented out for now because no dendogram
+#'     #filter(Cluster %in% dendrogram_order)
+#'   
+#'   # Scale expression of each gene linearly across clusters to [0, 1]
+#'   if (scale) {
+#'     
+#'     exp <- exp %>%
+#'       as.data.frame() %>%
+#'       tibble::column_to_rownames(var = "Cluster") %>%
+#'       apply(2, scales::rescale, to = c(0, 1)) %>%
+#'       as.data.frame %>%
+#'       tibble::rownames_to_column(var = "Cluster")
+#'     
+#'   }
+#'   
+#'   # Convert to long / tidy format with columns: Cluster, Gene, Expression
+#'   exp <- exp %>%
+#'     gather(., "TF", "Activity", 2:ncol(.))
+#'   
+#'   # Probably don't need this in the TF plot
+#'   # # Load the proportion of cells in each cluster in which each gene was detected,
+#'   # # and convert to long / tidy format with columns: Cluster, Gene, Pct1
+#'   # pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
+#'   #                      columns = c("Cluster", gene)) %>%
+#'   #   gather(., "Gene", "Pct1", 2:ncol(.))
+#'   
+#'   # # Join with cluster metadata
+#'   # df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
+#'   #   left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
+#'   
+#'   # Tidy data for plotting
+#'   df <- df %>%
+#'     
+#'     # Order genes to match order input by user
+#'     mutate(TF = factor(TF, levels = rev(TF))) %>% 
+#'     arrange(TF) %>% 
+#'     
+#'     # Pad gene names so that the plot takes up a more standardized
+#'     # width; to roughly the the # of characters in the gene w/ longest name
+#'     # However, letters take up more pixels than spaces, so do less padding
+#'     # for genes with longer names
+#'     # TODO: Test the (commented) third line inside mutate() and adjust padding as required
+#'     mutate(TF_padded = case_when(
+#'       str_length(TF) <= 5 ~ str_pad(TF, 15, side = 'right', pad = " "),
+#'       between(str_length(TF), 5, 8) ~ str_pad(TF, 12, side = 'right', pad = " ")
+#'       #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
+#'     )
+#'     ) %>% 
+#'     mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
+#'     
+#'     # Order the clusters on the x-axis to match the dendrogram image
+#'     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
+#'     
+#'     filter(!is.na(Cluster)) %>% 
+#'     
+#'     # Convert NAs (undetected genes) to 0s -- this ensures all
+#'     # clusters have a value for all genes, so that all clusters are plot,
+#'     # even if the gene was undetected
+#'     replace_na(list(Expression = 0, Pct1 = 0)) %>% 
+#'     
+#'     # Keep columns
+#'     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
+#'   
+#'   # Create & append set of rows containing mean expression over all selected genes
+#'   if(show_mean) {
+#'     
+#'     # Create mean expression rows, preserving information for tooltip
+#'     mean_exp <- df %>% 
+#'       group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
+#'       summarize(#Gene = "MEAN", 
+#'         #Cluster = Cluster,
+#'         #Sample = Sample,
+#'         #Cell_type = Cell_type,
+#'         #Cell_class = Cell_class,
+#'         #N_cells = N_cells,
+#'         Expression = mean(Expression) 
+#'         #Pct1 = mean(Pct1),
+#'         #Colour = Colour,
+#'         #Gene_padded = "MEAN"
+#'       ) %>% 
+#'       # Remove the Pct1 value from the mean expression
+#'       # and label the mean expression
+#'       mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
+#'     
+#'     # Add the rows containing mean expression to the original dataframe,
+#'     # removing duplicate rows and ordering them once more by user input,
+#'     # except the mean which is placed at the bottom
+#'     gene_order_padded <- levels(df$Gene_padded)
+#'     df <- bind_rows(df, mean_exp) %>% 
+#'       distinct(.) %>%
+#'       mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
+#'     
+#'   }
+#'   
+#'   return(df)
+#'   
+#' }
+#' 
+#' 
+#' #' Bubbleplot of gene expression
+#' #' 
+#' #' Generate a bubble plot for genes of interest across clusters in the mouse
+#' #' dendrogram, where bubble colour encodes the mean expression in each cluster
+#' #' and bubble size encodes the proportion of cells where each gene is detected
+#' #'
+#' #' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
+#' #' Gene_padded, Pct1, and Expression
+#' #'
+#' #' @return ggplot2 object
+#' #'
+#' #' @examples
+#' #' bubble_prep("Dlx1") %>% bubbleplot()
+#' #' 
+#' #' @export
+#' bubble_plot <- function(df, max_point_size) {
+#'   
+#'   # Generate plot
+#'   p1 <- df %>% 
+#'     ggplot(aes(x = Cluster, y = Gene_padded)) +
+#'     geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
+#'     scale_size_area(max_size = max_point_size) +
+#'     scale_color_gradientn(colours = tail(rdbu, 70)) +
+#'     theme_min() +
+#'     ylab(NULL) +
+#'     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5,
+#'                                      colour = joint_mouse_palette, size = rel(0.7)),
+#'           panel.grid.major.x = element_line(colour = "grey90"),
+#'           panel.border = element_blank(),
+#'           axis.ticks.x = element_blank(),
+#'           axis.ticks.y = element_blank(),
+#'           # Do not show the legend because it is included in the static
+#'           # dendrogram image displayed above the bubbleplot
+#'           legend.position = "bottom") +
+#'     # Put gene labels on the right hand side to improve alignment
+#'     scale_y_discrete(position = "right")
+#'   
+#'   return(p1)
+#'   
+#' }
 #----------------------------ggNet visualisation---------------------------------------------
 #function to create an igraph object
 #' @param tf the user input vector of transcription factors
 #' @param tf_target_gene_info a data frame containing information for each association 
 #' between a TF and a target gene; created in data_prep.R, loaded in global.R and used depending 
 #' on the region input in input_new()
-make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
+make_network <- function(tf, tf_target_gene_info, gene_list){
   #add a step to select only the transcription factors that are in the list 
   #create edgelist
   edges <- data_cortex$TF_target_gene_info %>% select(TF, gene, nMotifs, Genie3Weight.weight) %>%
@@ -36,25 +229,35 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
   #making a basic igraph object with an attribute for each gene indicating if it is a gene 
   #target or transcription factor
   net <- graph_from_data_frame(d=edges, vertices = nodes) %>% 
-    set_vertex_attr("Gene_Type", index = unique_gene_targets, "Gene Target") %>%
-    set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Gene") %>%
-    set_vertex_attr("Gene_Type", index = unique_TF, "TF") #%>% 
-    #set_vertex_attr("label_always", index = unique_TF, "yes")
+    set_vertex_attr("Gene_Type", index = unique_gene_targets, "Target Genes") %>%
+    set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Target Genes") %>%
+    set_vertex_attr("Gene_Type", index = unique_TF, "TF") 
   
+}  
+plot_network <- function(net, labelNodes, tf){ 
   if(labelNodes){
-    set.seed(2)
-    ggnet2(net, color = "Gene_Type", label = labelNodes, label.size = 3, size = "Gene_Type",
-           size.palette = c("Gene Target" = 6, "TF" = 6, "Input Gene" = 6),  
-           palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
-      guides(size = FALSE)
+    set.seed(0.926)
+    ggnet2(net, color = "Gene_Type", alpha = "Gene_Type", size = "Gene_Type", shape = "Gene_Type", 
+           label = labelNodes, label.size = 3, 
+           mode = "fruchtermanreingold", layout.par = list(niter = 1000),
+           size.palette = c("Target Genes" = 2, "TF" = 6, "Input Target Genes" = 6),
+           alpha.palette = c("Target Genes" = "1", "TF" = "1", "Input Target Genes" = "1"),
+           shape.palette = c("Target Genes" = "19", "TF" = "19", "Input Target Genes" = "19"),
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange"),
+           group = 1, text = names(V(net))) +
+      guides(size = FALSE, alpha = FALSE, shape = FALSE, color = guide_legend(title = "Gene Type"))
   }
   else{
-    set.seed(2)
-    ggnet2(net, color = "Gene_Type", label = tf, label.size = 3, size = "Gene_Type",
-           mode = "fruchtermanreingold", laout.par = list(niter = 1000),
-           size.palette = c("Gene Target" = 2, "TF" = 6, "Input Gene" = 6),
-           palette = c("Gene Target" = "grey", "TF" = "lightblue", "Input Gene" = "orange")) +
-      guides(size = FALSE)
+    set.seed(0.926)
+    ggnet2(net, color = "Gene_Type", alpha = "Gene_Type", size = "Gene_Type", shape = "Gene_Type", 
+           label = tf, label.size = 3, 
+           mode = "fruchtermanreingold", layout.par = list(niter = 1000),
+           size.palette = c("Target Genes" = 2, "TF" = 6, "Input Target Genes" = 6),
+           alpha.palette = c("Target Genes" = "1", "TF" = "1", "Input Target Genes" = "1"),
+           shape.palette = c("Target Genes" = "19", "TF" = "19", "Input Target Genes" = "19"),
+           palette = c("Target Genes" = "grey", "TF" = "lightblue", "Input Target Genes" = "orange"),
+           group = 1, text = names(V(net))) +
+      guides(size = FALSE, alpha = FALSE, shape = FALSE, color = guide_legend(title = "Gene Type")) 
   }
   
 }
@@ -83,56 +286,56 @@ make_igraph <- function(tf, tf_target_gene_info, gene_list, labelNodes){
 #' network <- createCytoscapeJsNetwork(nodeData, edgeData)
 #' rcytoscapejs2(network$nodes, network$edges)
 #' 
-create_network <- function(tf, TF_target_gene, unique_TF, pathway_genes = c(),
-                           shrink_gray = FALSE){ 
-  TF_interest <- filter(TF_target_gene, TF %in% tf)[["TF"]]
-  gene_target <- filter(TF_target_gene, TF %in% tf)[["gene"]]
-  
-  source <- TF_interest
-  target <- gene_target
-  
-  id <- c(TF_interest, gene_target)
-  name <- id
-  nodeData <- data.frame(id,name, stringsAsFactors = FALSE)
-  edgeData <- data.frame(source, target, stringsAsFactors = FALSE)
-  
-  #unique_TF <- unique(TF_target_gene[["TF"]])
-  
-  mutual_target <- edgeData %>% 
-    # a character vector that indicates the nodes that are target of multiple selected TFs
-    count(target) %>%
-    filter(n > 1 & !target %in% tf ) %>%
-    .[[1]]
-  
-  nodeData <- nodeData %>%
-    # you can customize the color using the case_when structure easily,
-    # check the tfs in id column that exist in your vector, then you can control its size,
-    # shape and color easily
-    mutate(color = case_when(id %in% tf ~ "#9d4097", # orange
-                             # orange nodes are tfs that are active in this region
-                             id %in% pathway_genes ~ "green",
-                             id %in% unique_TF ~ "#D6604D", 
-                             id %in% mutual_target ~ "#4fafc6",
-                             TRUE ~ "lightgrey")) %>%
-    mutate(height = case_when(id %in% tf ~ "100",
-                           TRUE ~ "70")) %>%
-    mutate(width = case_when(id %in% tf ~ "100",
-                            TRUE ~ "70"))
-  
-  if(shrink_gray){
-    nodeData <- nodeData %>%
-      mutate(height = case_when(color %in% "lightgrey" ~ "40",
-                                TRUE ~ "70")) %>%
-      mutate(width = case_when(color %in% "lightgrey" ~ "40",
-                               TRUE ~ "70"))
-    
-  }
-  
-  return(list(nodes = nodeData,
-              edges = edgeData
-  ))
-}
-# ------------------------------------------------------------------------------------
+# create_network <- function(tf, TF_target_gene, unique_TF, pathway_genes = c(),
+#                            shrink_gray = FALSE){ 
+#   TF_interest <- filter(TF_target_gene, TF %in% tf)[["TF"]]
+#   gene_target <- filter(TF_target_gene, TF %in% tf)[["gene"]]
+#   
+#   source <- TF_interest
+#   target <- gene_target
+#   
+#   id <- c(TF_interest, gene_target)
+#   name <- id
+#   nodeData <- data.frame(id,name, stringsAsFactors = FALSE)
+#   edgeData <- data.frame(source, target, stringsAsFactors = FALSE)
+#   
+#   #unique_TF <- unique(TF_target_gene[["TF"]])
+#   
+#   mutual_target <- edgeData %>% 
+#     # a character vector that indicates the nodes that are target of multiple selected TFs
+#     count(target) %>%
+#     filter(n > 1 & !target %in% tf ) %>%
+#     .[[1]]
+#   
+#   nodeData <- nodeData %>%
+#     # you can customize the color using the case_when structure easily,
+#     # check the tfs in id column that exist in your vector, then you can control its size,
+#     # shape and color easily
+#     mutate(color = case_when(id %in% tf ~ "#9d4097", # orange
+#                              # orange nodes are tfs that are active in this region
+#                              id %in% pathway_genes ~ "green",
+#                              id %in% unique_TF ~ "#D6604D", 
+#                              id %in% mutual_target ~ "#4fafc6",
+#                              TRUE ~ "lightgrey")) %>%
+#     mutate(height = case_when(id %in% tf ~ "100",
+#                            TRUE ~ "70")) %>%
+#     mutate(width = case_when(id %in% tf ~ "100",
+#                             TRUE ~ "70"))
+#   
+#   if(shrink_gray){
+#     nodeData <- nodeData %>%
+#       mutate(height = case_when(color %in% "lightgrey" ~ "40",
+#                                 TRUE ~ "70")) %>%
+#       mutate(width = case_when(color %in% "lightgrey" ~ "40",
+#                                TRUE ~ "70"))
+#     
+#   }
+#   
+#   return(list(nodes = nodeData,
+#               edges = edgeData
+#   ))
+# }
+# --------------------------------Helper functions----------------------------------------------------
 #' Identify transcription factor data type
 #' 
 #' Generate a tibble that has two columns indicating whether the tf has ext type,
@@ -242,7 +445,7 @@ tf_ext <- function(TF, TF_and_ext){
   filter(TF_and_ext, type==TF & ext=="ext")[[1,1]]
 }
 
-# --------------------------------Tab2 data--------------------------------
+# --------------------------------Create data for plots--------------------------------
 # NOTE: TF_and_ext is a dataframe (loaded already) that created in order to identify 
 # whether the TF data is a regular TF (with high confidence annotation) 
 # or ext type(with lower confidence)
@@ -343,7 +546,7 @@ create_activity_data <- function(tf, method, region, TF_and_ext, timepoint = NUL
 }
 
 
-#--------------------------------Tab 2: heatmap----------------------------------
+#--------------------------------Heatmap----------------------------------
 # This function takes a colour palette as input,
 # and creates the data formats needed to annotate
 # a pheatmap with some colours
@@ -384,7 +587,7 @@ makePheatmapAnno <- function(palette, column) {
 #' plot_heatmap(c("Pax6","Lef1"), "Cluster","pons", TF_and_ext_pon, pon_data)
 #' plot_heatmap(c("Pax6","Lef1"), "Cell","pons", TF_and_ext_pon,pon_data)
 #' 
-plot_heatmap <- function(tf,method, region, TF_and_ext, brain_data, cell_plot_num = 300, timepoint = NULL){
+plot_heatmap <- function(tf, method, region, TF_and_ext, brain_data, cell_plot_num = 300, timepoint = NULL){
   # sanity checking
   if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons")
   if(!method %in% c("Cell","Cluster", "joint")) return("Wrong usage, method should be Cell/Cluster")
@@ -445,12 +648,18 @@ plot_heatmap <- function(tf,method, region, TF_and_ext, brain_data, cell_plot_nu
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
   }
+  cluster_row <- FALSE
+ #do not do row clustering if there is only one TF selected
+  if(length(tf) > 1){
+   cluster_row <- TRUE
+  }
   pheatmap::pheatmap(t(act),
                      show_colnames = show_colname_plot,
                      scale = "none",
                      border_color = NA,
                      color = colorRampPalette(c("blue", "white", "red"))(100),
                      main = title,
+                     cluster_rows = cluster_row,
                      #annotation_col = anno_col,
                      # change the default color annotation
                      annotation_colors = hm_anno_new$side_colors, # loaded by data_prep.R
@@ -459,7 +668,7 @@ plot_heatmap <- function(tf,method, region, TF_and_ext, brain_data, cell_plot_nu
                      cellheight = 10)
 } 
 
-
+#----------------------------Dimension reduction---------------------------------------------
 #' Make UMAP clustering scatterplot
 #'
 #' @param tf_number Either 1 or 2. In the tf input vector we get from user in Shiny app, there could be
@@ -478,8 +687,7 @@ plot_heatmap <- function(tf,method, region, TF_and_ext, brain_data, cell_plot_nu
 #' activity_test_tf1 <- create_activity_data(tf, "Cell","cortex", data_cortex$TF_and_ext)
 #' plot_UMAP(tf_number = 1,data_cortex$overall, activity_test_tf1)
 #' 
-plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, sample_number = 13000,
-                      sample_reduce = TRUE){ #cell_metadata is the tsv with the 
+plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){ #cell_metadata is the tsv with the 
   #embedding coordinates for each cell in the dataset
   # if(tf_number == 1) tf_plot <- 2 # number of col, the first col is Cell, so start from 2
   # else if(tf_number == 2) tf_plot <- 3 
@@ -489,29 +697,57 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, sample_numbe
   
   tf_plot <- tf_number + 1 #replaces the above control flow
 
-  if(! sample_reduce) sample_number <- 27000
   
   activity_tf <- cell_activity_data[,tf_plot][[1]] #extracts the TF activity from the cell_activity_data
   #and appends it to the cell_metadata to make cell meta with activity to plot
   
-  cell_meta_with_activity <- mutate(cell_metadata, activity_tf = activity_tf) %>%
-    sample_n(sample_number)
+  cell_meta_with_activity <- mutate(cell_metadata, activity_tf = activity_tf)
   
+  x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
+  y_axis <- switch(dim_red_type, "umap" = "UMAP2", "tsne" = "tSNE_2", "pca" = "PC2")
   
-  ggplot(data = cell_meta_with_activity, mapping = aes(x=UMAP1,y=UMAP2))+
+  ggplot(data = cell_meta_with_activity, mapping = aes_string(x = x_axis, y = y_axis))+
     geom_point(aes(color = activity_tf))+
     scale_color_gradient(low = "grey", high = "red")+
-    theme_bw() + labs(color = 'TF Activity')
+    theme_min() + labs(color = 'TF Activity')
   
 }
 #if I want to include labeled clusters, then I need to map cells to the clusters 
 #place a label at the mean of the umap coordinates for the cells that belong in that cluster
 
-color_by_cluster <- function(cell_metadata, cluster_palette){
-  ggplot(data = cell_metadata, mapping = aes(x=UMAP1,y=UMAP2))+
-    geom_point(aes(color = Joint_cluster)) + theme_bw() + theme(legend.position="bottom") + 
-    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette)
+color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, cluster_label){
+  
+  x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
+  y_axis <- switch(dim_red_type, "umap" = "UMAP2", "tsne" = "tSNE_2", "pca" = "PC2")
+  
+  # Store the center points (medians) of each cluster courtesy of Bhavyaa 
+  centers <- cell_metadata %>%
+    group_by(Joint_cluster) %>%
+    summarise(center_x = median(get(x_axis)),
+              center_y = median(get(y_axis)))
+  
+  gg <- ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
+    geom_point(aes(color = Joint_cluster)) + theme_min() + theme(legend.position="bottom") + 
+    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette) 
+  
+  if(cluster_label){
+    gg <- gg + ggrepel::geom_label_repel(data = centers,
+                                         aes(x = center_x, y = center_y),
+                                         label = centers$Joint_cluster,
+                                         size = 4,
+                                         segment.color = 'grey50',
+                                         fontface = 'bold',
+                                         alpha = 0.8,
+                                         segment.alpha = 0.8,
+                                         label.size = NA,
+                                         force = 2,
+                                         segment.size = 0.5,
+                                         arrow = arrow(length = unit(0.01, 'npc')))
+  }
+  return(gg)
 }
+
+#----------------------------Time Course Ribbon Plot---------------------------------------------
 #need to maybe change the colors, select out the numbers and rename legend, just cosmetic things
 
 #' make cell metadata of certain region, cortex/pon
@@ -674,6 +910,7 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
                        limits = c(1, length(unique(df$stage)))) +
     labs(x = "age", y = "Proportion", title = TF) +
     guides(fill = guide_legend(ncol = 5)) +
+    theme_min() + 
     theme(legend.position = "bottom")
   
   if(make_plotly) {
