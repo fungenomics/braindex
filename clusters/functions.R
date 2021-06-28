@@ -52,7 +52,19 @@ get_expression <- function(sample,
     
   }
   
-  return(df)
+  is_zero = FALSE
+  
+  non_zero_exp <- df %>% 
+    filter(Expression != 0)
+  
+  # TRUE if non_zero_exp has no rows i.e. i.e. all zero expression
+  if (dim(non_zero_exp)[1] == 0){ 
+    
+    is_zero = TRUE    
+ 
+  }
+  
+  return(list(data = df, zero = is_zero))
   
 }
 
