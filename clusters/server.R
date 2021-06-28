@@ -80,6 +80,10 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
     if (length(input_new()$gene) > 1 && input_new()$mean_exp){
@@ -185,7 +189,6 @@ server <- function(input, output, session) {
 
   # Show table with cluster & expression info 
   output$cluster_table <- renderDataTable({
-    
     req(bubble_input())
     
     # Use the order from bubble_input except reversed 
@@ -244,6 +247,10 @@ server <- function(input, output, session) {
   # user to download it 
   ribbon_static <- reactive({
     
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
     p1 <- ribbon_plot(gene   = input_new()$gene[1],
                       region = input_new()$region)
     
@@ -272,6 +279,10 @@ server <- function(input, output, session) {
   # Generate interactive ribbon plot and save the output
   ribbon_plotly <- reactive({
 
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    ) 
+    
     ribbon_plot(gene   = input_new()$gene[1],
                 region = input_new()$region,
                 make_plotly = TRUE)
@@ -304,6 +315,10 @@ server <- function(input, output, session) {
   dr_joint_embedding <- reactive({
     
     req(input_new())
+    
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    ) 
     
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
     get_embedding(sample  = input_new()$region,
@@ -575,12 +590,9 @@ server <- function(input, output, session) {
   
   output$rank_tick_plot <- renderPlot({
     
-    # Lists & palette to use for more general cell class labels
-    # neuron_list = list("RGC", "RGC (prolif.)", "Excitatory neurons",
-    #                 "Other neurons", "Inhibitory neurons")
-    # progenitor_list = list("Neuronal progenitors", "Oligodendrocyte precursors",
-    #                     "Glial progenitors")
-    # others_list = list("Other", "Non-neuroectoderm", "Immune")
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    ) 
     
     palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
                              "Oligodendrocytes" = "#b7dd5f",
