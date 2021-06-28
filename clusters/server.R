@@ -618,7 +618,9 @@ server <- function(input, output, session) {
             axis.title.x = element_blank(),
             axis.text.x = element_blank(),
             axis.ticks.x = element_blank()) +
-      expand_limits(x = -18) 
+      expand_limits(x = -18) +
+      labs(title = input_new()$gene[1]) +
+      ylab(glue("proportion {input_new()$gene[1]}+ cells"))
 
     ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
                              palette = palette_tick_plot,
