@@ -28,13 +28,16 @@ ui <- function(request){
                  selectInput("gene", "Gene", choices = genes_mouse,
                              multiple = TRUE),
                  
-                 # Gene list input with a file
-                 fileInput("gene_list", NULL, buttonLabel = "Upload gene list", 
-                           multiple = FALSE, accept = c(".csv", ".tsv")),
+                 # Gene list input with a file, shared across tabs
+                 fileInput(inputId = "genelist", label = NULL,
+                           #label = "Upload gene list (.csv or .tsv)", 
+                           buttonLabel = "Upload gene list",
+                           multiple = FALSE, 
+                           accept = c(".csv", ".tsv"),
+                           placeholder = "None"),
 
-                 # Input for dendrogram tab and expression tabletab
-                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')
-                                  && input.gene.length > 1",
+                 # Input for dendrogram tab and expression table tab
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
                                                  status = "success",
