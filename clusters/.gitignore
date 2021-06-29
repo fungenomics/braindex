@@ -31,3 +31,6 @@ debug-app
 
 # Exclude R script used for testing
 test.R
+
+# Exclude server-side bookmark files
+shiny_bookmarks/
