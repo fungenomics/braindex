@@ -33,9 +33,16 @@ server <- function(input, output, session) {
       )
     })
     
+    # Don't wait for file input if it is not provided
+    if (length(input$gene_list) > 0){
+      genes = union(input$gene, g_list())
+    } else {
+      genes = input$gene
+    }
+    
     # Inputs to use as is
     l <- list(
-      "gene"   = union(input$gene, g_list()),
+      "gene"   = genes,
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
       "region" = input$region,
