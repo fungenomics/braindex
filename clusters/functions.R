@@ -379,10 +379,10 @@ ribbon_plot <- function(gene,
                                                 "hoverClosestCartesian",
                                                 "toImage"),
                      displaylogo = FALSE) %>% 
-              layout(yaxis = list(showspikes = FALSE,
+              layout(yaxis = list(showspikes = TRUE,
                                   spikethickness = 1.5,
                                   spikedash = "solid"),
-                     xaxis = list(showspikes = FALSE,
+                     xaxis = list(showspikes = TRUE,
                                   spikethickness = 1.5,
                                   spikedash = "solid"))))
   }  else {
