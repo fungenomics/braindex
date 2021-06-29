@@ -28,6 +28,10 @@ ui <- function(request){
                  selectInput("gene", "Gene", choices = genes_mouse,
                              multiple = TRUE),
                  
+                 # Gene list input with a file
+                 fileInput("gene_list", NULL, buttonLabel = "Upload gene list", 
+                           multiple = FALSE, accept = c(".csv", ".tsv")),
+
                  # Input for dendrogram tab and expression tabletab
                  conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')
                                   && input.gene.length > 1",

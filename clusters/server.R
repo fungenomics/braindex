@@ -18,9 +18,24 @@ server <- function(input, output, session) {
   # more options in the future
   input_new <- eventReactive(input$update, {
     
+    g_list <- reactive({
+      req(input$gene_list)
+      
+      ext <- tools::file_ext(input$gene_list$name)
+      switch(ext,
+             csv = scan(input$gene_list$datapath, 
+                        what = "string", sep = ",", 
+                        encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             tsv = scan(input$gene_list$datapath, 
+                        what = "string", sep = "\t", 
+                        encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             validate("Invalid file; Please upload a .csv or .tsv file")
+      )
+    })
+    
     # Inputs to use as is
     l <- list(
-      "gene"   = input$gene,
+      "gene"   = union(input$gene, g_list()),
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
       "region" = input$region,
@@ -184,6 +199,7 @@ server <- function(input, output, session) {
   width = 200
   
   )
+  
   
   #### ---- Expression table tab content ----
 
