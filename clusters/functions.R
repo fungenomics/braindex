@@ -377,7 +377,9 @@ ribbon_plot <- function(gene,
               # remove the plotly logo, and toggle spike lines on by default
               config(modeBarButtonsToRemove = c("hoverCompareCartesian", 
                                                 "hoverClosestCartesian",
-                                                "toImage"),
+                                                "toImage", 
+                                                "toggleSpikelines", 
+                                                "autoScale2d"),
                      displaylogo = FALSE) %>% 
               layout(yaxis = list(showspikes = TRUE,
                                   spikethickness = 1.5,
