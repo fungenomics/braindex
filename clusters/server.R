@@ -19,14 +19,14 @@ server <- function(input, output, session) {
   input_new <- eventReactive(input$update, {
     
     g_list <- reactive({
-      req(input$gene_list)
+      req(input$genelist)
       
-      ext <- tools::file_ext(input$gene_list$name)
+      ext <- tools::file_ext(input$genelist$name)
       switch(ext,
-             csv = scan(input$gene_list$datapath, 
+             csv = scan(input$genelist$datapath, 
                         what = "string", sep = ",", 
                         encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
-             tsv = scan(input$gene_list$datapath, 
+             tsv = scan(input$genelist$datapath, 
                         what = "string", sep = "\t", 
                         encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
              validate("Invalid file; Please upload a .csv or .tsv file")
@@ -34,7 +34,7 @@ server <- function(input, output, session) {
     })
     
     # Don't wait for file input if it is not provided
-    if (length(input$gene_list) > 0){
+    if (length(input$genelist) > 0){
       genes = union(input$gene, g_list())
     } else {
       genes = input$gene
