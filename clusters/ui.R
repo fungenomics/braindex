@@ -24,17 +24,25 @@ ui <- function(request){
     
     sidebarPanel(width = 3,
                  
-                 # Gene input field, shared across tabs
-                 selectInput("gene", "Gene", choices = genes_mouse,
-                             multiple = TRUE),
+                 conditionalPanel(condition = '!input.upload',
+                                  # Gene input field, shared across tabs
+                                  selectInput("gene", "Gene", choices = genes_mouse,
+                                              multiple = TRUE)),
                  
-                 # Gene list input with a file, shared across tabs
-                 fileInput(inputId = "genelist", label = NULL,
-                           #label = "Upload gene list (.csv or .tsv)", 
-                           buttonLabel = "Upload gene list",
-                           multiple = FALSE, 
-                           accept = c(".csv", ".tsv"),
-                           placeholder = "None"),
+                 conditionalPanel(condition = 'input.upload',
+                                  # Gene list input with a file, shared across tabs
+                                  fileInput(inputId = "genelist", label = "Gene list",
+                                            #label = "Upload gene list (.csv or .tsv)", 
+                                            buttonLabel = "Upload gene list",
+                                            multiple = FALSE, 
+                                            accept = c(".csv", ".tsv"),
+                                            placeholder = "None")),
+  
+                 materialSwitch("upload", "Upload a list of genes",
+                                # status doesn't have any effect other than color scheme. See bootstrap status values
+                                status = "success", 
+                                value = FALSE,
+                                right = TRUE),
 
                  # Input for dendrogram tab and expression table tab
                  conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')",
