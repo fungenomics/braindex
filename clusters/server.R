@@ -19,8 +19,9 @@ server <- function(input, output, session) {
   input_new <- eventReactive(input$update, {
     
     g_list <- reactive({
-      req(input$genelist)
       
+      req(input$genelist)
+
       ext <- tools::file_ext(input$genelist$name)
       switch(ext,
              csv = scan(input$genelist$datapath, 
@@ -33,9 +34,9 @@ server <- function(input, output, session) {
       )
     })
     
-    # Don't wait for file input if it is not provided
-    if (length(input$genelist) > 0){
-      genes = union(input$gene, g_list())
+    # Condition which input is used based on the upload toggle
+    if (input$upload){
+      genes = g_list()
     } else {
       genes = input$gene
     }
@@ -105,7 +106,7 @@ server <- function(input, output, session) {
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
-    
+
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
     if (length(input_new()$gene) > 1 && input_new()$mean_exp){
