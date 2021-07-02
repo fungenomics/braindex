@@ -32,11 +32,10 @@ ui <- function(request){
                  conditionalPanel(condition = 'input.upload',
                                   # Gene list input with a file, shared across tabs
                                   fileInput(inputId = "genelist", label = "Gene list",
-                                            #label = "Upload gene list (.csv or .tsv)", 
-                                            buttonLabel = "Upload gene list",
+                                            buttonLabel = "Upload...",
                                             multiple = FALSE, 
                                             accept = c(".csv", ".tsv"),
-                                            placeholder = "None")),
+                                            placeholder = "No file selected")),
   
                  materialSwitch("upload", "Upload a list of genes",
                                 # status doesn't have any effect other than color scheme. See bootstrap status values

@@ -30,7 +30,7 @@ server <- function(input, output, session) {
              tsv = scan(input$genelist$datapath, 
                         what = "string", sep = "\t", 
                         encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
-             validate("Invalid file; Please upload a .csv or .tsv file")
+             validate("\n\n\nInvalid file; Please upload a .csv or .tsv file")
       )
     })
     
