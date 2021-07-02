@@ -37,14 +37,15 @@ ui <- function(request){
                                             accept = c(".csv", ".tsv"),
                                             placeholder = "No file selected")),
   
-                 materialSwitch("upload", "Upload a list of genes",
+                 materialSwitch("upload", "Use gene list from file",
                                 # status doesn't have any effect other than color scheme. See bootstrap status values
                                 status = "success", 
                                 value = FALSE,
                                 right = TRUE),
 
                  # Input for dendrogram tab and expression table tab
-                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table')",
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table') &&
+                                  (input.gene.length > 1 || input.upload)",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
                                                  status = "success",
