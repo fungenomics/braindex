@@ -32,7 +32,7 @@ ui <- function(request){
                  conditionalPanel(condition = 'input.upload',
                                   # Gene list input with a file, shared across tabs
                                   fileInput(inputId = "genelist", label = "Gene list",
-                                            buttonLabel = "Upload...",
+                                            buttonLabel = "Browse...",
                                             multiple = FALSE, 
                                             accept = c(".csv", ".tsv"),
                                             placeholder = "No file selected")),
@@ -133,10 +133,10 @@ ui <- function(request){
                  
                  # Update button for all sidebar inputs. Coloured to differentiate
                  # from the bookmark button beside it
-                 tags$head(
-                   tags$style(HTML('#update{background-color:#4863A0; 
-                                   color:#FFFFFF;}'))
-                 ),
+                 # tags$head(
+                 #   tags$style(HTML('#update{background-color:#4863A0; 
+                 #                   color:#FFFFFF;}'))
+                 # ),
                  actionButton("update", label = "Update"),
                  
                  # Bookmark button to store current inputs / state of app
@@ -152,8 +152,9 @@ ui <- function(request){
       tabPanel("Dendrogram",
                
                tags$br(),
-               p("This tab displays the mean expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
-               
+               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse scRNAseq development atlas."),
+               tags$br(),
+               tags$br(),
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
@@ -162,7 +163,7 @@ ui <- function(request){
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
                
-               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over the selected genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
+               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -205,11 +206,12 @@ ui <- function(request){
       tabPanel("Expression table", 
                
                tags$br(),
-               p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
-               
+               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
+               tags$br(),
+               tags$br(),
                p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                
-               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over the selected genes in a new column of the table"),
+               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over these genes in a new column of the table"),
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
@@ -235,8 +237,9 @@ ui <- function(request){
                
                tags$br(),
                
-               p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse"),
-               
+               tags$b("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse."),
+               tags$br(),
+               tags$br(),
                p("• Use the side bar to select which brain region to interrogate"),
                
                p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
@@ -287,8 +290,9 @@ ui <- function(request){
                
                tags$br(),
                
-               p("Use this tab to explore the expression of one or more genes at the single-cell level per brain region"),
-               
+               tags$b("Use this tab to explore the expression of one or more genes at the single-cell level per brain region."),
+               tags$br(),
+               tags$br(),
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
                p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be disabled if clusters are labeled"),
@@ -341,8 +345,9 @@ ui <- function(request){
                    
                    tags$br(),
                    
-                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-                   
+                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
+                   tags$br(),
+                   tags$br(),
                    p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
                    
                    p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
@@ -363,8 +368,9 @@ ui <- function(request){
                    
                    tags$br(),
                    
-                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-                   
+                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
+                   tags$br(),
+                   tags$br(),
                    p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
                    
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
@@ -386,9 +392,10 @@ ui <- function(request){
                
                tags$br(),
                
-               p("This plot displays the expression of the selected gene in each cluster ranked from highest to lowest"),
-               
-               p("• The ticks below the plot x-axis provide categorization by general cell type"),
+               tags$b("This plot displays the expression of the selected gene in each cluster, ranked from highest to lowest expression."),
+               tags$br(),
+               tags$br(),
+               p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
                p("• If more than one gene is provided, only the first gene is plotted"),
                
