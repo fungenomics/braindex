@@ -10,13 +10,14 @@ library(glue)
 library(stringr)
 library(ggplot2)
 library(ggrepel)
-library(DT)
+#library(DT)
 library(purrr)
 library(readr)
 library(shinyWidgets)
 library(plotly)
 library(shinycssloaders)
 library(shiny)
+library(reactable)
 
 # ---- Set-up / load common data ----
 
