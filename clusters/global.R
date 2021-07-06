@@ -40,4 +40,4 @@ load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 # ---- Shiny settings ----
 
 # Enable bookmarking
-enableBookmarking(store = "server")
+enableBookmarking(store = "url")
