@@ -212,13 +212,13 @@ server <- function(input, output, session) {
   #### ---- Expression table tab content ----
 
   # Show table with cluster & expression info 
-  output$cluster_table <- DT::renderDT({
+  output$cluster_table <- renderReactable({
     req(bubble_input())
     
     # Use the order from bubble_input except reversed 
     gene_table_order <- rev(unique(bubble_input()$Gene))
     
-    table<- 
+    table <- 
       bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
@@ -238,13 +238,39 @@ server <- function(input, output, session) {
     #                              .after = last_col())
     # }
     
-    # Produce a datatable
-    DT::datatable(table, rownames= FALSE) %>% 
-        
-    # Colour the cluster column based on the palette
-    formatStyle("Cluster",
-                 backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
-    
+    # Produce a data table
+    reactable(table, 
+              rownames = FALSE,
+              highlight = TRUE,
+              compact = TRUE,
+              searchable = TRUE,
+              showSortable = TRUE,
+              fullWidth = FALSE,
+              showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
+              columns = list(
+                Cluster = colDef(minWidth = 110,
+                                 style = function(index){
+                                   # Colour cluster column background by existing palette
+                                   b_color <- toString(unname(joint_mouse_palette)[index])
+                                   # Change text colour to white if background is dark
+                                   if (dark(b_color)){
+                                     f_color = "#FFFFFF"
+                                   } else {
+                                     f_color = "#000000"
+                                   }
+                                   list(background = b_color, color = f_color, fontWeight = "bold", 
+                                   # Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                        position = "sticky", left = 0, zIndex = 1)
+                                  },
+                                 headerStyle = 
+                                   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                                 ), 
+                Sample = colDef(minWidth = 125),
+                "Cell type" = colDef(minWidth = 200),
+                "Cell class" = colDef(minWidth = 150),
+                "Number of cells" = colDef(minWidth = 80)
+                )
+    ) 
   })
   
   # output$x4 = renderPrint({
