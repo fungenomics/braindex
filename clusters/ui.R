@@ -44,7 +44,7 @@ ui <- function(request){
                                 right = TRUE),
 
                  # Input for dendrogram tab and expression table tab
-                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table') &&
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
                                   (input.gene.length > 1 || input.upload)",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
@@ -397,7 +397,9 @@ ui <- function(request){
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• If more than one gene is provided, only the first gene is plotted"),
+               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene will be plotted"),
+               
+               p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
                fluidRow(
                  plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
