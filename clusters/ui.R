@@ -392,12 +392,12 @@ ui <- function(request){
                
                tags$br(),
                
-               tags$b("This plot displays the expression of the selected gene in each cluster, ranked from highest to lowest expression."),
+               tags$b("This plot displays the mean expression of the selected gene in each cluster, ranked from highest to lowest expression."),
                tags$br(),
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene will be plotted"),
+               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene's expression will be plotted"),
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                

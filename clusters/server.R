@@ -646,11 +646,11 @@ server <- function(input, output, session) {
       df <- bubble_prep(gene = input_new()$gene,
                         show_mean = TRUE) %>% 
         filter(Gene == "MEAN")
-      y_axis_text <- "proportion of cells"
+      y_axis_text <- "Mean gene expression"
       title_text <- "Mean expression over all selected genes"
     } else {
       df <- bubble_prep(gene = input_new()$gene[1])
-      y_axis_text <- glue("proportion {input_new()$gene[1]}+ cells")
+      y_axis_text <- glue("Mean {input_new()$gene[1]} expression")
       title_text <- input_new()$gene[1]
     }
     
