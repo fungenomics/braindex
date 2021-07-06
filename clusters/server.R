@@ -640,9 +640,21 @@ server <- function(input, output, session) {
                              "Ependymal" = "#8ee5cf",
                              "Neurons" = "#840200",
                              "Non-neuroect." = "gray40",
-                             "Other" = "gray90")
+                             "Other" = "gray60")
     
-    df <- bubble_prep(gene = input_new()$gene[1]) %>% 
+    if (input_new()$mean_exp){
+      df <- bubble_prep(gene = input_new()$gene,
+                        show_mean = TRUE) %>% 
+        filter(Gene == "MEAN")
+      y_axis_text <- "proportion of cells"
+      title_text <- "Mean expression over all selected genes"
+    } else {
+      df <- bubble_prep(gene = input_new()$gene[1])
+      y_axis_text <- glue("proportion {input_new()$gene[1]}+ cells")
+      title_text <- input_new()$gene[1]
+    }
+    
+    df <- df %>% 
       # Order from highest to lowest by expression (ranked)
       arrange(desc(Expression)) %>% 
       mutate(Cluster = factor(Cluster, levels = .$Cluster)) %>% 
@@ -660,14 +672,16 @@ server <- function(input, output, session) {
     p1 <- df %>% ggplot(aes(x = Cluster, y = Expression)) +
       geom_bar(aes(fill = Cluster), stat = "identity") +
       scale_fill_manual(values = df$Colour) +
-      theme_min() +
+      theme_min(border_colour = "gray90") +
       theme(legend.position = "none",
             axis.title.x = element_blank(),
             axis.text.x = element_blank(),
-            axis.ticks.x = element_blank()) +
+            axis.ticks.x = element_blank(),
+            # Remove white space at the bottom of plot
+            plot.margin = margin(b=0, unit="cm")) +
       expand_limits(x = -18) +
-      labs(title = input_new()$gene[1]) +
-      ylab(glue("proportion {input_new()$gene[1]}+ cells"))
+      labs(title = title_text) +
+      ylab(y_axis_text)
 
     ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
                              palette = palette_tick_plot,
@@ -675,10 +689,14 @@ server <- function(input, output, session) {
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +
       theme(legend.position = "none",
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 10),
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
             axis.title.y = element_blank(),
             axis.text.y = element_blank(),
-            axis.ticks.y = element_blank()) 
+            axis.ticks.y = element_blank(),
+            # Remove plot border
+            panel.border = element_blank(),
+            # Remove white space at the top of the plot
+            plot.margin = margin(t=0, unit="cm")) 
     
     plot_grid(p1, ticks, ncol = 1, align = "v")
   })
