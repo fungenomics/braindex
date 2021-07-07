@@ -868,3 +868,28 @@ add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palett
        scale_colour_manual(values = palette))
   
 }
+
+#' Check a certain number of input genes against an list of accepted genes 
+#' 
+#' @param user_genes Character vector, inputs from user (from textbox or file)
+#' @param n Numeric, the number of genes from the beginning of the list to check.
+#' Default: NULL (i.e. check all genes)
+#' @param annotation Logical, whether to check against annotation or not. 
+#' Default: FALSE (i.e. check against list of dataset genes, not annotation)
+#' 
+#' @return A list of inputs that do not match the list of accepted genes
+
+check_genes <- function(user_genes, 
+                        n = 20,
+                        annotation = FALSE) {
+  
+  if (!is.null(n)) {
+    user_genes <- head(user_genes, n)
+  } 
+  
+  if (!(all(user_genes %in% genes_mouse))) {
+    return(user_genes[!(user_genes %in% genes_mouse)])
+  } else {
+    return(NULL)
+  }
+}

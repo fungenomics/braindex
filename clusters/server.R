@@ -103,21 +103,19 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
+    # Check whether a gene was provided or not
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    if (!(all(input_new()$gene %in% genes_mouse))) {
-      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
-    } else {
-      error_genes <- NULL
-    }
-    
+    # Check first 20 inputs against the dataset genes
+    error_genes <- check_genes(input_new()$gene, 20)
     validate(
-      need(all(input_new()$gene %in% genes_mouse), 
+      need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
-
+    
+    
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
     if (length(input_new()$gene) > 1 && input_new()$mean_exp){
@@ -308,25 +306,22 @@ server <- function(input, output, session) {
   # user to download it 
   ribbon_static <- reactive({
     
+    # Check whether a gene was provided or not
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    if (!(input_new()$gene[1] %in% genes_mouse)) {
-      error_genes <- input_new()$gene[1] 
-    } else {
-      error_genes <- NULL
-    }
-    
+    # Check first input against the dataset genes
+    error_genes <- check_genes(input_new()$gene, 1)
     validate(
-      need(input_new()$gene[1] %in% genes_mouse, 
+      need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
     all_zero <- ribbon_plot(gene   = input_new()$gene[1],
                       region = input_new()$region)$zero
     
-    # Display message to the user if there is 0 expression throughout region
+    # Display message to the user instead of plot if 0 expression throughout region
     validate(
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
@@ -359,18 +354,15 @@ server <- function(input, output, session) {
   # Generate interactive ribbon plot and save the output
   ribbon_plotly <- reactive({
 
+    # Check whether a gene was provided or not
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
-    ) 
+    )
     
-    if (!(input_new()$gene[1] %in% genes_mouse)) {
-      error_genes <- input_new()$gene[1] 
-    } else {
-      error_genes <- NULL
-    }
-    
+    # Check first input against the dataset genes
+    error_genes <- check_genes(input_new()$gene, 1)
     validate(
-      need(input_new()$gene[1] %in% genes_mouse, 
+      need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
@@ -415,18 +407,15 @@ server <- function(input, output, session) {
     
     req(input_new())
     
+    # Check whether a gene was provided or not
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
-    ) 
+    )
     
-    if (!(all(input_new()$gene %in% genes_mouse))) {
-      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
-    } else {
-      error_genes <- NULL
-    }
-    
+    # Check ALL inputs against the dataset genes
+    error_genes <- check_genes(input_new()$gene)
     validate(
-      need(all(input_new()$gene %in% genes_mouse), 
+      need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
@@ -700,34 +689,23 @@ server <- function(input, output, session) {
   
   output$rank_tick_plot <- renderPlot({
     
+    # Check whether a gene was provided or not
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
-    ) 
+    )
     
     if(input_new()$mean_exp){
-      if (!(input_new()$gene[1] %in% genes_mouse)) {
-        error_genes <- input_new()$gene[1] 
-      } else {
-        error_genes <- NULL
-      }
-      
-      validate(
-        need(input_new()$gene[1] %in% genes_mouse, 
-             glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
-      )
-    } else {
-      if (!(all(input_new()$gene %in% genes_mouse))) {
-        error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
-      } else {
-        error_genes <- NULL
-      }
-      
-      validate(
-        need(all(input_new()$gene %in% genes_mouse), 
-             glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
-      )
+      # Check ALL inputs against the dataset genes
+      error_genes <- check_genes(input_new()$gene)
+    } else{
+      # Check only first input against the dataset genes
+      error_genes <- check_genes(input_new()$gene, 1)
     }
     
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
     
     palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
                              "Oligodendrocytes" = "#b7dd5f",
