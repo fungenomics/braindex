@@ -37,6 +37,8 @@ load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
+# Load names of genes detected in mouse to provide choices in input
+genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
 
 # ---- Shiny settings ----
 

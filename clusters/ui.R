@@ -1,9 +1,6 @@
 
 source("../www/ui_functions.R")
 
-# Load names of genes detected in mouse to provide choices in input
-genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
-
 ui <- function(request){
   
   bootstrapPage(
