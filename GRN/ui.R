@@ -2,7 +2,7 @@ source("../www/ui_functions.R")
 
 ui <- fluidPage(
   #introjsUI(),
-  #useShinyjs(),
+  useShinyjs(),
   includeCSS("../www/minimal.css"),
    
   navigation(),
@@ -31,6 +31,9 @@ ui <- fluidPage(
                      choices = NULL,
                      multiple = TRUE,
                      selected = c("Arx", "Lef1")),
+      #text output for user TF input
+      textOutput("tf_check"),
+      br(),
 
 #----------------------------ggNet visualisation---------------------------------------------
       conditionalPanel(
@@ -90,7 +93,11 @@ ui <- fluidPage(
       
       # Update everything
       actionButton("update", label = "Update"),
+      
+      #save url to server button
       bookmarkButton(),
+
+      
     ),
 # -----------------Main Panel ---------------------------------------------
     mainPanel(
@@ -107,7 +114,16 @@ ui <- fluidPage(
             Currently, hover only displays gene name but more information to come soon!"),
           p("• TFs that self regulate are not displayed (i.e no self loops)."),
           p("• File input format: single column csv file with the first row titled 'Gene' and the remaining rows containing a list of genes of interest."),
-          title = "GRN Visualization",
+          title = "GRN Visualization", 
+          
+          fluidRow(
+            column(width = 3, materialSwitch(inputId = "grn_toggle", label = "Explore per Time-Point GRN",
+                         value = FALSE, status = "success")),
+            column(width = 3, actionButton("info", "What Is This?"))
+            ),
+          
+          textOutput("grn_data"),
+          
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
           #textOutput("desc"),
           plotlyOutput("network"),
@@ -139,6 +155,15 @@ ui <- fluidPage(
             as predicted with Genie3, with a higher value indicating a more likely regulatory link."),
           p("• The number of motifs for each gene is identified via the RcisTarget package. The best motif and its sequence logo is displayed."),
           title = "TF Target Information",
+          
+          fluidRow(
+            column(width = 3,  materialSwitch(inputId = "table_toggle", label = "Explore per Time-Point Data",
+                                              value = FALSE, status = "success")),
+            column(width = 3, actionButton("info1", "What Is This?"))
+          ),
+          # materialSwitch(inputId = "table_toggle", label = "Explore per Time-Point Data",
+          #                value = FALSE, status = "success"),
+          textOutput("table_data"),
           #textOutput("general_desc"),
           dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
@@ -153,28 +178,47 @@ ui <- fluidPage(
           individual time-point per brain region."),
         p("• Use the \"Time-point to Visalise\" option to select which (if not all) time-points
           to visualise in the sample cluster heatmap."),
+        
+        fluidRow(
+          column(width = 3,  materialSwitch(inputId = "heatmap_toggle", 
+                                            label = "Explore per Time-Point Heatmap", 
+                                            value = FALSE, status = "success")),
+          column(width = 3, actionButton("info2", "What Is This?"))
+        ),
+        # materialSwitch(inputId = "heatmap_toggle", 
+        #                label = "Explore per Time-Point Heatmap", 
+        #                value = FALSE, status = "success"),
+        textOutput("hm_data"),
         title = "TF Activity Heatmap",
         value = "Heatmap",
         fluidRow(
           plotOutput("heatmap_joint")
         ),
-        downloadButton("download_hm_joint", "Heatmap by Joint Cluster (PDF)"),
+        downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
         div(style = "margin-left: 1.3em; margin-right: 1.3em;",
         fluidRow(
           plotOutput("heatmap_cluster")
         )),
-        downloadButton("download_hm_cluster", "Heatmap by Timepoint Cluster (PDF)"),
-        imageOutput("color_hm_palette", width = "6in", height = "4in")
+        downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
+        #imageOutput("color_hm_palette", width = "6in", height = "4in")
       ),
       # -----------------DR plots ---------------------------------------------     
       tabPanel(
         title = "TF Activity, by Region",
         value = "Clustering",
-        fluidRow( #make each plot smaller to fit more
+
           p("This tab displays the activity of selected transcription factors") %>% strong(),
           p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
           p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
           p("• Only the first two transcriptions factors are displayed"),
+        fluidRow(
+          column(width = 3, materialSwitch(inputId = "cluster_toggle", 
+                                           label = "Explore per Time-Point TF Activity",
+                                          value = FALSE, status = "success")),
+          column(width = 6, actionButton("info3", "What Is This?"))
+        ),
+          textOutput("dr_data"),
+        fluidRow(
           column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
         ),
         fluidRow(
@@ -205,7 +249,7 @@ ui <- fluidPage(
                plotlyOutput("timeseries1"),
                downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
                plotOutput("timeseries2"),
-               imageOutput("timeseries_color"),
+               #imageOutput("timeseries_color"),
                #plotOutput("timeseries3"),
                #plotlyOutput("timeseries4")
                ),

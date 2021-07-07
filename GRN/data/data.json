@@ -157,6 +157,447 @@
        
      }
      
-   ]
+   ],
+
+"ct_e12": [
+        {
+        "file": "ct_e12.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e12/ct_e12.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e12.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e12/ct_e12.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e12.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e12/ct_e12.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e12.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e12/ct_e12.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e12.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e12/ct_e12.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e12_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"ct_e15": [
+        {
+        "file": "ct_e15.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e15/ct_e15.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e15.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e15/ct_e15.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e15.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e15/ct_e15.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e15.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e15/ct_e15.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e15.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e15/ct_e15.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e15_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"ct_p0": [
+        {
+        "file": "ct_p0.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p0/ct_p0.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_p0.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p0/ct_p0.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_p0.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p0/ct_p0.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_p0.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p0/ct_p0.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_p0.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p0/ct_p0.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_p0_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"ct_p3": [
+        {
+        "file": "ct_p3.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p3/ct_p3.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_p3.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p3/ct_p3.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_p3.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p3/ct_p3.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_p3.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p3/ct_p3.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_p3.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p3/ct_p3.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_p3_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"ct_p6": [
+        {
+        "file": "ct_p6.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p6/ct_p6.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_p6.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p6/ct_p6.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_p6.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p6/ct_p6.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_p6.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p6/ct_p6.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_p6.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_p6/ct_p6.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_p6_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"po_e12": [
+        {
+        "file": "po_e12.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e12/po_e12.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e12.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e12/po_e12.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e12.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e12/po_e12.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e12.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e12/po_e12.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e12.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e12/po_e12.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e12_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"po_e15": [
+        {
+        "file": "po_e15.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e15/po_e15.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e15.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e15/po_e15.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e15.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e15/po_e15.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e15.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e15/po_e15.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e15.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e15/po_e15.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e15_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"po_p0": [
+        {
+        "file": "po_p0.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p0/po_p0.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_p0.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p0/po_p0.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_p0.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p0/po_p0.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_p0.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p0/po_p0.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_p0.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p0/po_p0.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_p0_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"po_p3": [
+        {
+        "file": "po_p3.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p3/po_p3.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_p3.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p3/po_p3.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_p3.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p3/po_p3.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_p3.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p3/po_p3.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_p3.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p3/po_p3.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_p3_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ],
+"po_p6": [
+        {
+        "file": "po_p6.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p6/po_p6.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_p6.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p6/po_p6.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_p6.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p6/po_p6.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_p6.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p6/po_p6.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_p6.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_p6/po_p6.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_p6_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        }
+        ]
 
 }
