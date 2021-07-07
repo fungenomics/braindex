@@ -107,14 +107,14 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    if (!(all(tolower(input_new()$gene) %in% tolower(genes_mouse)))) {
-      error_genes <- input_new()$gene[!(tolower(input_new()$gene) %in% tolower(genes_mouse))] 
+    if (!(all(input_new()$gene %in% genes_mouse))) {
+      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
     } else {
       error_genes <- NULL
     }
     
     validate(
-      need(all(tolower(input_new()$gene) %in% tolower(genes_mouse)), 
+      need(all(input_new()$gene %in% genes_mouse), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
 
@@ -253,8 +253,7 @@ server <- function(input, output, session) {
     reactable(table, 
               rownames = FALSE,
               highlight = TRUE,
-              #compact = TRUE,
-              striped = TRUE,
+              compact = TRUE,
               searchable = TRUE,
               showSortable = TRUE,
               fullWidth = FALSE,
@@ -280,7 +279,7 @@ server <- function(input, output, session) {
                 Sample = colDef(minWidth = 125),
                 "Cell type" = colDef(minWidth = 200),
                 "Cell class" = colDef(minWidth = 150),
-                "Number of cells" = colDef(minWidth = 85)
+                "Number of cells" = colDef(minWidth = 80)
                 )
     ) 
   })
@@ -313,14 +312,14 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    if (!(tolower(input_new()$gene[1]) %in% tolower(genes_mouse))) {
+    if (!(input_new()$gene[1] %in% genes_mouse)) {
       error_genes <- input_new()$gene[1] 
     } else {
       error_genes <- NULL
     }
     
     validate(
-      need(tolower(input_new()$gene[1]) %in% tolower(genes_mouse), 
+      need(input_new()$gene[1] %in% genes_mouse, 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
@@ -420,14 +419,14 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
     
-    if (!(all(tolower(input_new()$gene) %in% tolower(genes_mouse)))) {
-      error_genes <- input_new()$gene[!(tolower(input_new()$gene) %in% tolower(genes_mouse))] 
+    if (!(all(input_new()$gene %in% genes_mouse))) {
+      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
     } else {
       error_genes <- NULL
     }
     
     validate(
-      need(all(tolower(input_new()$gene) %in% tolower(genes_mouse)), 
+      need(all(input_new()$gene %in% genes_mouse), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
@@ -705,29 +704,26 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
     
-    if(!input_new()$mean_exp){
-      
-      if (!(tolower(input_new()$gene[1]) %in% tolower(genes_mouse))) {
+    if(input_new()$mean_exp){
+      if (!(input_new()$gene[1] %in% genes_mouse)) {
         error_genes <- input_new()$gene[1] 
       } else {
         error_genes <- NULL
       }
       
       validate(
-        need(tolower(input_new()$gene[1]) %in% tolower(genes_mouse), 
+        need(input_new()$gene[1] %in% genes_mouse, 
              glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
       )
-      
     } else {
-      
-      if (!((all(tolower(input_new()$gene) %in% tolower(genes_mouse))))) {
-        error_genes <- input_new()$gene[!(tolower(input_new()$gene) %in% tolower(genes_mouse))] 
+      if (!(all(input_new()$gene %in% genes_mouse))) {
+        error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
       } else {
         error_genes <- NULL
       }
       
       validate(
-        need(all(tolower(input_new()$gene) %in% tolower(genes_mouse)), 
+        need(all(input_new()$gene %in% genes_mouse), 
              glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
       )
     }
