@@ -106,6 +106,17 @@ server <- function(input, output, session) {
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
+    
+    if (!(all(input_new()$gene %in% genes_mouse))) {
+      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
+    } else {
+      error_genes <- NULL
+    }
+    
+    validate(
+      need(all(input_new()$gene %in% genes_mouse), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
 
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
@@ -301,6 +312,17 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
+    if (!(input_new()$gene[1] %in% genes_mouse)) {
+      error_genes <- input_new()$gene[1] 
+    } else {
+      error_genes <- NULL
+    }
+    
+    validate(
+      need(input_new()$gene[1] %in% genes_mouse, 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
     all_zero <- ribbon_plot(gene   = input_new()$gene[1],
                       region = input_new()$region)$zero
     
@@ -340,6 +362,17 @@ server <- function(input, output, session) {
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
+    
+    if (!(input_new()$gene[1] %in% genes_mouse)) {
+      error_genes <- input_new()$gene[1] 
+    } else {
+      error_genes <- NULL
+    }
+    
+    validate(
+      need(input_new()$gene[1] %in% genes_mouse, 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
     
     all_zero = ribbon_plot(gene   = input_new()$gene[1],
                            region = input_new()$region)$zero
@@ -385,6 +418,17 @@ server <- function(input, output, session) {
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
+    
+    if (!(all(input_new()$gene %in% genes_mouse))) {
+      error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
+    } else {
+      error_genes <- NULL
+    }
+    
+    validate(
+      need(all(input_new()$gene %in% genes_mouse), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
     
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
     get_embedding(sample  = input_new()$region,
@@ -659,6 +703,31 @@ server <- function(input, output, session) {
     validate(
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     ) 
+    
+    if(input_new()$mean_exp){
+      if (!(input_new()$gene[1] %in% genes_mouse)) {
+        error_genes <- input_new()$gene[1] 
+      } else {
+        error_genes <- NULL
+      }
+      
+      validate(
+        need(input_new()$gene[1] %in% genes_mouse, 
+             glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      )
+    } else {
+      if (!(all(input_new()$gene %in% genes_mouse))) {
+        error_genes <- input_new()$gene[!(input_new()$gene %in% genes_mouse)] 
+      } else {
+        error_genes <- NULL
+      }
+      
+      validate(
+        need(all(input_new()$gene %in% genes_mouse), 
+             glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      )
+    }
+    
     
     palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
                              "Oligodendrocytes" = "#b7dd5f",
