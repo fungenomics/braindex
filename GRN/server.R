@@ -1,3 +1,7 @@
+#----------------------------------problem---------------------------------
+#need to check select input for TF and genes and display any that are not in the data or annotation
+#then generate a list of genes or TFs to use and then supply that as the input_new()$tf input
+
 server <- function(input, output, session) {
 
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
@@ -33,7 +37,7 @@ server <- function(input, output, session) {
       l <- data_pons
       temp <- paste("P-", input$time, sep = "")
       }
-    
+    #str(input$TF)
     l$tf <- input$TF
     l$region <- input$region
     #l$input_pathway <- input$input_pathway
@@ -44,6 +48,10 @@ server <- function(input, output, session) {
     l$label <- input$label
     l$dim_red <- input$dim_red
     l$cluster_label <- input$cluster_label
+    l$grn_toggle <- input$grn_toggle
+    l$table_toggle <- input$table_toggle
+    l$heatmap_toggle <- input$heatmap_toggle
+    l$cluster_toggle <- input$cluster_toggle
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -55,22 +63,253 @@ server <- function(input, output, session) {
   
   #input_tf <- reactive(input_new()$tf)
   
-  # -----------------------------Tab1:table and network------------------------------------------
-  #def need to re-write this at the end 
-   # output$general_desc <- renderText({
-   #    "This app designs for displaying transcription factor and gene data from mice brain (cortex & pons part) in various fancy ways by three main tabs;
-   #                                           
-   #     PROBLEM: There are some transcription factors from your input that may not have the corresponding data
-   #     in the following tabs. (Sometimes you may not see the information of that transcription factor or the plot
-   #     is not updated, etc. That is unfortunately because of the lack of data in the cell activity data in tab2,
-   #     or the binary cell activity data in tab3.  
-   # "
-   #    
-   #  })
+
+  #------------------------problem--------------------------
+  #once the per sample toggle is hit, there is brief moment where a pathing error 
+  #is displayed because the paths depend on the time input for each tab and the time 
+  #input is not reactive on the update button, but reaction on use input
+  #so the pathing error results from the app trying to access the file using a NULL time value
+  #before the insertUI kicks in and supplies the correct time value to the path
+  #using priorities in the observeEvent has not helped 
+  
+  #solved using req() lol
+  
+  observeEvent(input$tabs, {
+    if (input$table_toggle == TRUE & !identical(input$tabs,
+                                                "Transcription Factor Target Information")){
+      removeUI(
+        selector = "div:has(>> #table_tp)"
+      )
+    }
+    else if (input$table_toggle == TRUE & identical(input$tabs,
+                                                    "Transcription Factor Target Information")){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "table_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+    }
+  })
+  
+  #insert timepoint selection when the toggle for sample data in the table tab is acted on
+  observeEvent(input$table_toggle,{
+    if(input$table_toggle){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "table_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+      #print(input$tabs)
+      output$table_data <- renderText({
+        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$table_tp}")
+      })
+    }
+    else if (input$table_toggle == FALSE){
+      removeUI(
+        selector = "div:has(>> #table_tp)"
+      )
+      output$table_data <- renderText({
+        ""
+      })
+    }
+  }) 
+  
+  observeEvent(input$tabs, {
+    if (input$grn_toggle == TRUE & !identical(input$tabs,
+                                                "Regulatory Network Visualization")){
+      removeUI(
+        selector = "div:has(>> #grn_tp)"
+      )
+    }
+    else if (input$grn_toggle == TRUE & identical(input$tabs,
+                                                    "Regulatory Network Visualization")){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "grn_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+    }
+  })
+  #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
+  observeEvent(input$grn_toggle,{
+    if(input$grn_toggle){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "grn_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+      output$grn_data <- renderText({
+        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$grn_tp}")
+      })
+    }
+    else if (input$grn_toggle == FALSE){
+      removeUI(
+        selector = "div:has(>> #grn_tp)"
+      )
+      output$grn_data <- renderText({
+        ""
+      })
+    }
+  }) 
+  
+  observeEvent(input$heatmap_toggle,{
+    if(input$heatmap_toggle){
+      updateCheckboxGroupInput(session, inputId = "method", "Cluster Method",
+                             choices = c("Per Sample Clustering" = "joint"),
+                             selected = "joint")
+      updateSelectInput(session, inputId = "time",
+                                             label = "Time-point to Visualize",
+                                             choices = c("e12", "e15", "p0", "p3", "p6"),
+                                             selected = "e12")
+      output$hm_data <- renderText({
+        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}")
+      })
+    }
+    else{
+      updateCheckboxGroupInput(session, inputId = "method", "Cluster Method",
+                               choices = c("Joint Cluster" = "joint",
+                                           "Sample Cluster" = "Cluster"),
+                               selected = "joint")
+      updateSelectInput(session, inputId = "time",
+                        label = "Time-point to Visualize",
+                        choices = c("All", "e12", "e15", "p0", "p3", "p6"),
+                        selected = "All")
+      output$hm_data <- renderText({
+        ""
+      })
+    }
+    
+  })
+  
+  observeEvent(input$tabs, {
+    if (input$cluster_toggle == TRUE & !identical(input$tabs,
+                                              "Clustering")){
+      removeUI(
+        selector = "div:has(>> #cluster_tp)"
+      )
+    }
+    else if (input$cluster_toggle == TRUE & identical(input$tabs,
+                                                  "Clustering")){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "cluster_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+    }
+  })
+  #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
+  observeEvent(input$cluster_toggle,{
+    if(input$cluster_toggle){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "cluster_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+      output$dr_data <- renderText({
+        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$cluster_tp}")
+      })
+    }
+    else if (input$cluster_toggle == FALSE){
+      removeUI(
+        selector = "div:has(>> #cluster_tp)"
+      )
+      output$dr_data <- renderText({
+        ""
+      })
+    }
+  })
+  
+  #update inputs when toggle is turned so that the plots auto-update
+  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle, {
+    click(id = "update")
+  }, ignoreInit = TRUE)
+  
+  reg <- reactive({
+    if(identical(input_new()$region, "cortex")){
+      "ct"
+    }
+    else{
+      "po"
+    }
+  })
+  
+  observeEvent(input$info|input$info1|input$info2|input$info3, {
+    sendSweetAlert(session, title = "What Is This?", text = 
+                     "Use toggle to explore data from SCENIC analyses performed
+                   on each developmental time-point individually.")
+  }, ignoreInit = TRUE)
+  
+  tf_list <- reactiveValues(
+    TF_in_data = NULL,
+    TF_not_data = NULL
+  )
+  output$tf_check <- renderText({
+    
+    glue("The following TFs in your input are not in the dataset
+         that your are currently exploring: {toString(tf_list$TF_not_data)}")
+  })
+  
+  # -----------------------------Table------------------------------------------
+
   #filter the data, add a column for logos, then display
     output$table1 <- renderDataTable({
         # process data, filter the lines with our interested TF
-      subset_data <- input_new()$TF_target_gene_info %>% dplyr::filter(TF %in% input_new()$tf) %>% select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+        
+      datafile <- glue("data_{reg()}_{input$table_tp}")
+      
+      
+      if(input$table_toggle){
+        
+        req(input$table_tp)
+        
+        temp <- check_tf_input(input_new()$tf, get(datafile)$unique_TF)
+        
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        #print(tf_list)
+        
+        subset_data <- get(datafile)$TF_target_gene_info %>% 
+          dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
+          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+      }
+      
+      else{
+        temp <- check_tf_input(input_new()$tf, input_new()$unique_active_TFs_bare)
+        
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+
+        #print(tf_list)
+        
+        subset_data <- input_new()$TF_target_gene_info %>% 
+          dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
+          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+      }
       
       subset_data <- addMotifPic(subset_data)
       
@@ -81,10 +320,9 @@ server <- function(input, output, session) {
                              'Logo' = 'motif_logo'),
                 rownames = FALSE)
     })
-    # observeEvent(input$reset, {
-    #   reset("file_gene")
-    # 
-    # })
+  
+
+  # -----------------------------GRN------------------------------------------
     gene_list <- reactiveValues( #makes reactive values to take in the user input gene list
       data = NULL,
       clear = FALSE
@@ -124,17 +362,45 @@ server <- function(input, output, session) {
     })
     #check if there is a user input gene_list file, if there is, use it, if not, use the selectInput genes 
     igraph_network <- reactive ({
+      
       if(is.null(gene_list$data)){
         gene_to_highlight <- input_new()$gene 
       }
+      
       else{
         gene_to_highlight <- gene_list$data
       }
-      make_network(input_new()$tf, input_new()$TF_target_gene_info,
-                  gene_to_highlight) #returns an igraph network object
+      
+      datafile <- glue("data_{reg()}_{input$grn_tp}")
+      
+      if(input$grn_toggle){
+        req(input$grn_tp)
+        
+        temp <- check_tf_input(input_new()$tf, get(datafile)$unique_TF)
+        
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        req(length(tf_list$TF_in_data) > 0)
+        
+        make_network(tf_list$TF_in_data, get(datafile)$TF_target_gene_info,
+                     gene_to_highlight)
+      }
+      
+      else{
+        
+        temp <- check_tf_input(input_new()$tf, input_new()$unique_active_TFs_bare)
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        req(length(tf_list$TF_in_data) > 0)
+         
+        make_network(tf_list$TF_in_data, input_new()$TF_target_gene_info,
+                     gene_to_highlight) #returns an igraph network object
+      }
     })
     network_ggplot <- reactive({
-      plot_network(igraph_network(), input_new()$label, input_new()$tf)
+      plot_network(igraph_network(), input_new()$label, tf_list$TF_in_data)
     })
     
     output$network <- renderPlotly({
@@ -152,80 +418,79 @@ server <- function(input, output, session) {
                                                          width = 8.5, height = 11)
                                                 })
     
-    #probably redo this entire part to visualize with ggNet
-#     output$desc <- renderText({
-#       text <- "\nOrange nodes are active transcription factors (tf genes that express their own tf);
-# Purple nodes in the center are your input transcription factors;
-# Green nodes are your input genes related to input tfs(purple nodes);
-# grey nodes are other genes."
-#     })
-# nodeData <- reactive(
-#   #input$show,
-#   {
-# 
-#   if(input$show_pathway){input_pathway <- input_new()$input_pathway}
-#   else{input_pathway <- c()}
-# 
-#   if(input$show == "all"){
-#     create_network(input_new()$tf, input_new()$TF_target_gene_info,
-#                    input_new()$unique_active_TFs_bare,
-#                    pathway_genes = input_pathway)$nodes
-#   }
-#   else if(input$show == "neglect"){
-#     create_network(input_new()$tf, input_new()$TF_target_gene_info,
-#                    input_new()$unique_active_TFs_bare,
-#                    pathway_genes = input_pathway)$nodes %>%
-#       filter(color!="lightgrey")
-#   }
-#   else if(input$show == "shrink"){
-#     create_network(input_new()$tf, input_new()$TF_target_gene_info,
-#                    input_new()$unique_active_TFs_bare,
-#                    pathway_genes = input_pathway,
-#                    shrink_gray = TRUE)$nodes
-#   }
-# 
-# })
-# output$network <- renderRcytoscapejs({
-#   req(nodeData())
-#   nodeData <- nodeData()
-#   edgeData <- create_network(input_new()$tf, input_new()$TF_target_gene_info,
-#                              input_new()$unique_active_TFs_bare)$edges
-#   network <- createCytoscapeJsNetwork(nodeData, edgeData)
-#   rcytoscapejs2(network$nodes, network$edges)
-# 
-# })
     
+    # -----------------------------Heatmap-------------------------------------------
+    # output$color_hm_palette <- renderImage({
+    #   
+    #   expr = list(src = "www/timeseries_color.png", #picture of colors corresponding with clusters 
+    #        alt = "This is alternate text")
+    #   
+    #   
+    # },
+    # deleteFile = FALSE)
     
-    # -----------------------------Tab2-------------------------------------------
-    output$color_hm_palette <- renderImage({
-      
-      expr = list(src = "www/timeseries_color.png", #picture of colors corresponding with clusters 
-           alt = "This is alternate text")
-      
-      
-    },
-    deleteFile = FALSE)
-    #probably get rid of this 
     hm_joint_cluster_plot <- reactive({
+      
       req("joint" %in% input_new()$method)
-      plot_heatmap(input_new()$tf, "joint",input_new()$region,
-                   input_new()$TF_and_ext,input_new()$cell_metadata)
+      
+      if(input_new()$heatmap_toggle == TRUE){
+        
+        datafile <- glue("data_{reg()}_{input$time}")
+        
+        temp <- check_tf_input(input_new()$tf, unique(get(datafile)$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+         
+        req(length(tf_list$TF_in_data) > 0)
+        
+        req(input$time != "All")
+        
+        plot_heatmap(tf_list$TF_in_data, "joint",input_new()$region,
+                     get(datafile)$TF_and_ext, per_sample = input_new()$heatmap_toggle,
+                     timepoint = input$time)
+      }
+      else{
+        temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        req(length(tf_list$TF_in_data) > 0)
+        
+        plot_heatmap(tf_list$TF_in_data, "joint",input_new()$region,
+                   input_new()$TF_and_ext)
+      }
 
     })
     #need to adjust this, at least zoomable, change color scheme to dark blue and neon yellow
     hm_sample_cluster_plot <- reactive({ #this is displaying heatmap clustering by sample cluster and not joint cluster
       req("Cluster" %in% input_new()$method)
+      
+      temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+      tf_list$TF_in_data <- temp$TF_in_data
+      tf_list$TF_not_data <- temp$TF_not_data
+      
+      req(length(tf_list$TF_in_data) > 0)
+      
       plot_heatmap(input_new()$tf, "Cluster",input_new()$region, 
-                   input_new()$TF_and_ext,input_new()$cell_metadata, timepoint = input_new()$time_point)
+                   input_new()$TF_and_ext, timepoint = input_new()$time_point)
       
     })
  
     output$heatmap_joint <- renderPlot({
-      hm_joint <- hm_joint_cluster_plot()
-      hm_joint
+      #print(str(input_new()$tf))
+      req(length(input_new()$tf) != 23 ) #change this line after the tf input check has been done
+      hm_joint_cluster_plot()
     })
-
-    output$download_hm_joint <- downloadHandler(filename = "heatmap_joint.pdf",
+    
+    hm_name <- reactive({
+      if(input$heatmap_toggle){
+        glue("{reg()}_{input$time}_heatmap.pdf")
+      }
+      else{
+        "heatmap_joint.pdf"
+      }
+    })
+    output$download_hm_joint <- downloadHandler(filename = hm_name(),
                                                contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_joint_cluster_plot(),
@@ -233,8 +498,8 @@ server <- function(input, output, session) {
                                                })
     
     output$heatmap_cluster <- renderPlot({
-      hm_sample <- hm_sample_cluster_plot() 
-      hm_sample
+      #req(length(input_new()$tf) != 23 ) #change this line after the tf input check has been done
+      hm_sample_cluster_plot() 
 
     })
     
@@ -244,29 +509,95 @@ server <- function(input, output, session) {
                                                  ggsave(filename = file, plot = hm_sample_cluster_plot(),
                                                         width = 20, height = 25)
                                                })
-  
+ 
+    
+    # -----------------------------DR plots------------------------------------------ 
     # The cluster scatterplot is always plot by cells, so we use an independent reactive
     # value for this plot
     activity_data_cluster <- reactive({
-      # use the feature of feather data to read certain col to optimize speed
-      create_activity_data(input_new()$tf, "Cell",input_new()$region, input_new()$TF_and_ext)
+      
+      
+      if(input_new()$cluster_toggle){
+        
+        datafile <- glue("data_{reg()}_{input$cluster_tp}")
+        
+        temp <- check_tf_input(input_new()$tf, unique(get(datafile)$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        req(length(tf_list$TF_in_data) > 0)
+        
+        req(input$cluster_tp)
+        
+        create_activity_data(input_new()$tf, "Cell", input_new()$region,
+                             get(datafile)$TF_and_ext, per_sample = input_new()$cluster_toggle,
+                             timepoint = input$cluster_tp, bad_cells = get(datafile)$bad_cells)
+      }
+      else{
+        temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+        req(length(tf_list$TF_in_data) > 0)
+        # use the feature of feather data to read certain col to optimize speed
+        create_activity_data(tf_list$TF_in_data, "Cell",input_new()$region, input_new()$TF_and_ext)
+      }
     }) #this part takes the TF that the user selects and subsets the feather file containing all 
     #regulon activity data to include only the regulons that the user selects and this is entered into the 
     #UMAP plot function 
     
 
-    # seems redundant, just needs one umap function here
+
     Umap_plot_1 <- reactive({
       req(length(input_new()$tf)>0)
-      plot_UMAP(tf_number = 1,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
+      
+      if(input_new()$cluster_toggle){
+        
+        datafile <- glue("data_{reg()}_{input$cluster_tp}")
+        
+        req(input$cluster_tp)
+        
+        plot_UMAP(tf_number = 1, get(datafile)$cell_metadata, 
+                  activity_data_cluster(), input_new()$dim_red)
+      }
+      else{
+        plot_UMAP(tf_number = 1,input_new()$cell_metadata, 
+                  activity_data_cluster(), input_new()$dim_red)
+      }
     })
     Umap_plot_2 <- reactive({
       req(length(input_new()$tf)>1)
-      plot_UMAP(tf_number = 2,input_new()$cell_metadata, activity_data_cluster(), input_new()$dim_red)
+      
+      if(input_new()$cluster_toggle){
+        
+        datafile <- glue("data_{reg()}_{input$cluster_tp}")
+        
+        req(input$cluster_tp)
+        
+        plot_UMAP(tf_number = 2, get(datafile)$cell_metadata, 
+                  activity_data_cluster(), input_new()$dim_red)
+      }
+      else{
+        plot_UMAP(tf_number = 2,input_new()$cell_metadata,
+                  activity_data_cluster(), input_new()$dim_red)
+      }
     })
     
     output$color_by_cluster <- renderPlot({
-      color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, input_new()$dim_red, input_new()$cluster_label)
+      if (input_new()$cluster_toggle){
+        
+        datafile <- glue("data_{reg()}_{input$cluster_tp}")
+        
+        req(input$cluster_tp)
+        
+        color_by_cluster(get(datafile)$cell_metadata, get(datafile)$cluster_palette, 
+                         input_new()$dim_red, input_new()$cluster_label,
+                         per_sample = input_new()$cluster_toggle)
+      }
+      else{
+        color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, 
+                         input_new()$dim_red, input_new()$cluster_label)
+      }
     })
     
     output$cluster1 <- renderPlot({
@@ -294,7 +625,7 @@ server <- function(input, output, session) {
     
     
     
-    # --------------------------------------Tab3: timeseries-------------------------------------------
+    # --------------------------------------Timeseries-------------------------------------------
     # tf_nexist_data <- reactive({
     #   tf_nexist <- ""
     #   for(tf in input_new()$tf){
@@ -353,6 +684,13 @@ server <- function(input, output, session) {
     # we must transform the TF format, from raw form (Arx) to (Arx_extended (21g)) to fetch
     # information
     TF_transformed <- reactive({
+      
+      temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+      tf_list$TF_in_data <- temp$TF_in_data
+      tf_list$TF_not_data <- temp$TF_not_data
+      
+      req(length(tf_list$TF_in_data) > 0)
+      
       translate_tf(input_new()$tf,input_new()$binary_active_TFs)
       })
     
@@ -379,25 +717,27 @@ server <- function(input, output, session) {
       plot_timeseries(TF_transformed()[1][1], input_new()$timeseries_input_meta, input_new()$binary_activity,make_plotly = TRUE)
      })
     
-    output$download_ribbon_1 <- downloadHandler(filename = "timeseries_ribbon.png",
+    output$timeseries2 <- renderPlot({ # a ggplot list
+      ggplot_list_plot()
+      
+    })
+    
+    output$download_ribbon_1 <- downloadHandler(filename = "timeseries_ribbon.pdf",
                                                 contentType = "application/pdf",
                                                 content = function(file){
                                                   ggsave(filename = file, plot = ggplot_list_plot(),
                                                          width = 20, height = 15)
                                                 })
     
-    output$timeseries2 <- renderPlot({ # a ggplot list
-      ggplot_list_plot()
-      
-    })
+   
     
-    output$timeseries_color <- renderImage({
-      
-      list(src = "www/timeseries_color.png",
-           alt = "This is alternate text")
-      
-    },
-    deleteFile = FALSE)
+    # output$timeseries_color <- renderImage({
+    #   
+    #   list(src = "www/timeseries_color.png",
+    #        alt = "This is alternate text")
+    #   
+    # },
+    # deleteFile = FALSE)
     
     
     
