@@ -300,6 +300,29 @@ server <- function(input, output, session) {
   
   #### ---- Timecourse tab content ----
   
+  observe({
+    x <- input_new()$gene
+    
+    # Can use character(0) to remove all choices
+    if (is.null(x))
+      x <- character(0)
+    
+    if (length(x) == 1){
+      text_pick_timecourse <- " input)"
+    } else if (length(x) > 1){
+      text_pick_timecourse <- " inputs)"
+    } else {
+      text_pick_timecourse <- NULL
+    }
+    
+    # Can also set the label and select items
+    updateSelectInput(session, "pick_timecourse",
+                      label = paste("Select gene to display (from ", length(x), text_pick_timecourse),
+                      choices = x,
+                      selected = head(x, 1)
+    )
+  })
+  
   # STATIC TIMECOURSE 
   
   # Generate ribbon plot and save the output so that we can allow the
@@ -311,14 +334,14 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first input against the dataset genes
-    error_genes <- check_genes(input_new()$gene, 1)
+    # Check user-selected input against the dataset genes
+    error_genes <- check_genes(input$pick_timecourse, 1)
     validate(
       need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
-    all_zero <- ribbon_plot(gene   = input_new()$gene[1],
+    all_zero <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$zero
     
     # Display message to the user instead of plot if 0 expression throughout region
@@ -326,7 +349,7 @@ server <- function(input, output, session) {
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
     
-    p1 <- ribbon_plot(gene   = input_new()$gene[1],
+    p1 <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$plot
     
     # Get legend using cowplot
@@ -360,13 +383,13 @@ server <- function(input, output, session) {
     )
     
     # Check first input against the dataset genes
-    error_genes <- check_genes(input_new()$gene, 1)
+    error_genes <- check_genes(input$pick_timecourse, 1)
     validate(
       need(is.null(error_genes), 
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
-    all_zero = ribbon_plot(gene   = input_new()$gene[1],
+    all_zero = ribbon_plot(gene   = input$pick_timecourse,
                            region = input_new()$region)$zero
     
     # Display message to the user if there is 0 expression throughout region
@@ -374,7 +397,7 @@ server <- function(input, output, session) {
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
     
-    ribbon_plot(gene   = input_new()$gene[1],
+    ribbon_plot(gene   = input$pick_timecourse,
                 region = input_new()$region,
                 make_plotly = TRUE)$plot
     

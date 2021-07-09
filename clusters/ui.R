@@ -241,17 +241,28 @@ ui <- function(request){
                
                p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
                
+               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (update button not required)"),
+               
                p("• Download the static version of the plot as a pdf using the button below the plot"),
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
-               p("• If more than one gene is provided, only the first gene is plotted"),
-               
-               materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                              # status doesn't have any effect other than color scheme. See bootstrap status values
-                              status = "warning", 
-                              value = FALSE, 
-                              right = TRUE
+               fluidRow(
+                 column(6, 
+                        wellPanel(
+                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
+                                       # status doesn't have any effect other than color scheme. See bootstrap status values
+                                       status = "warning", 
+                                       value = FALSE, 
+                                       right = TRUE),
+                        )
+                 ),
+                 column(6,
+                        wellPanel(
+                          selectInput("pick_timecourse", "Select gene to display",
+                                      c("Please enter a gene"))
+                        )
+                 )
                ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
