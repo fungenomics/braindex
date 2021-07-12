@@ -215,7 +215,7 @@ ui <- function(request){
                
                #div(style = "overflow-x: scroll; overflow-y: visible;",
                    fluidRow(
-                     reactableOutput("cluster_table", width = 200) %>% ws
+                     reactableOutput("cluster_table", width = 1100) %>% ws
                    ),
                #),
                
