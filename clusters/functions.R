@@ -796,16 +796,20 @@ noTicks <- function() {
 
 #' Determine if a background colour is dark enough to warrant white text
 #' 
-#' @param hex_color String, colour in hex colour format e.g. #000000
+#' @param hex_color String, colour in hex colour format e.g. "#000000"
 #' 
 #' @return TRUE if the colour is dark enough (arbitrary)
 dark <- function(hex_color) {
   
+  # Store the first, third, and fifth character in the string (after "#")
   red <- substr(hex_color, 2, 2)
   green <- substr(hex_color, 4, 4)
   blue <- substr(hex_color, 6, 6)
-  dark_nums <- c(0:8)
   
+  # Output that a colour is "dark" if any of these 3 characters is an 
+  # integer between 0 and 8 inclusively. (Higher hexadecimal numbers 
+  # indicate less color e.g. #FFFFFF is white.)
+  dark_nums <- c(0:8)
   if ((red %in% dark_nums && blue %in% dark_nums) || 
       (red %in% dark_nums && green %in% dark_nums) ||
       (green %in% dark_nums && blue %in% dark_nums)) {
@@ -820,6 +824,7 @@ dark <- function(hex_color) {
 }
 
 #' Add ticks below a bar plot to categorize x axis into less granular categories
+#' (Adapted from Selin's code)
 #' 
 #' @param df Dataframe, containing the data to use
 #' [...]
@@ -878,7 +883,6 @@ add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palett
 #' Default: FALSE (i.e. check against list of dataset genes, not annotation)
 #' 
 #' @return A list of inputs that do not match the list of accepted genes
-
 check_genes <- function(user_genes, 
                         n = 20,
                         annotation = FALSE) {
