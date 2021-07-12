@@ -1,10 +1,9 @@
 
 source("../www/ui_functions.R")
 
-# Load names of genes detected in mouse to provide choices in input
-genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
-
-ui <- bootstrapPage(
+ui <- function(request){
+  
+  bootstrapPage(
   
   # Custom styling
   includeCSS("../www/minimal.css"),
@@ -19,22 +18,40 @@ ui <- bootstrapPage(
   
   #### ---- Sidebar (input) ----
   sidebarLayout(
+    
     sidebarPanel(width = 3,
                  
-                 # Gene input field, shared across tabs
-                 selectInput("gene", "Gene", choices = genes_mouse,
-                             multiple = TRUE),
+                 conditionalPanel(condition = '!input.upload',
+                                  # Gene input field, shared across tabs
+                                  selectInput("gene", "Gene", choices = genes_mouse,
+                                              multiple = TRUE)),
+                 
+                 conditionalPanel(condition = 'input.upload',
+                                  # Gene list input with a file, shared across tabs
+                                  fileInput(inputId = "genelist", label = "Gene list",
+                                            buttonLabel = "Browse...",
+                                            multiple = FALSE, 
+                                            accept = c(".csv", ".tsv"),
+                                            placeholder = "No file selected")),
+  
+                 materialSwitch("upload", "Use gene list from file",
+                                # status doesn't have any effect other than color scheme. See bootstrap status values
+                                status = "success", 
+                                value = FALSE,
+                                right = TRUE),
+
+                 # Input for dendrogram tab and expression table tab
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
+                                  (input.gene.length > 1 || input.upload)",
+                                  materialSwitch("mean_exp", "Display mean expression over the selected genes",
+                                                 # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                 status = "success",
+                                                 value = FALSE,
+                                                 right = TRUE),
+                 ),
                  
                  # Input for dendrogram tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
-                                  
-                                  conditionalPanel(condition = "input.gene.length > 1",
-                                                   materialSwitch("mean_exp", "Plot mean expression over the selected genes",
-                                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
-                                                                  status = "success",
-                                                                  value = FALSE,
-                                                                  right = TRUE),
-                                  ),
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
@@ -47,8 +64,9 @@ ui <- bootstrapPage(
                  ),
                  
 
-                 # Input for all tabs other than dendrogram & table
-                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'",
+                 # Input for all tabs other than dendrogram, ranked plot, & table
+                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
+                                  && input.tabs != 'rank_exp'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -110,8 +128,16 @@ ui <- bootstrapPage(
                                   ),
                  ),
                  
-                 # Update button for all sidebar inputs
-                 actionButton("update", label = "Update")
+                 # Update button for all sidebar inputs. Coloured to differentiate
+                 # from the bookmark button beside it
+                 # tags$head(
+                 #   tags$style(HTML('#update{background-color:#4863A0; 
+                 #                   color:#FFFFFF;}'))
+                 # ),
+                 actionButton("update", label = "Update"),
+                 
+                 # Bookmark button to store current inputs / state of app
+                 bookmarkButton()
                  
     ),
     
@@ -123,8 +149,9 @@ ui <- bootstrapPage(
       tabPanel("Dendrogram",
                
                tags$br(),
-               p("This tab displays the mean expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
-               
+               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse scRNAseq development atlas."),
+               tags$br(),
+               tags$br(),
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
@@ -133,7 +160,7 @@ ui <- bootstrapPage(
                
                p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
                
-               p("• When plotting more than one gene, use the sidebar switch to plot the mean expression over the plotted genes in a new row of the bubble plot. Pct values are disregarded here, so all bubbles in this row are the same size"),
+               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -142,18 +169,21 @@ ui <- bootstrapPage(
                ), 
                
                # Display the bubbleplot
-               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;",
+               div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;
+                   overflow-x: visible; overflow-y: visible;",
                    
                    fluidRow(
+                     # Set cellWidths equal to the actual width of each plot (server.R)
                      splitLayout(cellWidths = c(1103, 200),
+                       
                        # Bubble plot(s)
                        (plotOutput("bubble",
-                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% 
-                          withSpinner(type = 5)),
+                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE),
+                                  height = 2000) %>% ws),
                        
                        # Gene labels
-                       #No spinner to prevent confusing user, because there is only 1 plot
-                       (plotOutput("bubble_labels")) 
+                       # No spinner to prevent confusing user, because there is only 1 plot
+                       (plotOutput("bubble_labels", height = 2000)) 
                      )
                      
                    ),
@@ -171,19 +201,23 @@ ui <- bootstrapPage(
         
       #### ---- Expression table tab output ---- 
       
-      tabPanel("Expression table", #TODO: confirm a better name
+      tabPanel("Expression table", 
                
                tags$br(),
-               p("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas"),
-               
+               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
+               tags$br(),
+               tags$br(),
                p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
+               
+               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over these genes in a new column of the table"),
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
-               fluidRow(
-                 DT::dataTableOutput("cluster_table", width = 1100) %>% 
-                          withSpinner(type = 5)
-                 ),
+               #div(style = "overflow-x: scroll; overflow-y: visible;",
+                   fluidRow(
+                     reactableOutput("cluster_table", width = 1100) %>% ws
+                   ),
+               #),
                
                # Only display download button if update has been pressed at least once
                conditionalPanel(condition='input.update!=0',
@@ -203,23 +237,35 @@ ui <- bootstrapPage(
                
                tags$br(),
                
-               p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse"),
-               
+               tags$b("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse."),
+               tags$br(),
+               tags$br(),
                p("• Use the side bar to select which brain region to interrogate"),
                
                p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
+               
+               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (update button not required)"),
                
                p("• Download the static version of the plot as a pdf using the button below the plot"),
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
-               p("• If more than one gene is provided, only the first gene is plotted"),
-               
-               materialSwitch("plotly_ribbon", "Interactive ribbon plot",
-                              # status doesn't have any effect other than color scheme. See bootstrap status values
-                              status = "warning", 
-                              value = FALSE, 
-                              right = TRUE
+               fluidRow(
+                 column(6, 
+                        wellPanel(
+                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
+                                       # status doesn't have any effect other than color scheme. See bootstrap status values
+                                       status = "warning", 
+                                       value = FALSE, 
+                                       right = TRUE),
+                        )
+                 ),
+                 column(6,
+                        wellPanel(
+                          selectInput("pick_timecourse", "Select gene to display",
+                                      c("Please enter a gene"))
+                        )
+                 )
                ),
                
                # Plot a ribbon plot, showing the proportion of cells in which
@@ -228,15 +274,13 @@ ui <- bootstrapPage(
                conditionalPanel(condition = "input.plotly_ribbon",
                                 
                                 # Plot the ribbon plot & legend as a plotly (interactive) plot
-                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% 
-                                  withSpinner(type = 5)
+                                plotlyOutput("plotlyRibbon", height = "5in", width = "11.5in") %>% ws
                                 ),
                
                conditionalPanel(condition = "!(input.plotly_ribbon)",
                                 
                                 # Plot the ribbon plot & legend as static plots with ggplot2
-                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% 
-                                  withSpinner(type = 5)
+                                plotOutput("plotRibbon", height = "8.5in", width = "8in") %>% ws
                                 ),
                
                # Only display download button if update has been pressed at least once
@@ -257,8 +301,9 @@ ui <- bootstrapPage(
                
                tags$br(),
                
-               p("Use this tab to explore the expression of one or more genes at the single-cell level per brain region"),
-               
+               tags$b("Use this tab to explore the expression of one or more genes at the single-cell level per brain region."),
+               tags$br(),
+               tags$br(),
                p("• In the top row, the cells are plot in 2D according to a dimensionality reduction algorithm, coloured by cluster (left) or expression (right)"),
                
                p("• If using tSNE or UMAP reduction, hover over the plot coloured by cluster (top left) to identify each cluster. Hover will be disabled if clusters are labeled"),
@@ -268,8 +313,7 @@ ui <- bootstrapPage(
                p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                
                fluidRow(
-                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% 
-                 #   withSpinner(type = 5)
+                 # plotOutput("scatter_joint", width = "10in", height = "4in") %>% ws
                  
                  splitLayout(cellWidths = c(432, 512), # 432 = 4.5in, 512px = 5.33in
                              #cellArgs = list(style = "padding: 6px"),
@@ -277,15 +321,13 @@ ui <- bootstrapPage(
                              (plotOutput("dr_joint", 
                                          #width = "4.5in", 
                                          height = "4in",
-                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% 
-                                withSpinner(type = 5)),
+                                         hover = hoverOpts(id = "dr_joint_hover", clip = TRUE)) %>% ws),
                              
                               (plotOutput("feature_joint", 
                                          #width = "5.33in", 
                                          height = "4in"
                                          #, hover = hoverOpts(id = "feature_joint_hover", clip = TRUE)
-                              ) %>% 
-                               withSpinner(type = 5))
+                              ) %>% ws)
                          )
                 ),
                  
@@ -297,8 +339,7 @@ ui <- bootstrapPage(
                 #fluidRow(uiOutput("feature_joint_hover_info")),
                
                 fluidRow(
-                  plotOutput("vln_joint", width = "11in", height = "4in") %>% 
-                    withSpinner(type = 5)
+                  plotOutput("vln_joint", width = "11in", height = "4in") %>% ws
                 ),
                
                 # Specify the value to use when checking if this tab is selected
@@ -315,8 +356,9 @@ ui <- bootstrapPage(
                    
                    tags$br(),
                    
-                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-                   
+                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
+                   tags$br(),
+                   tags$br(),
                    p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
                    
                    p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
@@ -324,13 +366,11 @@ ui <- bootstrapPage(
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
                    ),
                    
                    fluidRow(
-                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
                    )
             
           ),
@@ -339,15 +379,15 @@ ui <- bootstrapPage(
                    
                    tags$br(),
                    
-                   p("Use this tab to explore the expression of one or more genes at the single-cell level in each sample"),
-                   
+                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
+                   tags$br(),
+                   tags$br(),
                    p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
                    
                    p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
                    
                    fluidRow(
-                     plotOutput("vln_sample", width = "10in", height = "20in") %>% 
-                       withSpinner(type = 5)
+                     plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
                    )
           )
                  
@@ -357,6 +397,29 @@ ui <- bootstrapPage(
         value = "sample"
       ),
       
+      #### ---- Clusters ranked by expression tab output ---- 
+      
+      tabPanel("Clusters ranked by expression",
+               
+               tags$br(),
+               
+               tags$b("This plot displays the mean expression of the selected gene in each cluster, ranked from highest to lowest expression."),
+               tags$br(),
+               tags$br(),
+               p("• The ticks below the plot x-axis provide a general categorization by cell type"),
+               
+               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene's expression will be plotted"),
+               
+               p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
+               
+               fluidRow(
+                 plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
+               ), 
+               
+               # Specify the value to use when checking if this tab is selected       
+               value = "rank_exp"
+      ),
+      
       id = "tabs"
       
     ))),
@@ -364,4 +427,4 @@ ui <- bootstrapPage(
   # Custom styling
   endPage()
   
-)
+)}

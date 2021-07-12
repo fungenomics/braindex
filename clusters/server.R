@@ -18,9 +18,32 @@ server <- function(input, output, session) {
   # more options in the future
   input_new <- eventReactive(input$update, {
     
+    g_list <- reactive({
+      
+      req(input$genelist)
+
+      ext <- tools::file_ext(input$genelist$name)
+      switch(ext,
+             csv = scan(input$genelist$datapath, 
+                        what = "string", sep = ",", 
+                        encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             tsv = scan(input$genelist$datapath, 
+                        what = "string", sep = "\t", 
+                        encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             validate("\n\n\nInvalid file; Please upload a .csv or .tsv file")
+      )
+    })
+    
+    # Condition which input is used based on the upload toggle
+    if (input$upload){
+      genes = g_list()
+    } else {
+      genes = input$gene
+    }
+    
     # Inputs to use as is
     l <- list(
-      "gene"   = input$gene,
+      "gene"   = genes,
       "scale"  = input$bubble_scale,
       "size"   = input$bubble_size,
       "region" = input$region,
@@ -80,6 +103,19 @@ server <- function(input, output, session) {
   # Generate the input dataframe for the bubbleplot 
   bubble_input <- reactive({
     
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    # Check first 20 inputs against the dataset genes
+    error_genes <- check_genes(input_new()$gene, 20)
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
+    
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
     if (length(input_new()$gene) > 1 && input_new()$mean_exp){
@@ -99,7 +135,7 @@ server <- function(input, output, session) {
     req(bubble_input())
     
     bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)$plot
+                max_point_size = input_new()$size)$plot # Get plot part of output
     
   },
   
@@ -133,7 +169,7 @@ server <- function(input, output, session) {
     # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
-                    "left: -350px; top: 450px; width: 350px;")
+                    "left: -350px; top: 500px; width: 350px;")
     
     # Set text to white if the background colour is dark, else it's black (default)
     if (dark(point$Colour)) {
@@ -163,42 +199,98 @@ server <- function(input, output, session) {
     )
   })
   
+  # Render the bubble plot gene labels separately with ggdraw
   output$bubble_labels <- renderPlot({
     
     ggdraw(bubble_plot(df = bubble_input(),
-                max_point_size = input_new()$size)$labels)
+                max_point_size = input_new()$size)$labels) # Get labels part of output
     
   },
   
-  height = function() 20 + 28 * length(input_new()$gene),
+  # Set height of bubble plot gene labels to (hopefully) align with plots
+  height = function() 28.5 + 29 * length(input_new()$gene),
   
+  # Max length of a gene is 200px
+  # NOTE: If altering this, also change the corresponding cellWidth for 
+  # splitLayout in ui.R
   width = 200
   
   )
   
+  
   #### ---- Expression table tab content ----
 
   # Show table with cluster & expression info 
-  output$cluster_table <- renderDataTable({
-    
+  output$cluster_table <- renderReactable({
     req(bubble_input())
     
-    bubble_input() %>%
+    # Use the order from bubble_input except reversed 
+    gene_table_order <- rev(unique(bubble_input()$Gene))
+    
+    table <- 
+      bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
       spread(Gene, Expression) %>% 
-      DT::datatable(options = list(
-        columnDefs = list(list(visible = FALSE,
-                               # Hide the Colour column
-                               targets = c(6))),
-        selection = "none")
-      ) %>%
-      
-      # Colour the cluster column based on the palette
-      formatStyle("Cluster",
-                  backgroundColor = styleEqual(names(joint_mouse_palette), unname(joint_mouse_palette)))
+      # Select all except Colour column, rename some variables for clarity, and
+      # follow bubble_input order for gene columns (saved above)
+      select(Cluster,
+             Sample,
+             "Cell type" = Cell_type,
+             "Cell class" = Cell_class,
+             "Number of cells" = N_cells,
+             all_of(gene_table_order))
     
+    # Move mean expression to the rightmost column
+    # if ("MEAN" %in% gene_table_order) {
+    #   table <- table %>% relocate("MEAN",
+    #                              .after = last_col())
+    # }
+    
+    # Produce a data table
+    reactable(table, 
+              rownames = FALSE,
+              highlight = TRUE,
+              compact = TRUE,
+              searchable = TRUE,
+              showSortable = TRUE,
+              fullWidth = FALSE,
+              showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
+              defaultColDef = colDef(minWidth = 80),
+              # Override colDef manually for the first few rows
+              columns = list(
+                Cluster = colDef(minWidth = 110,
+                                 style = function(index){
+                                   # Colour cluster column background by existing palette
+                                   b_color <- toString(unname(joint_mouse_palette)[index])
+                                   # Change text colour to white if background is dark
+                                   if (dark(b_color)){
+                                     f_color = "#FFFFFF"
+                                   } else {
+                                     f_color = "#000000"
+                                   }
+                                   list(background = b_color, color = f_color, fontWeight = "bold") 
+                                   # # Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                   #      position = "sticky", left = 0, zIndex = 1)
+                                  },
+                                 # headerStyle = 
+                                 #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                                 ), 
+                Sample = colDef(minWidth = 125),
+                "Cell type" = colDef(minWidth = 200),
+                "Cell class" = colDef(minWidth = 150),
+                "Number of cells" = colDef(minWidth = 100)
+                )
+    ) 
   })
+  
+  # output$x4 = renderPrint({
+  #   s = input$cluster_table_rows_selected
+  #   if (length(s)) {
+  #     cat('These clusters were selected:\n\n')
+  #     cat(bubble_input()$Cluster[s], sep = ', ')
+  #   }
+  # })
   
   # Download data in bubbleplot tab and expression table as TSV
   output$download_bubble <- 
@@ -210,14 +302,57 @@ server <- function(input, output, session) {
   
   #### ---- Timecourse tab content ----
   
+  observe({
+    x <- input_new()$gene
+    
+    # Can use character(0) to remove all choices
+    if (is.null(x))
+      x <- character(0)
+    
+    if (length(x) == 1){
+      text_pick_timecourse <- " input)"
+    } else if (length(x) > 1){
+      text_pick_timecourse <- " inputs)"
+    } else {
+      text_pick_timecourse <- NULL
+    }
+    
+    # Can also set the label and select items
+    updateSelectInput(session, "pick_timecourse",
+                      label = paste("Select gene to display (from ", length(x), text_pick_timecourse),
+                      choices = x,
+                      selected = head(x, 1)
+    )
+  })
+  
   # STATIC TIMECOURSE 
   
   # Generate ribbon plot and save the output so that we can allow the
   # user to download it 
   ribbon_static <- reactive({
     
-    p1 <- ribbon_plot(gene   = input_new()$gene[1],
-                region = input_new()$region)
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    # Check user-selected input against the dataset genes
+    error_genes <- check_genes(input$pick_timecourse, 1)
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
+    all_zero <- ribbon_plot(gene   = input$pick_timecourse,
+                      region = input_new()$region)$zero
+    
+    # Display message to the user instead of plot if 0 expression throughout region
+    validate(
+      need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
+    p1 <- ribbon_plot(gene   = input$pick_timecourse,
+                      region = input_new()$region)$plot
     
     # Get legend using cowplot
     leg <- cowplot::get_legend(p1)
@@ -244,9 +379,29 @@ server <- function(input, output, session) {
   # Generate interactive ribbon plot and save the output
   ribbon_plotly <- reactive({
 
-    ribbon_plot(gene   = input_new()$gene[1],
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    # Check first input against the dataset genes
+    error_genes <- check_genes(input$pick_timecourse, 1)
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
+    all_zero = ribbon_plot(gene   = input$pick_timecourse,
+                           region = input_new()$region)$zero
+    
+    # Display message to the user if there is 0 expression throughout region
+    validate(
+      need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
+    ribbon_plot(gene   = input$pick_timecourse,
                 region = input_new()$region,
-                make_plotly = TRUE)
+                make_plotly = TRUE)$plot
     
   })
   
@@ -256,7 +411,7 @@ server <- function(input, output, session) {
       layout(ribbon_plotly(), legend = list(x = 1, y = 0))
   })
 
-  # DOWNLOAD TIMECOURSE
+  # DOWNLOAD TIMECOURSE (static plot) AS A PDF
   
   output$download_ribbon <- 
     downloadHandler(filename = "timecourse_ribbon.pdf",
@@ -276,6 +431,18 @@ server <- function(input, output, session) {
   dr_joint_embedding <- reactive({
     
     req(input_new())
+    
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    # Check ALL inputs against the dataset genes
+    error_genes <- check_genes(input_new()$gene)
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
     
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
     get_embedding(sample  = input_new()$region,
@@ -368,12 +535,18 @@ server <- function(input, output, session) {
     
     req(input_new())
     
-    get_expression(sample    = input_new()$region,
-                   embedding = dr_joint_embedding(),
-                   gene      = input_new()$gene,
-                   
-                   # If more than one gene was provided, compute an aggregate
-                   aggregate = TRUE)
+    express <- get_expression(sample    = input_new()$region,
+                              embedding = dr_joint_embedding(),
+                              gene      = input_new()$gene,
+                              # If more than one gene was provided, compute an aggregate
+                              aggregate = TRUE)
+    
+    # Display message to the user if there is 0 expression throughout region
+    validate(
+      need(express$zero == FALSE, "This gene has no detected expression in the selected brain region.")
+    )
+    
+    express$data
     
   })
   
@@ -535,6 +708,95 @@ server <- function(input, output, session) {
       {plot_grid(plotlist = ., ncol = 1, align = "hv",
                  labels = timepoints, label_size = 15)}
     
+  })
+  
+  #### ---- Clusters ranked by expression tab content ----
+  
+  output$rank_tick_plot <- renderPlot({
+    
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    if(input_new()$mean_exp){
+      # Check ALL inputs against the dataset genes
+      error_genes <- check_genes(input_new()$gene)
+    } else{
+      # Check only first input against the dataset genes
+      error_genes <- check_genes(input_new()$gene, 1)
+    }
+    
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
+    palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
+                             "Oligodendrocytes" = "#b7dd5f",
+                             "Astrocytes" = "#00a385",
+                             "Ependymal" = "#8ee5cf",
+                             "Neurons" = "#840200",
+                             "Non-neuroect." = "gray40",
+                             "Other" = "gray60")
+    
+    if (input_new()$mean_exp){
+      df <- bubble_prep(gene = input_new()$gene,
+                        show_mean = TRUE) %>% 
+        filter(Gene == "MEAN")
+      y_axis_text <- "Mean gene expression"
+      title_text <- "Mean expression over all selected genes"
+    } else {
+      df <- bubble_prep(gene = input_new()$gene[1])
+      y_axis_text <- glue("Mean {input_new()$gene[1]} expression")
+      title_text <- input_new()$gene[1]
+    }
+    
+    df <- df %>% 
+      # Order from highest to lowest by expression (ranked)
+      arrange(desc(Expression)) %>% 
+      mutate(Cluster = factor(Cluster, levels = .$Cluster)) %>% 
+      # Rename cell classes to more general names
+      mutate(Cell_class = case_when(
+        grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
+        grepl("Olig", Cell_class) ~ "Oligodendrocytes",
+        grepl("Epen", Cell_class) ~ "Ependymal",
+        grepl("Astr", Cell_class) ~ "Astrocytes",
+        grepl("[Nn]euron", Cell_class) ~ "Neurons",
+        grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
+        TRUE ~ "Other"
+      ))
+    
+    p1 <- df %>% ggplot(aes(x = Cluster, y = Expression)) +
+      geom_bar(aes(fill = Cluster), stat = "identity") +
+      scale_fill_manual(values = df$Colour) +
+      theme_min(border_colour = "gray90") +
+      theme(legend.position = "none",
+            axis.title.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            # Remove white space at the bottom of plot
+            plot.margin = margin(b=0, unit="cm")) +
+      expand_limits(x = -18) +
+      labs(title = title_text) +
+      ylab(y_axis_text)
+
+    ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
+                             palette = palette_tick_plot,
+                             start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
+      # Make sure to expand to the same value that's in p1
+      expand_limits(x = -18) +
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            # Remove plot border
+            panel.border = element_blank(),
+            # Remove white space at the top of the plot
+            plot.margin = margin(t=0, unit="cm")) 
+    
+    plot_grid(p1, ticks, ncol = 1, align = "v")
   })
   
 }

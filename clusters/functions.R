@@ -52,7 +52,21 @@ get_expression <- function(sample,
     
   }
   
-  return(df)
+  # Output a flag if all expression values in the region are 0
+  # used for an informative error message in the app
+  is_zero = FALSE
+  
+  non_zero_exp <- df %>% 
+    filter(Expression != 0)
+  
+  # TRUE if non_zero_exp has no rows i.e. i.e. all zero expression
+  if (dim(non_zero_exp)[1] == 0){ 
+    
+    is_zero = TRUE    
+ 
+  }
+  
+  return(list(data = df, zero = is_zero))
   
 }
 
@@ -117,7 +131,6 @@ bubble_prep <- function(gene,
     # width; to roughly the the # of characters in the gene w/ longest name
     # However, letters take up more pixels than spaces, so do less padding
     # for genes with longer names
-    # TODO: Fix alignment of bubble plot w/ dendrogram for long gene names (issue #7)
     mutate(Gene_padded = case_when(
       str_length(Gene) <= 5 ~ str_pad(Gene, 15, side = 'right', pad = " "),
       str_length(Gene) > 5 ~ str_pad(Gene, 12, side = 'right', pad = " ")
@@ -175,7 +188,7 @@ bubble_prep <- function(gene,
 #' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
 #' Gene_padded, Pct1, and Expression
 #'
-#' @return ggplot2 object
+#' @return A list containing a ggplot2 object and its legend (extracted with cowplot)
 #'
 #' @examples
 #' bubble_prep("Dlx1") %>% bubbleplot()
@@ -287,6 +300,17 @@ ribbon_plot <- function(gene,
   ribbon_df <- prep_ribbon_input(gene, region)
   ribbon_df$gene <- ribbon_df[[gene]]
   
+  # Output a flag if all expression values in the region are 0
+  # used for an informative error message in the app
+  is_zero = FALSE
+  non_zero_exp <- ribbon_df %>% 
+    filter(gene != 0)
+  
+  # TRUE if non_zero_exp has no rows i.e. i.e. all zero expression
+  if (dim(non_zero_exp)[1] == 0){ 
+    is_zero = TRUE    
+  }
+  
   # For each cluster at each timepoint, calculate the proportion of cells in
   # which the gene is detected
   ribbon_df_celltype_frac <- ribbon_df %>% 
@@ -294,9 +318,9 @@ ribbon_plot <- function(gene,
     mutate(total = n()) %>% 
     group_by(Age, Cell_type) %>% 
     mutate(frac = sum(gene > 0) / total) %>% 
-    distinct(Age, Cell_type, frac) %>% 
+    distinct(Age, Cell_type, frac, total) %>% 
     ungroup()
-  
+
   # For each timepoint, calculate the proportion of cells in which the gene 
   # is detected
   ribbon_df_cum_frac <- ribbon_df %>% 
@@ -316,7 +340,7 @@ ribbon_plot <- function(gene,
   df$ranking = match(df$cluster, names(colours))
   df = df[order(df$stage, df$ranking),]
   
-  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = Age, frac)) %>% 
+  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cell_type, stage = Age, frac, total)) %>% 
     # Complete cases when genes were not detected in certain timepoints/clusters
     # by replacing with a zero
     mutate(frac = replace_na(frac, 0)) %>% 
@@ -325,7 +349,9 @@ ribbon_plot <- function(gene,
   df$xpos = match(df$stage, unique(timepoints2))
   
   p1 <- df %>%
-    ggplot(aes(x = xpos, y = frac, fill = cluster)) +
+    # Need to specify group or the text attribute with glue causes errors
+    ggplot(aes(x = xpos, y = frac, fill = cluster, group = cluster,
+               text = glue("{total*frac} {gene}+ cells out of {total} cells at this time point"))) +
     geom_area(stat = "identity") +
     scale_fill_manual(values = colours, drop = FALSE, name = "") +
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
@@ -337,17 +363,32 @@ ribbon_plot <- function(gene,
     ylim(0, ymax) 
   
   if(make_plotly) {
-    return (ggplotly(p1,
-                     # Only display cluster information within tooltip
-                     tooltip = "cluster") %>%
+    return (list(zero = is_zero, plot = (ggplotly(p1,
+                     # Display cluster (group) and info on number of cells (text) in tooltips
+                     tooltip = c("group", "text")) %>%
               
               # Add hovers both on points as well as filled areas of the plot
               # Changing it to hoveron="fills" only causes a known issue, see:
               # https://github.com/ropensci/plotly/issues/1641 
               style(hoveron="points+fills") 
-            )
+            ) %>% 
+              
+              # Customize the modebar on the plotly object to hide certain buttons, 
+              # remove the plotly logo, and toggle spike lines on by default
+              config(modeBarButtonsToRemove = c("hoverCompareCartesian", 
+                                                "hoverClosestCartesian",
+                                                "toImage", 
+                                                "toggleSpikelines", 
+                                                "autoScale2d"),
+                     displaylogo = FALSE) %>% 
+              layout(yaxis = list(showspikes = TRUE,
+                                  spikethickness = 1.5,
+                                  spikedash = "solid"),
+                     xaxis = list(showspikes = TRUE,
+                                  spikethickness = 1.5,
+                                  spikedash = "solid"))))
   }  else {
-    return(p1)
+    return(list(zero = is_zero, plot = p1))
   }
   
 }
@@ -379,7 +420,7 @@ ribbon_plot <- function(gene,
 #' @param hide_axes Logical, whether or not to hide the plot axes. Default: FALSE
 #' @param show_n_cells Logical, ... Default: FALSE
 #' 
-#' @return A ggplot object
+#' @return A list containing a ggplot object and a list of cluster centers
 #' 
 #' @export
 dr_plot <- function(embedding,
@@ -775,5 +816,80 @@ dark <- function(hex_color) {
     
     return(FALSE)
     
+  }
+}
+
+#' Add ticks below a bar plot to categorize x axis into less granular categories
+#' 
+#' @param df Dataframe, containing the data to use
+#' [...]
+#' 
+#' @example 
+#' plot + add_class_ticks(df, unique(df$Cell_class), palette = palettes$Cell_class,
+#'                        start = -50, sep = 100, height = 500, label_x_pos = -9, fontsize = 3.5)
+#'
+add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palette = NULL, fontsize = 3) {
+  
+  # Set up our limits
+  n <- length(classes)
+  tops     <- seq(start, by = - (height + sep), length.out = n)
+  bottoms  <- seq(start - height, by = - (height + sep), length.out = n)
+  mids     <- map2_dbl(tops, bottoms, ~ mean(c(.x, .y)))
+  betweens <- seq(start - (height + sep/2), by = - (height + sep), length.out = n - 1)
+  
+  if (is.null(palette)) palette <- rep("black", n)
+  
+  # Make a dataframe for tick positions
+  df$y_top <- NA
+  df$y_bottom <- NA
+  
+  for (i in seq_along(classes)) {
+    
+    df[df$Cell_class == classes[i], ]$y_top <- tops[i]
+    df[df$Cell_class == classes[i], ]$y_bottom <- bottoms[i]
+    
+  }
+  
+  # Make a dataframe for class labels
+  df2 <- data.frame(Class = classes,
+                    x = label_x_pos,
+                    y = mids)
+  
+  # Adding ggplot2 elements together
+  # https://stackoverflow.com/questions/56405904/how-to-add-ggproto-objects-together-and-save-for-later-without-call-to-ggplot
+  list(geom_segment(data = df,
+                    mapping = aes(x = Cluster, y = y_top,
+                                  xend = Cluster, yend = y_bottom),
+                    size = 1,
+                    colour = "gray50"),
+       geom_hline(yintercept = 0, colour = "gray90"),
+       geom_hline(yintercept = betweens, linetype = "dotted", size = 0.4, colour = "gray60"),
+       geom_text(data = df2, mapping = aes(x = x, y = y, label = Class, colour = Class), size = fontsize, fontface = "bold", hjust = "left"),
+       scale_colour_manual(values = palette))
+  
+}
+
+#' Check a certain number of input genes against an list of accepted genes 
+#' 
+#' @param user_genes Character vector, inputs from user (from textbox or file)
+#' @param n Numeric, the number of genes from the beginning of the list to check.
+#' Default: NULL (i.e. check all genes)
+#' @param annotation Logical, whether to check against annotation or not. 
+#' Default: FALSE (i.e. check against list of dataset genes, not annotation)
+#' 
+#' @return A list of inputs that do not match the list of accepted genes
+
+check_genes <- function(user_genes, 
+                        n = 20,
+                        annotation = FALSE) {
+  
+  if (!is.null(n)) {
+    user_genes <- head(user_genes, n)
+  } 
+  
+  if (!(all(user_genes %in% genes_mouse))) {
+    return(user_genes[!(user_genes %in% genes_mouse)])
+  } else {
+    return(NULL)
   }
 }

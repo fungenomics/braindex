@@ -1,8 +1,8 @@
 
 library(shinycssloaders)
 
-ws <- function(ui) withSpinner(ui, type = 3, size = 0.5,
-                               color.background = "white", color = "#8896AE")
+ws <- function(ui) withSpinner(ui, type = 5,
+                               color.background = "white")
 
 navigation <- function() {
 	includeHTML('../www/layout/navigation.html')
