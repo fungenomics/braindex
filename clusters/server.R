@@ -169,7 +169,7 @@ server <- function(input, output, session) {
     # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
     # z-index is set so we are sure are tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
-                    "left: -350px; top: 450px; width: 350px;")
+                    "left: -350px; top: 500px; width: 350px;")
     
     # Set text to white if the background colour is dark, else it's black (default)
     if (dark(point$Colour)) {
@@ -208,7 +208,7 @@ server <- function(input, output, session) {
   },
   
   # Set height of bubble plot gene labels to (hopefully) align with plots
-  height = function() 27 + 30 * length(input_new()$gene),
+  height = function() 28.5 + 28.5 * length(input_new()$gene),
   
   # Max length of a gene is 200px
   # NOTE: If altering this, also change the corresponding cellWidth for 
@@ -256,7 +256,7 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
-              defaultColDef = colDef(minWidth = 150),
+              defaultColDef = colDef(minWidth = 120),
               columns = list(
                 Cluster = colDef(minWidth = 110,
                                  style = function(index){
