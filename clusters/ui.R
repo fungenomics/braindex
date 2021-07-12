@@ -213,9 +213,11 @@ ui <- function(request){
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
-               fluidRow(
-                 reactableOutput("cluster_table", width = 1500) %>% ws
-               ),
+               #div(style = "overflow-x: scroll; overflow-y: visible;",
+                   fluidRow(
+                     reactableOutput("cluster_table", width = 200) %>% ws
+                   ),
+               #),
                
                # Only display download button if update has been pressed at least once
                conditionalPanel(condition='input.update!=0',

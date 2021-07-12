@@ -208,7 +208,7 @@ server <- function(input, output, session) {
   },
   
   # Set height of bubble plot gene labels to (hopefully) align with plots
-  height = function() 27 + 27 * length(input_new()$gene),
+  height = function() 27 + 30 * length(input_new()$gene),
   
   # Max length of a gene is 200px
   # NOTE: If altering this, also change the corresponding cellWidth for 
@@ -268,12 +268,12 @@ server <- function(input, output, session) {
                                    } else {
                                      f_color = "#000000"
                                    }
-                                   list(background = b_color, color = f_color, fontWeight = "bold", 
-                                   # Make the cluster column "sticky" i.e. freeze it in horizontal scroll
-                                        position = "sticky", left = 0, zIndex = 1)
+                                   list(background = b_color, color = f_color, fontWeight = "bold") 
+                                   # # Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                   #      position = "sticky", left = 0, zIndex = 1)
                                   },
-                                 headerStyle = 
-                                   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                                 # headerStyle = 
+                                 #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
                                  ), 
                 Sample = colDef(minWidth = 125),
                 "Cell type" = colDef(minWidth = 200),
