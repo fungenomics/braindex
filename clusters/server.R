@@ -208,7 +208,7 @@ server <- function(input, output, session) {
   },
   
   # Set height of bubble plot gene labels to (hopefully) align with plots
-  height = function() 28.5 + 28.5 * length(input_new()$gene),
+  height = function() 28.5 + 29 * length(input_new()$gene),
   
   # Max length of a gene is 200px
   # NOTE: If altering this, also change the corresponding cellWidth for 
@@ -256,7 +256,8 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
-              defaultColDef = colDef(minWidth = 120),
+              defaultColDef = colDef(minWidth = 80),
+              # Override colDef manually for the first few rows
               columns = list(
                 Cluster = colDef(minWidth = 110,
                                  style = function(index){
