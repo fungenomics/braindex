@@ -247,6 +247,9 @@ server <- function(input, output, session) {
     #                              .after = last_col())
     # }
     
+    # Create palette for expression level
+    orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
+    
     # Produce a data table
     reactable(table, 
               rownames = FALSE,
@@ -256,8 +259,13 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
-              defaultColDef = colDef(minWidth = 80),
-              # Override colDef manually for the first few rows
+              # Formatting for gene columns - color based on expression level
+              defaultColDef = colDef(minWidth = 80,
+                                     style = function(value) {
+                                       color <- orange_pal(value)
+                                       list(background = color)
+                                     }),
+              # Override colDef manually for the first few rows (not genes)
               columns = list(
                 Cluster = colDef(minWidth = 110,
                                  style = function(index){
@@ -276,10 +284,10 @@ server <- function(input, output, session) {
                                  # headerStyle = 
                                  #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
                                  ), 
-                Sample = colDef(minWidth = 125),
-                "Cell type" = colDef(minWidth = 200),
-                "Cell class" = colDef(minWidth = 150),
-                "Number of cells" = colDef(minWidth = 100)
+                Sample = colDef(minWidth = 125, style = list(background = "#FFFFFF")),
+                "Cell type" = colDef(minWidth = 200, style = list(background = "#FFFFFF")),
+                "Cell class" = colDef(minWidth = 150, style = list(background = "#FFFFFF")),
+                "Number of cells" = colDef(minWidth = 100, style = list(background = "#FFFFFF"))
                 )
     ) 
   })
