@@ -178,11 +178,12 @@ ui <- function(request){
                        
                        # Bubble plot(s)
                        (plotOutput("bubble",
-                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE)) %>% ws),
+                                  hover = hoverOpts(id = "bubble_hover", clip = FALSE),
+                                  height = 2000) %>% ws),
                        
                        # Gene labels
                        # No spinner to prevent confusing user, because there is only 1 plot
-                       (plotOutput("bubble_labels")) 
+                       (plotOutput("bubble_labels", height = 2000)) 
                      )
                      
                    ),

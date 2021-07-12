@@ -208,7 +208,7 @@ server <- function(input, output, session) {
   },
   
   # Set height of bubble plot gene labels to (hopefully) align with plots
-  height = function() 25 + 30 * length(input_new()$gene),
+  height = function() 27 + 27 * length(input_new()$gene),
   
   # Max length of a gene is 200px
   # NOTE: If altering this, also change the corresponding cellWidth for 
@@ -256,6 +256,7 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
+              defaultColDef = colDef(minWidth = 150),
               columns = list(
                 Cluster = colDef(minWidth = 110,
                                  style = function(index){
@@ -277,7 +278,7 @@ server <- function(input, output, session) {
                 Sample = colDef(minWidth = 125),
                 "Cell type" = colDef(minWidth = 200),
                 "Cell class" = colDef(minWidth = 150),
-                "Number of cells" = colDef(minWidth = 80)
+                "Number of cells" = colDef(minWidth = 100)
                 )
     ) 
   })
@@ -781,7 +782,7 @@ server <- function(input, output, session) {
 
     ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
                              palette = palette_tick_plot,
-                             start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3.5) +
+                             start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +
       theme(legend.position = "none",
