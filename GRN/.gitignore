@@ -13,4 +13,15 @@ data/joint_pons
 shiny_bookmarks
 data/ct_e12
 data/ct_e12_not_needed
+data/ct_e15
+data/ct_p0
+data/ct_p3
+data/ct_p6
+data/po_e12
+data/po_e15
+data/po_p0
+data/po_p3
+data/po_p6
 
+data/rsync_script.txt
+data/ID_20190715_dendrogram_order.rda

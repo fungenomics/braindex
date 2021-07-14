@@ -4,6 +4,7 @@ library(stringr)
 library(readr)
 library(dplyr)
 library(feather)
+library(glue)
 source("../functions.R")
 
 # ———————————————————————————————————color palette————————————————————————————————————————
@@ -20,7 +21,7 @@ colour_palette_cluster <- metadata %>%
   # and the second column is converted to the values
   deframe() # VECTOR , not data frame
 
-
+all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
 # color palette for timeseries plot, tab3
 colour_palette <- metadata %>% 
@@ -85,7 +86,7 @@ for (tf in unique_TF){
   else{l_nexist_cortex<- c(l_nexist_cortex,tf)}
 }
 
-# ----------------------------------Pon data-------------------------------------------------------
+# ----------------------------------Pons data-------------------------------------------------------
 
 pons_data <- read_tsv("joint_pons/Pons_join.2D.tsv") # for UMAP cluster
 
@@ -154,6 +155,54 @@ data_pons <- list(
   "tfs_not_exist_timeseries" = l_nexist_pons,
   "cluster_palette" = pons_cluster_palette
 )
+#---------------------ct_e12 data----------------------------------------------
+#use a loop for this 
+for (reg in c("ct", "po")){
+  
+  for(tp in c("e12", "e15", "p0", "p3", "p6")){
+    TF_target_gene_info <- as_tibble(read_rds(glue("{reg}_{tp}/{reg}_{tp}.regulon_target_info.Rds"))) %>%
+      select(-logo)
+    
+    unique_TF <- unique(TF_target_gene_info[["TF"]])
+    
+    TF_active <- as_tibble(read_rds(glue("{reg}_{tp}/{reg}_{tp}.active_regulons.Rds")))
+    TF_and_ext <- identify_tf(TF_active)
+    
+    cell_data <- read_tsv(glue("{reg}_{tp}/{reg}_{tp}.metadata.tsv")) 
+    
+    black_list_cells <- cell_data %>% select(Cell, ID_20190715_with_blacklist) %>%
+      filter(grepl("BLACKLISTED", ID_20190715_with_blacklist)) %>% select(Cell) %>%
+      deframe()
+    
+    #print(black_list_cells)
+    
+    cell_data <- cell_data %>% filter(!grepl("BLACKLISTED", ID_20190715_with_blacklist))
+      
+    
+    awoo <- switch(reg, "ct" = "F-", "po" = "P-")
+    
+    dr_palette <- metadata %>% 
+      separate(Cluster, into = c("Timepoint", "Cluster"), sep = "_") %>%
+      filter(Timepoint == glue("{awoo}{tp}")) %>%
+      unite(col = "Cluster", c("Timepoint", "Cluster"), sep = "_") %>%
+      select(Cluster, Colour) %>% 
+      deframe()
+    
+    x <- list(
+           "TF_target_gene_info" = TF_target_gene_info,
+           "TF_and_ext" = TF_and_ext,
+           "cell_metadata" = cell_data,
+           "bad_cells" = black_list_cells,
+           "cluster_palette" = dr_palette,
+           "unique_TF" = unique_TF
+    )
+    #print(x)
+    
+    saveRDS(x, file = glue("{reg}_{tp}/{reg}_{tp}_prep.Rds"))
+  }
+  
+}
+
 #-----------------------------forebrain joint cluster regulon activity data for heatmap------------
 forebrain_regulon_activity_data <-
   read_feather("joint_cortex/joint_cortex.regulon_activity_per_cell.feather")
@@ -193,7 +242,7 @@ save(data_pons, file = "joint_pons/pons_prep.Rda")
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
-     hm_anno, hm_anno_new, colour_palette, file = "shared/common_prep.Rda")
+     hm_anno, hm_anno_new, colour_palette, all_tf_list, file = "shared/common_prep.Rda")
 
 
 
