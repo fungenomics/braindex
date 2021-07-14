@@ -477,7 +477,7 @@ server <- function(input, output, session) {
       
       req(length(tf_list$TF_in_data) > 0)
       
-      plot_heatmap(input_new()$tf, "Cluster",input_new()$region, 
+      plot_heatmap(tf_list$TF_in_data, "Cluster",input_new()$region, 
                    input_new()$TF_and_ext, timepoint = input_new()$time_point)
       
     })
@@ -535,7 +535,7 @@ server <- function(input, output, session) {
         
         req(input$cluster_tp)
         
-        create_activity_data(input_new()$tf, "Cell", input_new()$region,
+        create_activity_data(tf_list$TF_in_data, "Cell", input_new()$region,
                              get(datafile)$TF_and_ext, per_sample = input_new()$cluster_toggle,
                              timepoint = input$cluster_tp, bad_cells = get(datafile)$bad_cells)
       }
@@ -572,7 +572,7 @@ server <- function(input, output, session) {
       }
     })
     Umap_plot_2 <- reactive({
-      req(length(input_new()$tf)>1)
+      req(ncol(activity_data_cluster()) > 2)
       
       if(input_new()$cluster_toggle){
         

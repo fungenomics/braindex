@@ -534,7 +534,9 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
   }
   else if(str_detect(method,"(?i)joint")){
     if(per_sample){
-      cell_col <- read_feather(path, "Cluster")
+      ID <- "ID_20201028"
+      cell_col <- read_feather(path, ID)
+      colnames(cell_col) <- "Cluster"
       method <- "Cluster"
     }
     else{
