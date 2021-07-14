@@ -668,16 +668,16 @@ server <- function(input, output, session) {
     #   }
     # })
     
-    output$tf_timeseries_desc <- renderText({
-      # tf_desc_timeseries()
-      tf_nexist_string <- ""
-      for(tf_n in input_new()$tfs_not_exist_timeseries){
-        tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
-      }
-      text <- glue("We do not have data for the following trancription: {tf_nexist_string}")
-      
-      
-    })
+    # output$tf_timeseries_desc <- renderText({
+    #   # tf_desc_timeseries()
+    #   tf_nexist_string <- ""
+    #   for(tf_n in input_new()$tfs_not_exist_timeseries){
+    #     tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
+    #   }
+    #   text <- glue("We do not have data for the following trancription: {tf_nexist_string}")
+    #   
+    #   
+    # })
     
     
     output$timeseries_desc <- renderText({
