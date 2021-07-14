@@ -21,7 +21,7 @@ colour_palette_cluster <- metadata %>%
   # and the second column is converted to the values
   deframe() # VECTOR , not data frame
 
-
+all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
 # color palette for timeseries plot, tab3
 colour_palette <- metadata %>% 
@@ -242,7 +242,7 @@ save(data_pons, file = "joint_pons/pons_prep.Rda")
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
-     hm_anno, hm_anno_new, colour_palette, file = "shared/common_prep.Rda")
+     hm_anno, hm_anno_new, colour_palette, all_tf_list, file = "shared/common_prep.Rda")
 
 
 

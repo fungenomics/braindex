@@ -5,17 +5,19 @@
 server <- function(input, output, session) {
 
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
+  updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
+                       selected = c("Arx","Lef1"), server = TRUE)
   observeEvent(input$region,{
     if(input$region == "cortex"){
-      updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
-                           selected = c("Arx","Lef1"), server = TRUE)
+      # updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
+      #                      selected = c("Arx","Lef1"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
                            selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
-      updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
-                           selected = c("Lhx5","Pax7"), server = TRUE)
+      # updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
+      #                      selected = c("Lhx5","Pax7"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
                            selected = c("Gad2"), server = TRUE)
       
@@ -268,9 +270,13 @@ server <- function(input, output, session) {
     TF_not_data = NULL
   )
   output$tf_check <- renderText({
-    
-    glue("The following TFs in your input are not in the dataset
+    if(!length(tf_list$TF_in_data) > 0 & !is.null(tf_list$TF_in_data)){
+      "None of the input TFs are active in the current dataset."
+    }
+    else{
+      glue("The following TFs in your input are not active in the dataset
          that your are currently exploring: {toString(tf_list$TF_not_data)}")
+    }
   })
   
   # -----------------------------Table------------------------------------------

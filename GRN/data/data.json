@@ -9,6 +9,13 @@
                         
         },
         {
+        "file": "Mus_musculus_TF_one_TF_per_line.txt",
+        "path": "selin.jessa/from_hydra/atlas/data/references/Mus_musculus_TF_one_TF_per_line.txt",
+        "description": "TF input into the SCENIC pipeline. Actives TFs in each dataset represents a subset of this.",
+        "contents": "Text file with each TF on one line"
+                        
+        },
+        {
         "file": "common_prep.Rda",
         "description": "Colour palettes and cluster annotations used for heatmaps, and timeseries",
         "contents": "R object containing colour palettes, and heatmap annotations",
