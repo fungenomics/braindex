@@ -243,7 +243,7 @@ ui <- fluidPage(
                
                textOutput("timeseries_desc"),
                br(),
-               textOutput("tf_timeseries_desc"),
+               #textOutput("tf_timeseries_desc"),
 
                fluidRow(
                plotlyOutput("timeseries1"),
