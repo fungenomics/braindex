@@ -7,6 +7,7 @@ server <- function(input, output, session) {
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
   updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
                        selected = c("Arx","Lef1"), server = TRUE)
+  
   observeEvent(input$region,{
     if(input$region == "cortex"){
       # updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
@@ -90,7 +91,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "table_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -105,7 +106,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "table_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -138,7 +139,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "grn_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -152,7 +153,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "grn_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -177,7 +178,7 @@ server <- function(input, output, session) {
                              selected = "joint")
       updateSelectInput(session, inputId = "time",
                                              label = "Time-point to Visualize",
-                                             choices = c("e12", "e15", "p0", "p3", "p6"),
+                                             choices = dev_time_points,
                                              selected = "e12")
       output$hm_data <- renderText({
         glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}")
@@ -213,7 +214,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "cluster_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -227,7 +228,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "cluster_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -245,11 +246,61 @@ server <- function(input, output, session) {
     }
   })
   
+  #Update the active and specific tab inputs and responding to toggle
+  observeEvent(input$tabs, {
+    if (input$as_toggle == TRUE & !identical(input$tabs,
+                                                  "active_specific")){
+      removeUI(
+        selector = "div:has(>> #as_tp)"
+      )
+    }
+    else if (input$as_toggle == TRUE & identical(input$tabs,
+                                                      "active_specific")){
+      #print("hello")
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "as_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = dev_time_points,
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+    }
+  })
+  #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
+  observeEvent(input$as_toggle,{
+    if(input$as_toggle){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "as_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = dev_time_points,
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+      output$as_data <- renderText({
+        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$as_tp}")
+      })
+    }
+    else if (input$as_toggle == FALSE){
+      removeUI(
+        selector = "div:has(>> #as_tp)"
+      )
+      output$as_data <- renderText({
+        ""
+      })
+    }
+  })
+  
   #update inputs when toggle is turned so that the plots auto-update
-  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle, {
+  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle, {
     click(id = "update")
   }, ignoreInit = TRUE)
   
+  #updates a reactive value reg depending on the input region which is used to select the right dataset to display in the app
+  #uses the input_new() region because wants to be dependant on the update button
   reg <- reactive({
     if(identical(input_new()$region, "cortex")){
       "ct"
@@ -259,7 +310,7 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$info|input$info1|input$info2|input$info3, {
+  observeEvent(input$info|input$info1|input$info2|input$info3|input$info4, {
     sendSweetAlert(session, title = "What Is This?", text = 
                      "Use toggle to explore data from SCENIC analyses performed
                    on each developmental time-point individually.")
@@ -271,11 +322,11 @@ server <- function(input, output, session) {
   )
   output$tf_check <- renderText({
     if(!length(tf_list$TF_in_data) > 0 & !is.null(tf_list$TF_in_data)){
-      "None of the input TFs are active in the current dataset."
+      "<font color=\"#FF0000\"><b> None of the input TFs are active in the current dataset. </b></font>"
     }
     else{
       glue("The following TFs in your input are not active in the dataset
-         that your are currently exploring: {toString(tf_list$TF_not_data)}")
+         that your are currently exploring: <font color=\"#FF0000\"><b> {toString(tf_list$TF_not_data)} </b></font>")
     }
   })
   
@@ -301,7 +352,7 @@ server <- function(input, output, session) {
         
         subset_data <- get(datafile)$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
       }
       
       else{
@@ -314,7 +365,7 @@ server <- function(input, output, session) {
         
         subset_data <- input_new()$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
       }
       
       subset_data <- addMotifPic(subset_data)
@@ -745,7 +796,37 @@ server <- function(input, output, session) {
     # },
     # deleteFile = FALSE)
     
-    
+#-------------------------------------Active specific-------------------
+    #same idea as reg but used to update the cluster list in this tab, uses the input$region because do not want 
+    #dependence on the update button
+    reg2 <- reactive({
+      if(identical(input$region, "cortex")){
+        "ct"
+      }
+      else{
+        "po"
+      }
+    })
+    clust_list <- reactive({
+      if(input$as_toggle){
+        
+        req(input$as_tp)
+        
+        datafile <- glue("data_{reg2()}_{input$as_tp}")
+        get(datafile)$cell_metadata %>% select(ID_20190715_with_blacklist) %>% unique() %>% deframe()
+        
+      }
+      else{
+        datafile <- glue("data_{input$region}")
+        
+        get(datafile)$cell_metadata %>% select(Sample_cluster) %>% unique() %>% 
+          filter(!grepl("BLACKLISTED", Sample_cluster)) %>% deframe()
+      }
+    })
+    update_in <- observe({
+      updateSelectizeInput(session, inputId = "active_specific_cluster", choices = clust_list(), 
+                           selected = clust_list()[1], server = TRUE)
+    })
     
     
 }

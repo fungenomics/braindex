@@ -91,6 +91,12 @@
        "description": "Binary activity of every tf in each cell, used for plotting cortex timeseries, we also use the rownames to generate a dataframe that saves all the tf names",
        "contents": "A giant matrix with columns of each cell and rows of tfs, with 1 or 0 denoting the presence of that tf in the cell."
        
+     },
+     {
+       "file": "joint_cortex.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/joint_cortex.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
      
    ],
@@ -162,6 +168,12 @@
        "description": "Binary activity of every tf in each cell, used for plotting pons timeseries, we also use the rownames to generate a dataframe that saves all the tf names",
        "contents": "A giant matrix with columns of each cell and rows of tfs, with 1 or 0 denoting the presence of that tf in the cell."
        
+     },
+     {
+       "file": "joint_pons.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/joint_pons.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
      
    ],
@@ -208,7 +220,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "ct_e12.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e12.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "ct_e15": [
         {
@@ -252,7 +270,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "ct_e15.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e15.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "ct_p0": [
         {
@@ -296,7 +320,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "ct_p0.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_p0.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "ct_p3": [
         {
@@ -340,7 +370,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "ct_p3.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_p3.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "ct_p6": [
         {
@@ -384,7 +420,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "ct_p6.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_p6.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "po_e12": [
         {
@@ -428,7 +470,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "po_e12.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e12.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "po_e15": [
         {
@@ -472,7 +520,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "po_e15.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e15.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "po_p0": [
         {
@@ -516,7 +570,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "po_p0.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_p0.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "po_p3": [
         {
@@ -560,7 +620,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "po_p3.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_p3.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ],
 "po_p6": [
         {
@@ -604,7 +670,13 @@
         "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
         "script": "data_prep.R"
                         
-        }
+        },
+     {
+       "file": "po_p6.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_p6.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
         ]
 
 }

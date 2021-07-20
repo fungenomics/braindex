@@ -126,7 +126,6 @@ for (tf in unique_TF_pon){
 }
 
 
-
 # make two lists containing same name (will be assigned to a reactive list),
 # then we can use the same name to code
 data_cortex <- list(
@@ -155,6 +154,10 @@ data_pons <- list(
   "tfs_not_exist_timeseries" = l_nexist_pons,
   "cluster_palette" = pons_cluster_palette
 )
+
+master_palette <- append(hm_anno_new$side_colors$Cluster, forebrain_cluster_palette)
+master_palette <- append(master_palette, pons_cluster_palette)
+master_palette <- list("Cluster" = master_palette)
 #---------------------ct_e12 data----------------------------------------------
 #use a loop for this 
 for (reg in c("ct", "po")){
@@ -242,7 +245,7 @@ save(data_pons, file = "joint_pons/pons_prep.Rda")
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
-     hm_anno, hm_anno_new, colour_palette, all_tf_list, file = "shared/common_prep.Rda")
+     hm_anno, hm_anno_new, colour_palette, all_tf_list, master_palette, file = "shared/common_prep.Rda")
 
 
 

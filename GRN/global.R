@@ -45,3 +45,6 @@ source("functions.R")
 
 #allows server side save states
 enableBookmarking(store = "url")
+
+#store variable accessible to all of app
+dev_time_points <- c("e12", "e15", "p0", "p3", "p6")

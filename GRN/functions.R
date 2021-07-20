@@ -584,7 +584,7 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     else{
       activity <- separate(activity, Cluster, into = c("Timepoint", "Cluster"), sep = " ")
       activity <- filter(activity, Timepoint == tp)
-      activity <- select(activity, -Timepoint)
+      activity <- unite(activity, Cluster, Timepoint, Cluster, sep = " ")
     }
   }
   else if(identical(method, "Cell") & per_sample){ #gets rid of blacklisted cells in the per sample data
@@ -678,6 +678,7 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
+    #print(anno_col)
     cell_width_plot <- 10
     if (identical(timepoint, "F-All") || identical(timepoint, "P-All")){
       cell_width_plot <- 7
@@ -698,14 +699,18 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                                 timepoint = timepoint) %>%
       column_to_rownames(var = col_to_row) 
   
-    
+    #print(act)
+    new_anno_row <- act %>% mutate(Cluster = rownames(act)) %>% select(Cluster)
+    row.names(new_anno_row) <- new_anno_row$Cluster
+    #print(new_anno_row)
     # change the anno_row, since we change the color palettes
-    new_anno_row <- hm_anno$anno_row %>%
-      mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-    rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
+    # new_anno_row <- hm_anno$anno_row %>%
+    #   mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
+    # rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
+   # print(anno_col)
     cell_width_plot <- 10
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
@@ -722,9 +727,9 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                      color = colorRampPalette(c("blue", "white", "red"))(100),
                      main = title,
                      cluster_rows = cluster_row,
-                     #annotation_col = anno_col,
+                     annotation_col = anno_col,
                      # change the default color annotation
-                     annotation_colors = hm_anno_new$side_colors, # loaded by data_prep.R
+                     annotation_colors = master_palette, # loaded by data_prep.R
                      annotation_legend = FALSE,
                      cellwidth = cell_width_plot,
                      cellheight = 10)

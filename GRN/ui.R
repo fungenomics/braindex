@@ -32,7 +32,7 @@ ui <- fluidPage(
                      multiple = TRUE,
                      selected = c("Arx", "Lef1")),
       #text output for user TF input
-      textOutput("tf_check"),
+      htmlOutput("tf_check"),
       br(),
 
 #----------------------------ggNet visualisation---------------------------------------------
@@ -90,6 +90,15 @@ ui <- fluidPage(
                        ),
       # 3. time series plot
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
+#----------------------Active specific-----------------      
+      conditionalPanel(condition = "input.tabs == 'active_specific'",
+                       selectizeInput(inputId = "active_specific_cluster",
+                                      label = "Cluster of Interest",
+                                      choices = NULL,
+                                      multiple = FALSE),
+                       sliderInput("sd", "Fold Change Cut-off",
+                                   min = 0.5, max = 3, value = 2, step = 0.5, ticks = FALSE)
+                       ),
       
       # Update everything
       actionButton("update", label = "Update"),
@@ -254,6 +263,19 @@ ui <- fluidPage(
                #plotlyOutput("timeseries4")
                ),
                value = "Time Series"),
+      #-----------------------------Active specific------------------------
+      tabPanel("TF Activity and Specificity",
+               
+               fluidRow(
+                 column(width = 3, materialSwitch(inputId = "as_toggle", label = "Explore per Time-Point Data",
+                                                  value = FALSE, status = "success")),
+                 column(width = 3, actionButton("info4", "What Is This?"))
+               ),
+               
+               textOutput("as_data"),
+               plotOutput("active_specific_dr"),
+               plotOutput("active_specific_bar"),
+               value = "active_specific"),
       id = "tabs"
     ))
   ),
