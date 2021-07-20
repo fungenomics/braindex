@@ -688,21 +688,30 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
   }
   else if(method == "joint"){ #plot heat map by joint cluster 
     
+    act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
+                                timepoint = timepoint)
+    #print(act)
     if(per_sample == TRUE){
       col_to_row <- "Cluster"
+      new_anno_row <- hm_anno$anno_row %>%
+        mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
+      rownames(new_anno_row) <- rownames(hm_anno$anno_row)
+      
     }
     else{
       col_to_row <- "Joint_cluster"
+      new_anno_row <- act %>% mutate(Cluster = Joint_cluster) %>%
+        column_to_rownames("Joint_cluster") %>% select(Cluster)
+      #print(new_anno_row)
+      
+      #%>%
+       # column_to_rownames("Cluster")
+      #row.names(new_anno_row) <- new_anno_row$Cluster
     }
   
-    act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
-                                timepoint = timepoint) %>%
+    act <- act %>%
       column_to_rownames(var = col_to_row) 
   
-    #print(act)
-    new_anno_row <- act %>% mutate(Cluster = rownames(act)) %>% select(Cluster)
-    row.names(new_anno_row) <- new_anno_row$Cluster
-    #print(new_anno_row)
     # change the anno_row, since we change the color palettes
     # new_anno_row <- hm_anno$anno_row %>%
     #   mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
@@ -710,7 +719,7 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
-   # print(anno_col)
+    #print(anno_col)
     cell_width_plot <- 10
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
