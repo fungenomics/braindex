@@ -99,7 +99,7 @@ server <- function(input, output, session) {
                          selected = "e12")
       )
     }
-  })
+  }, priority = 1000)
   
   #insert timepoint selection when the toggle for sample data in the table tab is acted on
   observeEvent(input$table_toggle,{
@@ -115,7 +115,7 @@ server <- function(input, output, session) {
       )
       #print(input$tabs)
       output$table_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$table_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$table_tp}</b>")
       })
     }
     else if (input$table_toggle == FALSE){
@@ -126,7 +126,7 @@ server <- function(input, output, session) {
         ""
       })
     }
-  }) 
+  }, priority = 1000) 
   
   observeEvent(input$tabs, {
     if (input$grn_toggle == TRUE & !identical(input$tabs,
@@ -161,7 +161,7 @@ server <- function(input, output, session) {
                          selected = "e12")
       )
       output$grn_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$grn_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$grn_tp}</b>")
       })
     }
     else if (input$grn_toggle == FALSE){
@@ -184,7 +184,7 @@ server <- function(input, output, session) {
                                              choices = dev_time_points,
                                              selected = "e12")
       output$hm_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}</b>")
       })
     }
     else{
@@ -236,7 +236,7 @@ server <- function(input, output, session) {
                          selected = "e12")
       )
       output$dr_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$cluster_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$cluster_tp}</b>")
       })
     }
     else if (input$cluster_toggle == FALSE){
@@ -284,7 +284,7 @@ server <- function(input, output, session) {
                          selected = "e12")
       )
       output$as_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$as_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$as_tp}</b>")
       })
     }
     else if (input$as_toggle == FALSE){
@@ -300,7 +300,7 @@ server <- function(input, output, session) {
   #update inputs when toggle is turned so that the plots auto-update
   observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle, {
     click(id = "update")
-  }, ignoreInit = TRUE, priority = 999)
+  }, ignoreInit = TRUE, priority = 1)
   
   #updates a reactive value reg depending on the input region which is used to select the right dataset to display in the app
   #uses the input_new() region because wants to be dependant on the update button

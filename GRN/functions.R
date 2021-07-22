@@ -695,9 +695,11 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
     #print(anno_col)
-    cell_width_plot <- 10
+    cell_width_plot <- 20
+    cell_height_plot <- 20
     if (identical(timepoint, "F-All") || identical(timepoint, "P-All")){
       cell_width_plot <- 7
+      cell_height_plot <- 10
     }
     show_colname_plot <- TRUE
     title <- glue('Transcription Factor Regulon Activity at Developmental Time: {timepoint}')
@@ -736,7 +738,8 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
     #print(anno_col)
-    cell_width_plot <- 10
+    cell_width_plot <- 20
+    cell_height_plot <- 20
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
   }
@@ -757,7 +760,7 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                      annotation_colors = master_palette, # loaded by data_prep.R
                      annotation_legend = FALSE,
                      cellwidth = cell_width_plot,
-                     cellheight = 10)
+                     cellheight = cell_height_plot)
 } 
 
 #----------------------------Dimension reduction---------------------------------------------
