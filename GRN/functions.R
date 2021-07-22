@@ -457,6 +457,22 @@ check_tf_input <- function(TF, TF_ref){
   )
 }
 
+transform_tf_input <- function(tf, tf_and_ext){
+  tf_to_read <- character(0)
+  for(TF in tf){ # tf is input tf list, could contain many tfs
+    
+    if(has_regular(TF, tf_and_ext)){
+      tf_to_read[TF] <- tf_regular(TF, tf_and_ext)
+    } # a helper to read the corresponding data
+    
+    else{
+      tf_to_read[TF] <- tf_ext(TF, tf_and_ext)
+    }
+  }
+  names(tf_to_read) <- NULL
+  return(tf_to_read)
+}
+
 # --------------------------------Create data for plots--------------------------------
 # NOTE: TF_and_ext is a dataframe (loaded already) that created in order to identify 
 # whether the TF data is a regular TF (with high confidence annotation) 
@@ -1006,6 +1022,76 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
     return (ggplotly(plot, tooltip = "cluster") %>% style(hoveron = "points + fills"))
   }
   else{return(plot)}
+}
+#--------------------------Active_specific------------------------
+active_specific_prep <- function(sample, cluster){
+  path <- glue("data/{sample}/{sample}.active_specific_tf.Rds")
+  data <- readRDS(path) 
+  #print()
+  tf_table <- data$tf_table[[cluster]] %>% 
+    mutate(is_ext = grepl("extended", data$tf_table[[cluster]]$TF))
+  FC_df <- data$FC_df
+  AUC_df <- data$AUC_df 
+  
+  send_back <- list("tf_table" = tf_table,
+                    "FC_df" = FC_df,
+                    "AUC_df" = AUC_df)
+  #names(data) <- cluster
+}
+plot_scatter <- function(data, fc, cluster){
+
+  to_label <- data %>% filter(AUC_FC > fc) %>% mutate(why = gsub("_extended", "+", TF)) %>%
+    mutate(TF = gsub("\\(.+\\)", "", why))
+  #print(to_label)
+  
+  ggplot(data = data, mapping = aes(AUC_out, AUC_in)) +
+    geom_point(aes(color = AUC_FC, shape = is_ext), size = 4, alpha = 0.6) + 
+    scale_color_gradientn(colors = rev(RColorBrewer::brewer.pal(8, "RdBu"))) + 
+    scale_shape_manual(values = c(19, 17)) +
+    geom_abline(slope = fc, intercept = 0, show.legend = TRUE) +
+    labs(color = 'AUC Fold\nChange', shape = 'Extended\nRegulon', 
+         y = glue('Average AUC in {cluster}'), x = 'Average AUC in All Other Clusters',
+         title = cluster) +
+    theme_min() +
+    theme(plot.title = element_text(size = 14, face="bold"),
+          plot.margin = unit(c(1.75,0,0,0), "cm")) +
+    guides(size = FALSE) + 
+    ggrepel::geom_label_repel(data = to_label,
+                              aes(x = AUC_out, y = AUC_in),
+                              label = to_label$TF,
+                              size = 4,
+                              segment.color = 'grey50',
+                              fontface = 'bold',
+                              alpha = 0.8,
+                              segment.alpha = 0,
+                              label.size = NA,
+                              force = 0.5,
+                              segment.size = 0.5,
+                              arrow = NULL)
+}
+plot_bar_list <- function(data, tf){
+  
+  data <- data %>% mutate(Cluster = gsub("_", " ", Cluster))
+  #print(data)
+  palette <- hm_anno$side_colors$Cluster[names(hm_anno$side_colors$Cluster) %in% data$Cluster]
+  #print(palette)
+  #print(length(data$Cluster))
+  #print(length(palette))
+  #(data)
+  #purrr::map(tf, ~print(.x) )
+  # 1. loop over genes, then each index can be referred to with .x
+   purrr::map(.x = tf, .f = ~data %>% select(.x, Cluster) %>% 
+                       arrange(desc(.x)) %>% head(30) %>%
+               ggplot(aes(x = get(.x), y = reorder(Cluster, get(.x)))) +
+               geom_bar(aes(colour = Cluster, fill = Cluster), stat = "identity") +
+               scale_color_manual(values = palette) +
+               scale_fill_manual(values = palette) +
+               ggtitle(.x) + theme_min() + theme(legend.position = "none") +
+               labs(y = "Cluster", x = glue('{.x} AUC'))
+              ) %>% 
+    # 2. pipe the output (a list) into plot_grid, using {} to indicate it's not the first argument
+    {plot_grid(plotlist = .)}
+  
 }
 
 

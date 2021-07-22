@@ -10,15 +10,15 @@ server <- function(input, output, session) {
   
   observeEvent(input$region,{
     if(input$region == "cortex"){
-      # updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
-      #                      selected = c("Arx","Lef1"), server = TRUE)
+       updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
+                            selected = c("Arx","Lef1"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
                            selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
-      # updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
-      #                      selected = c("Lhx5","Pax7"), server = TRUE)
+      updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
+                            selected = c("Lhx5","Pax7"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
                            selected = c("Gad2"), server = TRUE)
       
@@ -55,6 +55,9 @@ server <- function(input, output, session) {
     l$table_toggle <- input$table_toggle
     l$heatmap_toggle <- input$heatmap_toggle
     l$cluster_toggle <- input$cluster_toggle
+    l$as_cluster <- input$active_specific_cluster
+    l$fc <- input$fc
+    l$as_tp <- input$as_tp
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -297,7 +300,7 @@ server <- function(input, output, session) {
   #update inputs when toggle is turned so that the plots auto-update
   observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle, {
     click(id = "update")
-  }, ignoreInit = TRUE)
+  }, ignoreInit = TRUE, priority = 999)
   
   #updates a reactive value reg depending on the input region which is used to select the right dataset to display in the app
   #uses the input_new() region because wants to be dependant on the update button
@@ -321,6 +324,9 @@ server <- function(input, output, session) {
     TF_not_data = NULL
   )
   output$tf_check <- renderText({
+    # if(identical(input$tabs, "active_specific")){
+    #   ""
+    # }
     if(!length(tf_list$TF_in_data) > 0 & !is.null(tf_list$TF_in_data)){
       "<font color=\"#FF0000\"><b> None of the input TFs are active in the current dataset. </b></font>"
     }
@@ -826,8 +832,87 @@ server <- function(input, output, session) {
     update_in <- observe({
       updateSelectizeInput(session, inputId = "active_specific_cluster", choices = clust_list(), 
                            selected = clust_list()[1], server = TRUE)
+    }, priority = 1000)
+    
+    active_specific_data <- reactive({
+      if(input$as_toggle){
+        
+        req(input$as_tp)
+        req(grepl(input$as_tp, input_new()$as_cluster))
+        
+        data_sample <- glue("{reg()}_{input$as_tp}")
+      }
+      else{
+        data_sample <- glue("joint_{input_new()$region}")
+      }
+
+      #print(input_new()$as_cluster)
+      active_specific_prep(data_sample, input_new()$as_cluster)
     })
     
+    output$as_clust <- renderUI({
+       fluidRow(
+         column(width = 7, plotOutput("active_specific_scatter")),
+         column(width = 5, tableOutput("active_specific_table"))
+         
+       )
+    })
+    output$as_tf <- renderUI({
+      plotOutput("as_bar_AUC", height = '800px')
+    })
+    
+    output$as_bar_AUC <- renderPlot({
+      #print(input_new()$as_toggle)
+      if(input$as_toggle == TRUE){
+        
+        datafile <- glue("data_{reg()}_{input$as_tp}")
+        
+        req(input$as_tp)
+        
+        temp <- check_tf_input(input_new()$tf, unique(get(datafile)$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(get(datafile)$TF_and_ext) %>% 
+          head(4)
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+      }
+      else{
+        temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(input_new()$TF_and_ext) %>%
+          head(4)
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+      }
+      #print(tf_list$TF_in_data)
+      #print(active_specific_data())
+      req(length(tf_list$TF_in_data) > 0)
+      plot_bar_list(active_specific_data()$AUC_df, tf_list$TF_in_data)
+      
+    })
+    
+    output$active_specific_scatter <- renderPlot({
+      plot_scatter(active_specific_data()$tf_table, input_new()$fc, input_new()$as_cluster)
+    })
+    
+    output$active_specific_table <- renderTable({
+      
+      data <- active_specific_data()$tf_table %>% select(-is_ext) %>%
+        filter(AUC_FC > input_new()$fc) %>% arrange(desc(AUC_in))
+      
+      temp_col <- data %>% select(TF)
+      
+      data <- data %>% select(-TF) %>% 
+        round(3) %>% mutate(TF = temp_col) %>% 
+        transmute('TF' = TF,
+                  'Average AUC in Cluster' = AUC_in,
+                  'Average AUC in Other' = AUC_out,
+                  'AUC Fold Change' = AUC_FC )
+      
+      # datatable(data, escape = TRUE,
+      #           colnames = c('Average AUC in Cluster' = 'AUC_in', 
+      #                        'Average AUC in Other' = 'AUC_out',
+      #                        'AUC Fold Change' = 'AUC_FC'),
+      #           rownames = FALSE)
+    })
     
 }
 

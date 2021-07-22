@@ -92,12 +92,15 @@ ui <- fluidPage(
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
 #----------------------Active specific-----------------      
       conditionalPanel(condition = "input.tabs == 'active_specific'",
+                       #checkboxInput(inputId = "use_in",
+                                     #label = "View Selected Regulons"),
                        selectizeInput(inputId = "active_specific_cluster",
                                       label = "Cluster of Interest",
                                       choices = NULL,
                                       multiple = FALSE),
-                       sliderInput("sd", "Fold Change Cut-off",
-                                   min = 0.5, max = 3, value = 2, step = 0.5, ticks = FALSE)
+                       sliderInput("fc", "Fold Change Cut-off",
+                                   min = 1, max = 4, value = 1.5, step = 0.25, ticks = TRUE),
+                       #materialSwitch("dendro", "See Dendrogram", status = "success", right = TRUE)
                        ),
       
       # Update everything
@@ -271,9 +274,18 @@ ui <- fluidPage(
                                                   value = FALSE, status = "success")),
                  column(width = 3, actionButton("info4", "What Is This?"))
                ),
-               
                textOutput("as_data"),
-               plotOutput("active_specific_dr"),
+               tabsetPanel(
+                 tabPanel("By Cluster", uiOutput("as_clust"), value = "by_clust"),
+                 tabPanel("By TF", uiOutput("as_tf"), value = "by_tf"),
+                 id = "as_tabs"
+               ),
+               #uiOutput("as_plots"),
+               # fluidRow(
+               #   column(width = 7, plotOutput("active_specific_scatter")),
+               #   column(width = 5, tableOutput("active_specific_table"))
+               #   
+               # ),
                plotOutput("active_specific_bar"),
                value = "active_specific"),
       id = "tabs"
