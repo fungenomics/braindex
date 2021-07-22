@@ -28,10 +28,10 @@ ui <- function(request){
                  
                  conditionalPanel(condition = 'input.upload',
                                   # Gene list input with a file, shared across tabs
-                                  fileInput(inputId = "genelist", label = "Gene list",
+                                  fileInput(inputId = "genelist", label = "Gene list (.txt, .csv, or .tsv)",
                                             buttonLabel = "Browse...",
                                             multiple = FALSE, 
-                                            accept = c(".csv", ".tsv"),
+                                            accept = c(".txt", ".csv", ".tsv"),
                                             placeholder = "No file selected")),
   
                  materialSwitch("upload", "Use gene list from file",
