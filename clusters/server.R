@@ -743,14 +743,6 @@ server <- function(input, output, session) {
            glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
     )
     
-    palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
-                             "Oligodendrocytes" = "#b7dd5f",
-                             "Astrocytes" = "#00a385",
-                             "Ependymal" = "#8ee5cf",
-                             "Neurons" = "#840200",
-                             "Non-neuroect." = "gray40",
-                             "Other" = "gray60")
-    
     if (input_new()$mean_exp){
       df <- bubble_prep(gene = input_new()$gene,
                         show_mean = TRUE) %>% 
@@ -793,7 +785,7 @@ server <- function(input, output, session) {
       ylab(y_axis_text)
 
     ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
-                             palette = palette_tick_plot,
+                             palette = general_palette,
                              start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +

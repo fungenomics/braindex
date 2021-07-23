@@ -33,6 +33,15 @@ pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 
+# General cell type palette
+general_palette <- c("Progenitors/cyc." = "#ffaf49",
+                       "Oligodendrocytes" = "#b7dd5f",
+                       "Astrocytes" = "#00a385",
+                       "Ependymal" = "#8ee5cf",
+                       "Neurons" = "#840200",
+                       "Non-neuroect." = "gray40",
+                       "Other" = "gray60")
+
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
