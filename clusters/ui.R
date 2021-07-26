@@ -23,7 +23,7 @@ ui <- function(request){
                  
                  conditionalPanel(condition = '!input.upload',
                                   # Gene input field, shared across tabs
-                                  selectInput("gene", "Gene", choices = genes_mouse,
+                                  selectInput("gene", "Gene", choices = genes_anno,
                                               multiple = TRUE)),
                  
                  conditionalPanel(condition = 'input.upload',

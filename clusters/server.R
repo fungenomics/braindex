@@ -111,13 +111,25 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first 20 inputs against the dataset genes
-    error_genes <- check_genes(input_new()$gene, 20)
+    # Check first 20 inputs against the dataset & annotations
+    # TODO: Fix this so it works
+    not_data_genes <- check_genes(input_new()$gene, 20, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, 20, annotation = TRUE)
+    if (setequal(not_data_genes, not_anno_genes)){
+      error_genes <- NULL
+    } else {
+      error_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(error_genes),
+           glue("\n\n\nThe input gene \"{error_genes}\" is in the dataset annotation but no data exists for it."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" is not within the dataset nor the annotation."))
+    )
     
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
@@ -882,7 +894,6 @@ server <- function(input, output, session) {
                          cellwidth = 10,
                          cellheight = 10,
                          annotation_col = hm_anno$anno_row,
-                         # annotation_row = hm_anno$anno_col,
                          annotation_colors = hm_anno$side_colors,
                          main = "Genes clustered by mean expression")
     

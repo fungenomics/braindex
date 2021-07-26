@@ -891,8 +891,14 @@ check_genes <- function(user_genes,
     user_genes <- head(user_genes, n)
   } 
   
-  if (!(all(user_genes %in% genes_mouse))) {
-    return(user_genes[!(user_genes %in% genes_mouse)])
+  if(annotation){
+    check_against <- genes_anno
+  } else {
+    check_against <- genes_mouse
+  }
+  
+  if (!(all(user_genes %in% check_against))) {
+    return(user_genes[!(user_genes %in% check_against)])
   } else {
     return(NULL)
   }
