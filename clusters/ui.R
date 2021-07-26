@@ -40,7 +40,7 @@ ui <- function(request){
                                 value = FALSE,
                                 right = TRUE),
 
-                 # Input for dendrogram tab and expression table tab
+                 # Input for dendrogram tab, expression table, and ranked clusters tab
                  conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
                                   (input.gene.length > 1 || input.upload)",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
@@ -64,9 +64,9 @@ ui <- function(request){
                  ),
                  
 
-                 # Input for all tabs other than dendrogram, ranked plot, & table
+                 # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
-                                  && input.tabs != 'rank_exp'",
+                                  && input.tabs != 'rank_exp' && input.tabs != 'heatmap'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -418,6 +418,29 @@ ui <- function(request){
                
                # Specify the value to use when checking if this tab is selected       
                value = "rank_exp"
+      ),
+      
+      #### ---- Genes clustered by expression tab output ---- 
+      
+      tabPanel("Genes clustered by expression",
+               
+               tags$br(),
+               
+               tags$b("This plot displays a heatmap clustering genes together based on their expression across selected cell clusters."),
+               tags$br(),
+               tags$br(),
+               p("• Heatmap clustering requires at least two genes as input"),
+               
+               p("• The coloured bar above the plot provides a general categorization by cell type"),
+               
+               p("• The tree to the left of the plot indicates the clustering of genes"),
+               
+               fluidRow(
+                 plotOutput("heatmap", width = "10in") %>% ws
+               ), 
+               
+               # Specify the value to use when checking if this tab is selected       
+               value = "heatmap"
       ),
       
       id = "tabs"

@@ -897,3 +897,18 @@ check_genes <- function(user_genes,
     return(NULL)
   }
 }
+
+makePheatmapAnno <- function(palette, column) {
+  
+  palette <- palette[unique(names(palette))]
+  
+  anno_row <- data.frame(cluster = names(palette))
+  names(anno_row) <- column
+  rownames(anno_row) <- anno_row[[1]]
+  side_colors <- list(cluster = palette)
+  names(side_colors) <- column
+  
+  return(list(anno_row = anno_row,
+              side_colors = side_colors))
+  
+}

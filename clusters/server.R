@@ -802,5 +802,91 @@ server <- function(input, output, session) {
     plot_grid(p1, ticks, ncol = 1, align = "v")
   })
   
+  #### ---- Genes clustered by expression tab content ----
+  
+  output$heatmap <- renderPlot({
+    
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+    )
+    
+    # Check if number of genes > 1 - need at least 2 genes to cluster
+    validate(
+      need(length(input_new()$gene) > 1, "\n\n\nPlease enter more than one gene. Heatmap clustering requires at least two genes.")
+    )
+    
+    # Check ALL inputs against the dataset genes
+    error_genes <- check_genes(input_new()$gene)
+    validate(
+      need(is.null(error_genes), 
+           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+    )
+    
+    # Get gene expression values for input genes
+    df <- bubble_prep(gene = input_new()$gene) 
+    
+    df_for_cellclass <- df %>% 
+      # Rename cell classes to more general names
+      mutate(Cell_class = case_when(
+        grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
+        grepl("Olig", Cell_class) ~ "Oligodendrocytes",
+        grepl("Epen", Cell_class) ~ "Ependymal",
+        grepl("Astr", Cell_class) ~ "Astrocytes",
+        grepl("[Nn]euron", Cell_class) ~ "Neurons",
+        grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
+        TRUE ~ "Other"
+      ))
+    
+    # Store mean expression for each cluster 
+    df <- df %>% 
+      group_by(Gene, Cluster) %>% 
+      summarize(Expression = mean(Expression))
+    
+    # Select only certain clusters that can be categorized 
+    # (from Selin's code, to be confirmed)
+    df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
+    
+    # Pivot the cluster rows to columns
+    df <- df %>% 
+      mutate(Expression = as.numeric(Expression)) %>% 
+      tidyr::pivot_wider(names_from = "Cluster", values_from = "Expression")  
+    
+    # Set NA values in df to 0 (from Selin's code)
+    df[is.na(df)] <- 0 
+    
+    # Flip dataframe over to match the order of user input (bubble_prep does reverse)
+    df <- df[nrow(df):1,]
+    
+    # Convert dataframe values to matrix, set rownames to genes for labeling purposes
+    mat <- df[,-1] %>%
+      data.matrix()  
+    rownames(mat) <- df$Gene
+    
+    # Set up values for heatmap annotation (cell class bar at top)
+    hm_anno <- makePheatmapAnno(general_palette, "Cell_class")
+    hm_anno$anno_row <- left_join(hm_anno$anno_row, 
+                                  unique(select(df_for_cellclass, Cluster, Cell_class)), by = "Cell_class") 
+    rownames(hm_anno$anno_row) <- hm_anno$anno_row$Cluster
+    hm_anno$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+    
+    # Plot heatmap
+    mat %>% 
+      apply(1, scales::rescale) %>% 
+      t() %>% 
+      pheatmap::pheatmap(border_color = NA,
+                         color = colorRampPalette(c("blue", "white", "red"))(100),
+                         scale = "none",
+                         cluster_rows = TRUE,
+                         cluster_cols = FALSE,
+                         cellwidth = 10,
+                         cellheight = 10,
+                         annotation_col = hm_anno$anno_row,
+                         # annotation_row = hm_anno$anno_col,
+                         annotation_colors = hm_anno$side_colors,
+                         main = "Genes clustered by mean expression")
+    
+  })
+  
 }
 
