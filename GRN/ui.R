@@ -264,7 +264,9 @@ ui <- fluidPage(
                #imageOutput("timeseries_color"),
                #plotOutput("timeseries3"),
                #plotlyOutput("timeseries4")
+               plotlyOutput("cell_proportion_timeseries")
                ),
+               #imageOutput("proportion_timeseries", width = "auto", height = "auto"),
                value = "Time Series"),
       #-----------------------------Active specific------------------------
       tabPanel("TF Activity and Specificity",
@@ -285,7 +287,15 @@ ui <- fluidPage(
                ),
                htmlOutput("as_data"),
                tabsetPanel(
-                 tabPanel("By Cluster", uiOutput("as_clust"), value = "by_clust"),
+                 tabPanel("By Cluster", uiOutput("as_clust"), 
+                          downloadButton("as_scatter_download", "Scatter-Plot Download (PDF)"), 
+                          br(), 
+                          fluidRow(
+                            column(12, align="center",
+                                   plotOutput("active_specific_dr",  width = "4in", height = "4in"),
+                            )
+                          ),
+                          value = "by_clust"),
                  tabPanel("By TF", uiOutput("as_tf"), value = "by_tf"),
                  id = "as_tabs"
                ),
@@ -296,6 +306,7 @@ ui <- fluidPage(
                #   
                # ),
                plotOutput("active_specific_bar"),
+               downloadButton("as_bar_download", "Bar-Plot Download (PDF)"),
                value = "active_specific"),
       id = "tabs"
     ))

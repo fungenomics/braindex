@@ -10,5 +10,3 @@ draw_colnames_45 <- function (coln, gaps, ...) {
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",
                   ns=asNamespace("pheatmap"))
 
-assignInNamespace(x="draw_colnames", value="draw_colnames",
-                  ns=asNamespace("pheatmap"))

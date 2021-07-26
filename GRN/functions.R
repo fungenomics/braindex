@@ -822,10 +822,10 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   if(per_sample){
     var_group <- "ID_20190715_with_blacklist"
   }
-  centers <- cell_metadata %>%
-    group_by(get(var_group)) %>%
-    summarise(center_x = median(get(x_axis)),
-              center_y = median(get(y_axis)))
+  # centers <- cell_metadata %>%
+  #   group_by(get(var_group)) %>%
+  #   summarise(center_x = median(get(x_axis)),
+  #             center_y = median(get(y_axis)))
   
   #print("step1")
   #print(centers)
@@ -837,6 +837,11 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   
  # print("step2")
   if(cluster_label){
+    
+    centers <- cell_metadata %>%
+      group_by(get(var_group)) %>%
+      summarise(center_x = median(get(x_axis)),
+                center_y = median(get(y_axis)))
 
     gg <- gg + ggrepel::geom_label_repel(data = centers,
                                          aes(x = center_x, y = center_y),
@@ -1009,6 +1014,8 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
   
   df$xpos = match(df$stage, unique(timepoints2))
   
+  #view(df)
+  
   plot <- df %>%
     ggplot(aes(x = xpos, y = frac, fill = cluster)) +
     geom_area(stat = "identity", show.legend = show_legend) +
@@ -1016,10 +1023,10 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
                        labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
                        limits = c(1, length(unique(df$stage)))) +
-    labs(x = "age", y = "Proportion", title = TF) +
+    labs(x = "Developmental Age", y = "Proportion", title = TF) +
     guides(fill = guide_legend(ncol = 5)) +
     theme_min() + 
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom") 
   
   if(make_plotly) {
     return (ggplotly(plot, tooltip = "cluster") %>% style(hoveron = "points + fills"))
@@ -1089,7 +1096,7 @@ plot_bar_list <- function(data, tf){
                geom_bar(aes(colour = Cluster, fill = Cluster), stat = "identity") +
                scale_color_manual(values = palette) +
                scale_fill_manual(values = palette) +
-               ggtitle(.x) + theme_min() + theme(legend.position = "none") +
+               ggtitle(.x) + theme_min() + theme(legend.position = "none", plot.title = element_text(size = 14, face="bold")) +
                labs(y = "Cluster", x = glue('{.x} AUC'))
               ) %>% 
     # 2. pipe the output (a list) into plot_grid, using {} to indicate it's not the first argument

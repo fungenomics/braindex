@@ -56,6 +56,7 @@ server <- function(input, output, session) {
     l$heatmap_toggle <- input$heatmap_toggle
     l$cluster_toggle <- input$cluster_toggle
     l$as_cluster <- input$active_specific_cluster
+    l$as_toggle <- input$as_toggle
     l$fc <- input$fc
     l$as_tp <- input$as_tp
     # l$gene_file_path <- input$file_gene$datapath
@@ -566,7 +567,7 @@ server <- function(input, output, session) {
 
     })
     
-    output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.png",
+    output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.pdf",
                                                contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_sample_cluster_plot(),
@@ -792,6 +793,27 @@ server <- function(input, output, session) {
                                                          width = 20, height = 15)
                                                 })
     
+    output$pons_timeseries <- renderImage({
+         
+         list(src = "www/pons_timeseries.png",
+              alt = "This is alternate text")
+         
+       }, deleteFile = FALSE)
+    
+    output$cell_proportion_timeseries <- renderPlotly({
+      
+      if(identical(input_new()$region, "cortex")){
+        ggplotly(timeseries_proportion_plots$forebrain_plot + 
+                   ggtitle("Proportion of cells from each major cell class in the forebrain over the time course."), tooltip = "Cluster") %>% 
+          style(hoveron = "points + fills")
+      }
+      else{
+        ggplotly(timeseries_proportion_plots$pons_plot + 
+                   ggtitle("Proportion of cells from each major cell class in the pons over the time course."), tooltip = "Cluster") %>% 
+          style(hoveron = "points + fills")
+      }
+      
+    })
    
     
     # output$timeseries_color <- renderImage({
@@ -841,28 +863,56 @@ server <- function(input, output, session) {
         req(grepl(input$as_tp, input_new()$as_cluster))
         
         data_sample <- glue("{reg()}_{input$as_tp}")
+        sample_name <- glue("data_{reg()}_{input$as_tp}")
       }
       else{
         data_sample <- glue("joint_{input_new()$region}")
+        sample_name <- glue("data_{input_new()$region}")
       }
 
       #print(input_new()$as_cluster)
-      active_specific_prep(data_sample, input_new()$as_cluster)
+      woof <- list(
+        "data" = active_specific_prep(data_sample, input_new()$as_cluster),
+        "name" = sample_name
+      )
+      #active_specific_prep(data_sample, input_new()$as_cluster)
     })
+    
+
     
     output$as_clust <- renderUI({
        fluidRow(
          column(width = 7, plotOutput("active_specific_scatter")),
          column(width = 5, tableOutput("active_specific_table"))
-         
        )
+      #fluidRow(plotOutput("active_specific_cluster"))
     })
+    
     output$as_tf <- renderUI({
       plotOutput("as_bar_AUC", height = '800px')
     })
     
-    output$as_bar_AUC <- renderPlot({
-      #print(input_new()$as_toggle)
+    output$active_specific_dr <- renderPlot({
+      data <- get(active_specific_data()$name)
+      #cluster <- gsub(".+_", "", input_new()$as_cluster)
+      awo <- hm_anno$side_colors$Cluster
+      names(awo) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
+      to_color <- replace(awo, !grepl(input_new()$as_cluster, names(awo)), "#e5e5e5")
+      #print(to_color)
+      gg <- color_by_cluster(data$cell_metadata, data$cluster_palette, 
+                             "tsne", FALSE,
+                             per_sample = input_new()$as_toggle)
+      if(input$as_toggle == FALSE){
+        gg <- gg + geom_point(aes(color = Sample_cluster), alpha = 0.2)
+      }
+      gg <- gg + scale_color_manual(values = to_color) + 
+        theme(legend.position = "none", plot.title = element_text(size = 14, face="bold")) + 
+        ggtitle(input_new()$as_cluster)
+      gg
+    })
+    
+    #enveloping the bar plot as an reactive expression so it can be called in the download handler 
+    as_bar <- reactive({
       if(input$as_toggle == TRUE){
         
         datafile <- glue("data_{reg()}_{input$as_tp}")
@@ -885,17 +935,33 @@ server <- function(input, output, session) {
       #print(tf_list$TF_in_data)
       #print(active_specific_data())
       req(length(tf_list$TF_in_data) > 0)
-      plot_bar_list(active_specific_data()$AUC_df, tf_list$TF_in_data)
-      
+      plot_bar_list(active_specific_data()$data$AUC_df, tf_list$TF_in_data)
+    }) 
+    
+    output$as_bar_AUC <- renderPlot({
+      as_bar()
     })
     
+    
+    output$as_bar_download <- downloadHandler(filename = "bar_plot.pdf",
+                                                contentType = "application/pdf",
+                                                content = function(file){
+                                                  ggsave(filename = file, plot = as_bar())                                                })
+    
     output$active_specific_scatter <- renderPlot({
-      plot_scatter(active_specific_data()$tf_table, input_new()$fc, input_new()$as_cluster)
+      plot_scatter(active_specific_data()$data$tf_table, input_new()$fc, input_new()$as_cluster)
     })
+    
+    
+    output$as_scatter_download <- downloadHandler(filename = "scatter_plot.pdf",
+                                              contentType = "application/pdf",
+                                              content = function(file){
+                                                ggsave(filename = file, plot = plot_scatter(active_specific_data()$data$tf_table, input_new()$fc, input_new()$as_cluster))#why doesnt this work :(
+                                              })
     
     output$active_specific_table <- renderTable({
       
-      data <- active_specific_data()$tf_table %>% select(-is_ext) %>%
+      data <- active_specific_data()$data$tf_table %>% select(-is_ext) %>%
         filter(AUC_FC > input_new()$fc) %>% arrange(desc(AUC_in))
       
       temp_col <- data %>% select(TF)
@@ -913,6 +979,8 @@ server <- function(input, output, session) {
       #                        'AUC Fold Change' = 'AUC_FC'),
       #           rownames = FALSE)
     })
+    
+    
     
 }
 

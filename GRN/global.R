@@ -40,6 +40,9 @@ data_po_p0 <- readRDS("data/po_p0/po_p0_prep.Rds")
 data_po_p3 <- readRDS("data/po_p3/po_p3_prep.Rds")
 data_po_p6 <- readRDS("data/po_p6/po_p6_prep.Rds")
 
+#load_plots
+load("data/shared/timeseries_proportion_plots.Rda")
+
 # Custom functions
 source("functions.R")
 
@@ -48,3 +51,16 @@ enableBookmarking(store = "url")
 
 #store variable accessible to all of app
 dev_time_points <- c("e12", "e15", "p0", "p3", "p6")
+
+#overwrite pheatmap function so that the heatmap labels can be 45 degrees
+library(grid)
+
+draw_colnames_45 <- function (coln, gaps, ...) {
+  coord = pheatmap:::find_coordinates(length(coln), gaps)
+  x = coord$coord - 0.5 * coord$size
+  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
+  return(res)}
+
+## 'Overwrite' default draw_colnames with your own version 
+assignInNamespace(x="draw_colnames", value="draw_colnames_45",
+                  ns=asNamespace("pheatmap"))
