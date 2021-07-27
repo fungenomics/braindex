@@ -111,24 +111,25 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first 20 inputs against the dataset & annotations
-    # TODO: Fix this so it works
+    # Check first 20 gene inputs against the dataset & annotations
     not_data_genes <- check_genes(input_new()$gene, 20, annotation = FALSE)
     not_anno_genes <- check_genes(input_new()$gene, 20, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
     if (setequal(not_data_genes, not_anno_genes)){
-      error_genes <- NULL
+      anno_genes <- NULL
     } else {
-      error_genes <- setdiff(not_data_genes, not_anno_genes)
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
 
     validate(
-      need(is.null(error_genes),
-           glue("\n\n\nThe input gene \"{error_genes}\" is in the dataset annotation but no data exists for it."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
     validate(
       need(is.null(not_anno_genes),
-           glue("\n\n\nThe input gene \"{not_anno_genes}\" is not within the dataset nor the annotation."))
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     # Only display mean if more than one gene is given AND the user requested it
@@ -359,17 +360,32 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check user-selected input against the dataset genes
-    error_genes <- check_genes(input$pick_timecourse, 1)
+    # Check the selected gene against the dataset & annotations
+    not_data_genes <- check_genes(input$pick_timecourse, 1, annotation = FALSE)
+    not_anno_genes <- check_genes(input$pick_timecourse, 1, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check if expression is all zero in the brain region
+    # TODO: fix this to make it work
     all_zero <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$zero
     
-    # Display message to the user instead of plot if 0 expression throughout region
     validate(
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
@@ -407,17 +423,32 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first input against the dataset genes
-    error_genes <- check_genes(input$pick_timecourse, 1)
+    # Check the selected gene against the dataset & annotations
+    not_data_genes <- check_genes(input$pick_timecourse, 1, annotation = FALSE)
+    not_anno_genes <- check_genes(input$pick_timecourse, 1, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check if expression is all zero in the brain region
+    # TODO: fix this to make it work
     all_zero = ribbon_plot(gene   = input$pick_timecourse,
                            region = input_new()$region)$zero
     
-    # Display message to the user if there is 0 expression throughout region
     validate(
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
@@ -460,11 +491,25 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check ALL inputs against the dataset genes
-    error_genes <- check_genes(input_new()$gene)
+    # Check ALL gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
@@ -744,15 +789,31 @@ server <- function(input, output, session) {
     
     if(input_new()$mean_exp){
       # Check ALL inputs against the dataset genes
-      error_genes <- check_genes(input_new()$gene)
+      num_genes <- NULL
     } else{
       # Check only first input against the dataset genes
-      error_genes <- check_genes(input_new()$gene, 1)
+      num_genes <- 1
+    }
+    
+    # Check gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, num_genes, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, num_genes, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     if (input_new()$mean_exp){
@@ -828,11 +889,25 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 1, "\n\n\nPlease enter more than one gene. Heatmap clustering requires at least two genes.")
     )
     
-    # Check ALL inputs against the dataset genes
-    error_genes <- check_genes(input_new()$gene)
+    # Check ALL gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     # Get gene expression values for input genes

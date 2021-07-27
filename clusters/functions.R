@@ -884,7 +884,7 @@ add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palett
 #' 
 #' @return A list of inputs that do not match the list of accepted genes
 check_genes <- function(user_genes, 
-                        n = 20,
+                        n = NULL,
                         annotation = FALSE) {
   
   if (!is.null(n)) {
