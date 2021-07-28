@@ -969,8 +969,9 @@ server <- function(input, output, session) {
                          scale = "none",
                          cluster_rows = TRUE,
                          cluster_cols = TRUE,
-                         cellwidth = 10,
-                         cellheight = 10,
+                         cellwidth = 13,
+                         cellheight = 13,
+                         fontsize = 13,
                          annotation_col = hm_anno$anno_row,
                          annotation_colors = hm_anno$side_colors,
                          main = "Genes clustered by mean expression")

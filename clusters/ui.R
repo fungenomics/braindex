@@ -436,7 +436,7 @@ ui <- function(request){
                p("• The tree to the left of the plot indicates the clustering of genes, and the tree above the plot indicates clustering of cell clusters"),
                
                fluidRow(
-                 plotOutput("heatmap", width = "10in") %>% ws
+                 plotOutput("heatmap", width = "12in") %>% ws
                ), 
                
                # Specify the value to use when checking if this tab is selected       
