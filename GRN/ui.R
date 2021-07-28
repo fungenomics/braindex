@@ -32,7 +32,7 @@ ui <- fluidPage(
                      multiple = TRUE,
                      selected = c("Arx", "Lef1")),
       #text output for user TF input
-      textOutput("tf_check"),
+      htmlOutput("tf_check"),
       br(),
 
 #----------------------------ggNet visualisation---------------------------------------------
@@ -90,6 +90,18 @@ ui <- fluidPage(
                        ),
       # 3. time series plot
       conditionalPanel(condition = "input.tabs == 'Time Series'"),
+#----------------------Active specific-----------------      
+      conditionalPanel(condition = "input.tabs == 'active_specific'",
+                       #checkboxInput(inputId = "use_in",
+                                     #label = "View Selected Regulons"),
+                       selectizeInput(inputId = "active_specific_cluster",
+                                      label = "Cluster of Interest",
+                                      choices = NULL,
+                                      multiple = FALSE),
+                       sliderInput("fc", "Fold Change Cut-off",
+                                   min = 1, max = 4, value = 1.5, step = 0.25, ticks = TRUE),
+                       #materialSwitch("dendro", "See Dendrogram", status = "success", right = TRUE)
+                       ),
       
       # Update everything
       actionButton("update", label = "Update"),
@@ -122,7 +134,7 @@ ui <- fluidPage(
             column(width = 3, actionButton("info", "What Is This?"))
             ),
           
-          textOutput("grn_data"),
+          htmlOutput("grn_data"),
           
           #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
           #textOutput("desc"),
@@ -163,7 +175,7 @@ ui <- fluidPage(
           ),
           # materialSwitch(inputId = "table_toggle", label = "Explore per Time-Point Data",
           #                value = FALSE, status = "success"),
-          textOutput("table_data"),
+          htmlOutput("table_data"),
           #textOutput("general_desc"),
           dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
@@ -188,7 +200,7 @@ ui <- fluidPage(
         # materialSwitch(inputId = "heatmap_toggle", 
         #                label = "Explore per Time-Point Heatmap", 
         #                value = FALSE, status = "success"),
-        textOutput("hm_data"),
+        htmlOutput("hm_data"),
         title = "TF Activity Heatmap",
         value = "Heatmap",
         fluidRow(
@@ -217,7 +229,7 @@ ui <- fluidPage(
                                           value = FALSE, status = "success")),
           column(width = 6, actionButton("info3", "What Is This?"))
         ),
-          textOutput("dr_data"),
+          htmlOutput("dr_data"),
         fluidRow(
           column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
         ),
@@ -252,8 +264,50 @@ ui <- fluidPage(
                #imageOutput("timeseries_color"),
                #plotOutput("timeseries3"),
                #plotlyOutput("timeseries4")
+               plotlyOutput("cell_proportion_timeseries")
                ),
+               #imageOutput("proportion_timeseries", width = "auto", height = "auto"),
                value = "Time Series"),
+      #-----------------------------Active specific------------------------
+      tabPanel("TF Activity and Specificity",
+               p("This tab displays information on where a TF is the most active and 
+                 specific.") %>% strong(),
+               p("• The \"By Cluster\" sub-tab visualises the AUC of each TF in the selected cluster on the y-axis
+                  and the average AUC in all other clusters in the sample on the x-axis. User-selected
+                 fold change cutoff is displayed as a diagonal line and TFs with fold change greater than
+                 this cutoff is summarized in the table." ),
+               p("• The \"By TF\" sub-tab visualises the AUC of the first 4 selected TFs across all clusters 
+                 in the sample. If there are more than 30 clusters in the sample, the 30 clusters with the highest
+                 AUC value for that TF is shown."),
+               
+               fluidRow(
+                 column(width = 3, materialSwitch(inputId = "as_toggle", label = "Explore per Time-Point Data",
+                                                  value = FALSE, status = "success")),
+                 column(width = 3, actionButton("info4", "What Is This?"))
+               ),
+               htmlOutput("as_data"),
+               tabsetPanel(
+                 tabPanel("By Cluster", uiOutput("as_clust"), 
+                          downloadButton("as_scatter_download", "Scatter-Plot Download (PDF)"), 
+                          br(), 
+                          fluidRow(
+                            column(12, align="center",
+                                   plotOutput("active_specific_dr",  width = "4in", height = "4in"),
+                            )
+                          ),
+                          value = "by_clust"),
+                 tabPanel("By TF", uiOutput("as_tf"), value = "by_tf"),
+                 id = "as_tabs"
+               ),
+               #uiOutput("as_plots"),
+               # fluidRow(
+               #   column(width = 7, plotOutput("active_specific_scatter")),
+               #   column(width = 5, tableOutput("active_specific_table"))
+               #   
+               # ),
+               plotOutput("active_specific_bar"),
+               downloadButton("as_bar_download", "Bar-Plot Download (PDF)"),
+               value = "active_specific"),
       id = "tabs"
     ))
   ),

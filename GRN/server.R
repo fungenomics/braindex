@@ -7,17 +7,18 @@ server <- function(input, output, session) {
   # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
   updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
                        selected = c("Arx","Lef1"), server = TRUE)
+  
   observeEvent(input$region,{
     if(input$region == "cortex"){
-      # updateSelectizeInput(session, inputId = "TF", choices = data_cortex$unique_active_TFs_bare, 
-      #                      selected = c("Arx","Lef1"), server = TRUE)
+       updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
+                            selected = c("Arx","Lef1"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
                            selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
-      # updateSelectizeInput(session, inputId = "TF", choices = data_pons$unique_active_TFs_bare, 
-      #                      selected = c("Lhx5","Pax7"), server = TRUE)
+      updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
+                            selected = c("Lhx5","Pax7"), server = TRUE)
       updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
                            selected = c("Gad2"), server = TRUE)
       
@@ -54,6 +55,10 @@ server <- function(input, output, session) {
     l$table_toggle <- input$table_toggle
     l$heatmap_toggle <- input$heatmap_toggle
     l$cluster_toggle <- input$cluster_toggle
+    l$as_cluster <- input$active_specific_cluster
+    l$as_toggle <- input$as_toggle
+    l$fc <- input$fc
+    l$as_tp <- input$as_tp
     # l$gene_file_path <- input$file_gene$datapath
     # print(l$gene_file_path)
     # l has following elements with same names for both options above:
@@ -90,12 +95,12 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "table_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
     }
-  })
+  }, priority = 1000)
   
   #insert timepoint selection when the toggle for sample data in the table tab is acted on
   observeEvent(input$table_toggle,{
@@ -105,13 +110,13 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "table_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
       #print(input$tabs)
       output$table_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$table_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$table_tp}</b>")
       })
     }
     else if (input$table_toggle == FALSE){
@@ -122,7 +127,7 @@ server <- function(input, output, session) {
         ""
       })
     }
-  }) 
+  }, priority = 1000) 
   
   observeEvent(input$tabs, {
     if (input$grn_toggle == TRUE & !identical(input$tabs,
@@ -138,7 +143,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "grn_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -152,12 +157,12 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "grn_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
       output$grn_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$grn_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$grn_tp}</b>")
       })
     }
     else if (input$grn_toggle == FALSE){
@@ -177,10 +182,10 @@ server <- function(input, output, session) {
                              selected = "joint")
       updateSelectInput(session, inputId = "time",
                                              label = "Time-point to Visualize",
-                                             choices = c("e12", "e15", "p0", "p3", "p6"),
+                                             choices = dev_time_points,
                                              selected = "e12")
       output$hm_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$time}</b>")
       })
     }
     else{
@@ -213,7 +218,7 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "cluster_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
@@ -227,12 +232,12 @@ server <- function(input, output, session) {
         where = "afterEnd",
         ui = selectInput(inputId = "cluster_tp",
                          label = "Developmental Time-Point to Explore",
-                         choices = c("e12", "e15", "p0", "p3", "p6"),
+                         choices = dev_time_points,
                          multiple = FALSE,
                          selected = "e12")
       )
       output$dr_data <- renderText({
-        glue("Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$cluster_tp}")
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$cluster_tp}</b>")
       })
     }
     else if (input$cluster_toggle == FALSE){
@@ -245,11 +250,61 @@ server <- function(input, output, session) {
     }
   })
   
-  #update inputs when toggle is turned so that the plots auto-update
-  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle, {
-    click(id = "update")
-  }, ignoreInit = TRUE)
+  #Update the active and specific tab inputs and responding to toggle
+  observeEvent(input$tabs, {
+    if (input$as_toggle == TRUE & !identical(input$tabs,
+                                                  "active_specific")){
+      removeUI(
+        selector = "div:has(>> #as_tp)"
+      )
+    }
+    else if (input$as_toggle == TRUE & identical(input$tabs,
+                                                      "active_specific")){
+      #print("hello")
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "as_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = dev_time_points,
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+    }
+  })
+  #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
+  observeEvent(input$as_toggle,{
+    if(input$as_toggle){
+      insertUI(
+        selector = "#region",
+        where = "afterEnd",
+        ui = selectInput(inputId = "as_tp",
+                         label = "Developmental Time-Point to Explore",
+                         choices = dev_time_points,
+                         multiple = FALSE,
+                         selected = "e12")
+      )
+      output$as_data <- renderText({
+        glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$as_tp}</b>")
+      })
+    }
+    else if (input$as_toggle == FALSE){
+      removeUI(
+        selector = "div:has(>> #as_tp)"
+      )
+      output$as_data <- renderText({
+        ""
+      })
+    }
+  })
   
+  #update inputs when toggle is turned so that the plots auto-update
+  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle, {
+    click(id = "update")
+  }, ignoreInit = TRUE, priority = 1)
+  
+  #updates a reactive value reg depending on the input region which is used to select the right dataset to display in the app
+  #uses the input_new() region because wants to be dependant on the update button
   reg <- reactive({
     if(identical(input_new()$region, "cortex")){
       "ct"
@@ -259,7 +314,7 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$info|input$info1|input$info2|input$info3, {
+  observeEvent(input$info|input$info1|input$info2|input$info3|input$info4, {
     sendSweetAlert(session, title = "What Is This?", text = 
                      "Use toggle to explore data from SCENIC analyses performed
                    on each developmental time-point individually.")
@@ -270,12 +325,15 @@ server <- function(input, output, session) {
     TF_not_data = NULL
   )
   output$tf_check <- renderText({
+    # if(identical(input$tabs, "active_specific")){
+    #   ""
+    # }
     if(!length(tf_list$TF_in_data) > 0 & !is.null(tf_list$TF_in_data)){
-      "None of the input TFs are active in the current dataset."
+      "<font color=\"#FF0000\"><b> None of the input TFs are active in the current dataset. </b></font>"
     }
     else{
       glue("The following TFs in your input are not active in the dataset
-         that your are currently exploring: {toString(tf_list$TF_not_data)}")
+         that your are currently exploring: <font color=\"#FF0000\"><b> {toString(tf_list$TF_not_data)} </b></font>")
     }
   })
   
@@ -301,7 +359,7 @@ server <- function(input, output, session) {
         
         subset_data <- get(datafile)$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
       }
       
       else{
@@ -314,7 +372,7 @@ server <- function(input, output, session) {
         
         subset_data <- input_new()$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, nMotifs, bestMotif)
+          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
       }
       
       subset_data <- addMotifPic(subset_data)
@@ -509,7 +567,7 @@ server <- function(input, output, session) {
 
     })
     
-    output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.png",
+    output$download_hm_cluster <- downloadHandler(filename = "heatmap_cluster.pdf",
                                                contentType = "application/pdf",
                                                content = function(file){
                                                  ggsave(filename = file, plot = hm_sample_cluster_plot(),
@@ -735,6 +793,27 @@ server <- function(input, output, session) {
                                                          width = 20, height = 15)
                                                 })
     
+    output$pons_timeseries <- renderImage({
+         
+         list(src = "www/pons_timeseries.png",
+              alt = "This is alternate text")
+         
+       }, deleteFile = FALSE)
+    
+    output$cell_proportion_timeseries <- renderPlotly({
+      
+      if(identical(input_new()$region, "cortex")){
+        ggplotly(timeseries_proportion_plots$forebrain_plot + 
+                   ggtitle("Proportion of cells from each major cell class in the forebrain over the time course."), tooltip = "Cluster") %>% 
+          style(hoveron = "points + fills")
+      }
+      else{
+        ggplotly(timeseries_proportion_plots$pons_plot + 
+                   ggtitle("Proportion of cells from each major cell class in the pons over the time course."), tooltip = "Cluster") %>% 
+          style(hoveron = "points + fills")
+      }
+      
+    })
    
     
     # output$timeseries_color <- renderImage({
@@ -745,6 +824,161 @@ server <- function(input, output, session) {
     # },
     # deleteFile = FALSE)
     
+#-------------------------------------Active specific-------------------
+    #same idea as reg but used to update the cluster list in this tab, uses the input$region because do not want 
+    #dependence on the update button
+    reg2 <- reactive({
+      if(identical(input$region, "cortex")){
+        "ct"
+      }
+      else{
+        "po"
+      }
+    })
+    clust_list <- reactive({
+      if(input$as_toggle){
+        
+        req(input$as_tp)
+        
+        datafile <- glue("data_{reg2()}_{input$as_tp}")
+        get(datafile)$cell_metadata %>% select(ID_20190715_with_blacklist) %>% unique() %>% deframe()
+        
+      }
+      else{
+        datafile <- glue("data_{input$region}")
+        
+        get(datafile)$cell_metadata %>% select(Sample_cluster) %>% unique() %>% 
+          filter(!grepl("BLACKLISTED", Sample_cluster)) %>% deframe()
+      }
+    })
+    update_in <- observe({
+      updateSelectizeInput(session, inputId = "active_specific_cluster", choices = clust_list(), 
+                           selected = clust_list()[1], server = TRUE)
+    }, priority = 1000)
+    
+    active_specific_data <- reactive({
+      if(input$as_toggle){
+        
+        req(input$as_tp)
+        req(grepl(input$as_tp, input_new()$as_cluster))
+        
+        data_sample <- glue("{reg()}_{input$as_tp}")
+        sample_name <- glue("data_{reg()}_{input$as_tp}")
+      }
+      else{
+        data_sample <- glue("joint_{input_new()$region}")
+        sample_name <- glue("data_{input_new()$region}")
+      }
+
+      #print(input_new()$as_cluster)
+      woof <- list(
+        "data" = active_specific_prep(data_sample, input_new()$as_cluster),
+        "name" = sample_name
+      )
+      #active_specific_prep(data_sample, input_new()$as_cluster)
+    })
+    
+
+    
+    output$as_clust <- renderUI({
+       fluidRow(
+         column(width = 7, plotOutput("active_specific_scatter")),
+         column(width = 5, tableOutput("active_specific_table"))
+       )
+      #fluidRow(plotOutput("active_specific_cluster"))
+    })
+    
+    output$as_tf <- renderUI({
+      plotOutput("as_bar_AUC", height = '800px')
+    })
+    
+    output$active_specific_dr <- renderPlot({
+      data <- get(active_specific_data()$name)
+      #cluster <- gsub(".+_", "", input_new()$as_cluster)
+      awo <- hm_anno$side_colors$Cluster
+      names(awo) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
+      to_color <- replace(awo, !grepl(input_new()$as_cluster, names(awo)), "#e5e5e5")
+      #print(to_color)
+      gg <- color_by_cluster(data$cell_metadata, data$cluster_palette, 
+                             "tsne", FALSE,
+                             per_sample = input_new()$as_toggle)
+      if(input$as_toggle == FALSE){
+        gg <- gg + geom_point(aes(color = Sample_cluster), alpha = 0.2)
+      }
+      gg <- gg + scale_color_manual(values = to_color) + 
+        theme(legend.position = "none", plot.title = element_text(size = 14, face="bold")) + 
+        ggtitle(input_new()$as_cluster)
+      gg
+    })
+    
+    #enveloping the bar plot as an reactive expression so it can be called in the download handler 
+    as_bar <- reactive({
+      if(input$as_toggle == TRUE){
+        
+        datafile <- glue("data_{reg()}_{input$as_tp}")
+        
+        req(input$as_tp)
+        
+        temp <- check_tf_input(input_new()$tf, unique(get(datafile)$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(get(datafile)$TF_and_ext) %>% 
+          head(4)
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+      }
+      else{
+        temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+        tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(input_new()$TF_and_ext) %>%
+          head(4)
+        tf_list$TF_not_data <- temp$TF_not_data
+        
+      }
+      #print(tf_list$TF_in_data)
+      #print(active_specific_data())
+      req(length(tf_list$TF_in_data) > 0)
+      plot_bar_list(active_specific_data()$data$AUC_df, tf_list$TF_in_data)
+    }) 
+    
+    output$as_bar_AUC <- renderPlot({
+      as_bar()
+    })
+    
+    
+    output$as_bar_download <- downloadHandler(filename = "bar_plot.pdf",
+                                                contentType = "application/pdf",
+                                                content = function(file){
+                                                  ggsave(filename = file, plot = as_bar())                                                })
+    
+    output$active_specific_scatter <- renderPlot({
+      plot_scatter(active_specific_data()$data$tf_table, input_new()$fc, input_new()$as_cluster)
+    })
+    
+    
+    output$as_scatter_download <- downloadHandler(filename = "scatter_plot.pdf",
+                                              contentType = "application/pdf",
+                                              content = function(file){
+                                                ggsave(filename = file, plot = plot_scatter(active_specific_data()$data$tf_table, input_new()$fc, input_new()$as_cluster))#why doesnt this work :(
+                                              })
+    
+    output$active_specific_table <- renderTable({
+      
+      data <- active_specific_data()$data$tf_table %>% select(-is_ext) %>%
+        filter(AUC_FC > input_new()$fc) %>% arrange(desc(AUC_in))
+      
+      temp_col <- data %>% select(TF)
+      
+      data <- data %>% select(-TF) %>% 
+        round(3) %>% mutate(TF = temp_col) %>% 
+        transmute('TF' = TF,
+                  'Average AUC in Cluster' = AUC_in,
+                  'Average AUC in Other' = AUC_out,
+                  'AUC Fold Change' = AUC_FC )
+      
+      # datatable(data, escape = TRUE,
+      #           colnames = c('Average AUC in Cluster' = 'AUC_in', 
+      #                        'Average AUC in Other' = 'AUC_out',
+      #                        'AUC Fold Change' = 'AUC_FC'),
+      #           rownames = FALSE)
+    })
     
     
     

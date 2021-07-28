@@ -5,6 +5,7 @@ library(readr)
 library(dplyr)
 library(feather)
 library(glue)
+library(ggplot2)
 source("../functions.R")
 
 # ———————————————————————————————————color palette————————————————————————————————————————
@@ -20,6 +21,9 @@ colour_palette_cluster <- metadata %>%
   # Convert to vector of colours, where the first column gives the names
   # and the second column is converted to the values
   deframe() # VECTOR , not data frame
+
+colour_palette_cluster_underscore <- colour_palette_cluster
+names(colour_palette_cluster_underscore) <- gsub(" ", "_", names(colour_palette_cluster))
 
 all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
@@ -126,7 +130,6 @@ for (tf in unique_TF_pon){
 }
 
 
-
 # make two lists containing same name (will be assigned to a reactive list),
 # then we can use the same name to code
 data_cortex <- list(
@@ -155,7 +158,17 @@ data_pons <- list(
   "tfs_not_exist_timeseries" = l_nexist_pons,
   "cluster_palette" = pons_cluster_palette
 )
-#---------------------ct_e12 data----------------------------------------------
+
+
+
+master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint cluster with timepoint removed
+                    colour_palette_cluster,                 # per-timepoint cluster, with spaces
+		    colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
+		    forebrain_cluster_palette,              # joint clustering, forebrain
+		    pons_cluster_palette)                   # joint clustering, pons
+master_palette <- list("Cluster" = master_palette)
+
+#---------------------time_point data----------------------------------------------
 #use a loop for this 
 for (reg in c("ct", "po")){
   
@@ -242,9 +255,119 @@ save(data_pons, file = "joint_pons/pons_prep.Rda")
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
-     hm_anno, hm_anno_new, colour_palette, all_tf_list, file = "shared/common_prep.Rda")
+     hm_anno, hm_anno_new, colour_palette, all_tf_list, master_palette, file = "shared/common_prep.Rda")
+
+#-----------------cell proportion over time ribbon plot--------------------
+
+forebrain_fraction <- forebrain_data %>% select(Cell, Sample, Sample_cluster) %>%
+  filter(!grepl("BLACKLIST", Sample_cluster)) %>%
+  separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
+  group_by(Sample) %>% mutate (total_in_tp = n()) %>%
+  ungroup() %>% group_by(Sample, Cluster) %>%
+  mutate(frac = n()/total_in_tp) %>% 
+  ungroup() %>% group_by(tp)
+
+forebrain_clusters <- forebrain_fraction$Cluster %>% unique
+
+unique_forebrain_fraction <- forebrain_fraction %>% select(-Cell) %>% 
+  distinct() %>% select(-Sample, -total_in_tp)
+
+tp <- unique_forebrain_fraction$tp %>% unique()
+
+unique_forebrain_fraction_complete <- unique_forebrain_fraction %>%
+	mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
+	complete(Cluster, nesting(tp), fill = list(frac = 0))
+
+# for (i in tp){
+#   tp_clusters <- unique_forebrain_fraction %>% ungroup() %>%
+#     filter(tp == i) %>% pull(Cluster)
+  #print(tp_clusters)
+#   clust_not_in <- forebrain_clusters[!(forebrain_clusters %in% tp_clusters)]
+  #print(clust_not_in)
+#   to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
+  # for(j in clust_not_in){
+  #   row <- tibble(tp = i, Cluster = j, frac = 0)
+  # }
+#   print(to_add)
+
+  # unique_forebrain_fraction2 <- rbind(unique_forebrain_fraction, to_add)
+# }
+
+# unique_forebrain_fraction_complete %>% ungroup() %>% group_by(tp)
+unique_forebrain_fraction_complete$xpos = group_indices(unique_forebrain_fraction_complete)
 
 
+forebrain_plot <- unique_forebrain_fraction_complete %>%
+  ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
+  geom_area(stat = "identity", show.legend = FALSE) +
+  scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
+  scale_x_continuous(breaks = c(1,2,3,4,5),
+                     labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
+                     limits = c(1, 5)) +
+  labs(x = "Developmental Age", y = "Proportion") +
+  guides(fill = guide_legend(ncol = 5)) +
+  theme_min() + 
+  theme(legend.position = "bottom")
+
+#same for pons
+
+pons_fraction <- pons_data %>% select(Cell, Sample, Sample_cluster) %>%
+  filter(!grepl("BLACKLIST", Sample_cluster)) %>%
+  separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
+  group_by(tp) %>% mutate (total_in_tp = n()) %>%
+  ungroup() %>% group_by(Sample, Cluster) %>%
+  mutate(frac = n()/total_in_tp, number = n()) %>% 
+  ungroup() %>% group_by(tp)
+
+pons_clusters <- pons_fraction$Cluster %>% unique
+
+unique_pons_fraction <- pons_fraction %>% select(-Cell) %>% 
+  distinct() %>% select(-Sample, -total_in_tp) 
+
+test <- unique_pons_fraction %>% group_by(tp) %>% summarize(sum(frac))
+
+tp <- unique_pons_fraction$tp %>% unique()
+
+unique_pons_fraction_complete <- unique_pons_fraction %>%
+	        mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
+		complete(Cluster, nesting(tp), fill = list(frac = 0))
+
+
+# for (i in tp){
+#   tp_clusters <- unique_pons_fraction %>% ungroup() %>%
+#    filter(tp == i) %>% pull(Cluster)
+  #print(tp_clusters)
+#  clust_not_in <- pons_clusters[!(pons_clusters %in% tp_clusters)]
+  #print(clust_not_in)
+#  to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
+  # for(j in clust_not_in){
+  #   row <- tibble(tp = i, Cluster = j, frac = 0)
+  # }
+#  unique_pons_fraction <- rbind(unique_pons_fraction, to_add)
+#}
+
+# unique_pons_fraction %>% ungroup() %>% group_by(tp)
+unique_pons_fraction_complete$xpos = group_indices(unique_pons_fraction_complete)
+
+
+pons_plot <- unique_pons_fraction_complete %>%
+  ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
+  geom_area(stat = "identity", show.legend = FALSE) +
+  scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
+  scale_x_continuous(breaks = c(1,2,3,4,5),
+                     labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
+                     limits = c(1, 5)) +
+  labs(x = "Developmental Age", y = "Proportion") +
+  guides(fill = guide_legend(ncol = 5)) +
+  theme_min() + 
+  theme(legend.position = "bottom")
+
+timeseries_proportion_plots <- list(
+  "forebrain_plot" = forebrain_plot,
+  "pons_plot" = pons_plot
+)
+
+save(timeseries_proportion_plots, file = "shared/timeseries_proportion_plots.Rda")
 
 
 

@@ -457,6 +457,22 @@ check_tf_input <- function(TF, TF_ref){
   )
 }
 
+transform_tf_input <- function(tf, tf_and_ext){
+  tf_to_read <- character(0)
+  for(TF in tf){ # tf is input tf list, could contain many tfs
+    
+    if(has_regular(TF, tf_and_ext)){
+      tf_to_read[TF] <- tf_regular(TF, tf_and_ext)
+    } # a helper to read the corresponding data
+    
+    else{
+      tf_to_read[TF] <- tf_ext(TF, tf_and_ext)
+    }
+  }
+  names(tf_to_read) <- NULL
+  return(tf_to_read)
+}
+
 # --------------------------------Create data for plots--------------------------------
 # NOTE: TF_and_ext is a dataframe (loaded already) that created in order to identify 
 # whether the TF data is a regular TF (with high confidence annotation) 
@@ -584,7 +600,7 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     else{
       activity <- separate(activity, Cluster, into = c("Timepoint", "Cluster"), sep = " ")
       activity <- filter(activity, Timepoint == tp)
-      activity <- select(activity, -Timepoint)
+      activity <- unite(activity, Cluster, Timepoint, Cluster, sep = " ")
     }
   }
   else if(identical(method, "Cell") & per_sample){ #gets rid of blacklisted cells in the per sample data
@@ -678,35 +694,60 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
-    cell_width_plot <- 10
+    #print(anno_col)
+    cell_width_plot <- 20
+    cell_height_plot <- 20
     if (identical(timepoint, "F-All") || identical(timepoint, "P-All")){
       cell_width_plot <- 7
+      cell_height_plot <- 10
     }
     show_colname_plot <- TRUE
     title <- glue('Transcription Factor Regulon Activity at Developmental Time: {timepoint}')
   }
   else if(method == "joint"){ #plot heat map by joint cluster 
     
+    act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
+                                timepoint = timepoint) #%>% 
+      #filter(!grepl("BLACKLISTED", Cluster))
+    
+    print(act)
+    
     if(per_sample == TRUE){
+      #filter out the exclude clusters
+      act <- act %>% filter(!grepl("EXCLUDE", act$Cluster))
+      #print(act)
       col_to_row <- "Cluster"
+      new_anno_row <- hm_anno$anno_row %>%
+        mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
+      rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row))
+      
+     # print(new_anno_row)
+      
     }
     else{
       col_to_row <- "Joint_cluster"
+      new_anno_row <- act %>% mutate(Cluster = Joint_cluster) %>%
+        column_to_rownames("Joint_cluster") %>% select(Cluster)
+      #print(new_anno_row)
+      
+      #%>%
+       # column_to_rownames("Cluster")
+      #row.names(new_anno_row) <- new_anno_row$Cluster
     }
   
-    act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
-                                timepoint = timepoint) %>%
+    act <- act %>%
       column_to_rownames(var = col_to_row) 
   
-    
     # change the anno_row, since we change the color palettes
-    new_anno_row <- hm_anno$anno_row %>%
-      mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-    rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
+    # new_anno_row <- hm_anno$anno_row %>%
+    #   mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
+    # rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
-    cell_width_plot <- 10
+    #print(anno_col)
+    cell_width_plot <- 20
+    cell_height_plot <- 20
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
   }
@@ -722,12 +763,12 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                      color = colorRampPalette(c("blue", "white", "red"))(100),
                      main = title,
                      cluster_rows = cluster_row,
-                     #annotation_col = anno_col,
+                     annotation_col = anno_col,
                      # change the default color annotation
-                     annotation_colors = hm_anno_new$side_colors, # loaded by data_prep.R
+                     annotation_colors = master_palette, # loaded by data_prep.R
                      annotation_legend = FALSE,
                      cellwidth = cell_width_plot,
-                     cellheight = 10)
+                     cellheight = cell_height_plot)
 } 
 
 #----------------------------Dimension reduction---------------------------------------------
@@ -770,7 +811,7 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type
   
   ggplot(data = cell_meta_with_activity, mapping = aes_string(x = x_axis, y = y_axis))+
     geom_point(aes(color = activity_tf), alpha = 0.2)+
-    scale_color_gradient(low = "grey", high = "red")+
+    scale_color_gradient(low = "grey90", high = "red")+
     theme_min() + labs(color = 'TF Activity')
   
 }
@@ -789,10 +830,10 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   if(per_sample){
     var_group <- "ID_20190715_with_blacklist"
   }
-  centers <- cell_metadata %>%
-    group_by(get(var_group)) %>%
-    summarise(center_x = median(get(x_axis)),
-              center_y = median(get(y_axis)))
+  # centers <- cell_metadata %>%
+  #   group_by(get(var_group)) %>%
+  #   summarise(center_x = median(get(x_axis)),
+  #             center_y = median(get(y_axis)))
   
   #print("step1")
   #print(centers)
@@ -804,6 +845,11 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   
  # print("step2")
   if(cluster_label){
+    
+    centers <- cell_metadata %>%
+      group_by(get(var_group)) %>%
+      summarise(center_x = median(get(x_axis)),
+                center_y = median(get(y_axis)))
 
     gg <- gg + ggrepel::geom_label_repel(data = centers,
                                          aes(x = center_x, y = center_y),
@@ -976,6 +1022,8 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
   
   df$xpos = match(df$stage, unique(timepoints2))
   
+  #view(df)
+  
   plot <- df %>%
     ggplot(aes(x = xpos, y = frac, fill = cluster)) +
     geom_area(stat = "identity", show.legend = show_legend) +
@@ -983,15 +1031,85 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
                        labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
                        limits = c(1, length(unique(df$stage)))) +
-    labs(x = "age", y = "Proportion", title = TF) +
+    labs(x = "Developmental Age", y = "Proportion", title = TF) +
     guides(fill = guide_legend(ncol = 5)) +
     theme_min() + 
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom") 
   
   if(make_plotly) {
     return (ggplotly(plot, tooltip = "cluster") %>% style(hoveron = "points + fills"))
   }
   else{return(plot)}
+}
+#--------------------------Active_specific------------------------
+active_specific_prep <- function(sample, cluster){
+  path <- glue("data/{sample}/{sample}.active_specific_tf.Rds")
+  data <- readRDS(path) 
+  #print()
+  tf_table <- data$tf_table[[cluster]] %>% 
+    mutate(is_ext = grepl("extended", data$tf_table[[cluster]]$TF))
+  FC_df <- data$FC_df
+  AUC_df <- data$AUC_df 
+  
+  send_back <- list("tf_table" = tf_table,
+                    "FC_df" = FC_df,
+                    "AUC_df" = AUC_df)
+  #names(data) <- cluster
+}
+plot_scatter <- function(data, fc, cluster){
+
+  to_label <- data %>% filter(AUC_FC > fc) %>% mutate(why = gsub("_extended", "+", TF)) %>%
+    mutate(TF = gsub("\\(.+\\)", "", why))
+  #print(to_label)
+  
+  ggplot(data = data, mapping = aes(AUC_out, AUC_in)) +
+    geom_point(aes(color = AUC_FC, shape = is_ext), size = 4, alpha = 0.6) + 
+    scale_color_gradientn(colors = rev(RColorBrewer::brewer.pal(8, "RdBu"))) + 
+    scale_shape_manual(values = c(19, 17)) +
+    geom_abline(slope = fc, intercept = 0, show.legend = TRUE) +
+    labs(color = 'AUC Fold\nChange', shape = 'Extended\nRegulon', 
+         y = glue('Average AUC in {cluster}'), x = 'Average AUC in All Other Clusters',
+         title = cluster) +
+    theme_min() +
+    theme(plot.title = element_text(size = 14, face="bold"),
+          plot.margin = unit(c(1.75,0,0,0), "cm")) +
+    guides(size = FALSE) + 
+    ggrepel::geom_label_repel(data = to_label,
+                              aes(x = AUC_out, y = AUC_in),
+                              label = to_label$TF,
+                              size = 4,
+                              segment.color = 'grey50',
+                              fontface = 'bold',
+                              alpha = 0.8,
+                              segment.alpha = 0,
+                              label.size = NA,
+                              force = 0.5,
+                              segment.size = 0.5,
+                              arrow = NULL)
+}
+plot_bar_list <- function(data, tf){
+  
+  data <- data %>% mutate(Cluster = gsub("_", " ", Cluster))
+  #print(data)
+  palette <- hm_anno$side_colors$Cluster[names(hm_anno$side_colors$Cluster) %in% data$Cluster]
+  #print(palette)
+  #print(length(data$Cluster))
+  #print(length(palette))
+  #(data)
+  #purrr::map(tf, ~print(.x) )
+  # 1. loop over genes, then each index can be referred to with .x
+   purrr::map(.x = tf, .f = ~data %>% select(.x, Cluster) %>% 
+                       arrange(desc(.x)) %>% head(30) %>%
+               ggplot(aes(x = get(.x), y = reorder(Cluster, get(.x)))) +
+               geom_bar(aes(colour = Cluster, fill = Cluster), stat = "identity") +
+               scale_color_manual(values = palette) +
+               scale_fill_manual(values = palette) +
+               ggtitle(.x) + theme_min() + theme(legend.position = "none", plot.title = element_text(size = 14, face="bold")) +
+               labs(y = "Cluster", x = glue('{.x} AUC'))
+              ) %>% 
+    # 2. pipe the output (a list) into plot_grid, using {} to indicate it's not the first argument
+    {plot_grid(plotlist = .)}
+  
 }
 
 
