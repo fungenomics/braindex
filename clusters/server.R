@@ -965,7 +965,7 @@ server <- function(input, output, session) {
                          color = colorRampPalette(c("blue", "white", "red"))(100),
                          scale = "none",
                          cluster_rows = TRUE,
-                         cluster_cols = FALSE,
+                         cluster_cols = TRUE,
                          cellwidth = 10,
                          cellheight = 10,
                          annotation_col = hm_anno$anno_row,
