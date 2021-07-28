@@ -57,7 +57,8 @@ server <- function(input, output, session) {
       "ft_palette"       = input$feature_palette,
       "vln_points" = input$vln_points,
       "plotly_ribbon" = input$plotly_ribbon,
-      "mean_exp" = input$mean_exp
+      "mean_exp" = input$mean_exp,
+      "heatmap_cells" = input$heatmap_cells
     )
     
     # Get the columns for the appropriate type of dim red
@@ -880,16 +881,20 @@ server <- function(input, output, session) {
   
   #### ---- Cell types clustered by expression tab content ----
   
+  # Initial values, will show up briefly while plot is loading, so set 
+  # large height value so the plot that shows briefly is out of view
+  heatmap_dims <- reactiveValues(height = "100in", width = "12in")
+  
   output$heatmap <- renderPlot({
     
     # Check whether a gene was provided or not
     validate(
-      need(length(input_new()$gene) > 0, "\n\n\n     Please enter a gene.")
+      need(length(input_new()$gene) > 0, "\n\n\n    Please enter a gene.")
     )
     
     # Check if number of genes > 1 - need at least 2 genes to cluster
     validate(
-      need(length(input_new()$gene) > 1, "\n\n\n     Please enter more than one gene. Heatmap clustering requires at least two genes.")
+      need(length(input_new()$gene) > 1, "\n\n\n    Please enter more than one gene. Heatmap clustering requires at least two genes.")
     )
     
     # Check ALL gene inputs against the dataset & annotations
@@ -905,18 +910,24 @@ server <- function(input, output, session) {
     
     validate(
       need(is.null(anno_genes),
-           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+           glue("\n\n\n    The input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
     validate(
       need(is.null(not_anno_genes),
-           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+           glue("\n\n\n    The input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check that at least one cell type has been chosen by the user
+    validate(
+      need(length(input_new()$heatmap_cells) > 0,
+           glue("\n\n\n    Please select at least one cell type."))
     )
     
     # Get gene expression values for input genes
     df <- bubble_prep(gene = input_new()$gene) 
     
-    df_for_cellclass <- df %>% 
+    df <- df %>% 
       # Rename cell classes to more general names
       mutate(Cell_class = case_when(
         grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
@@ -928,18 +939,24 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
+    # Store this version of the df for later reference
+    df_for_cellclass <- df 
+    
     # Store mean expression for each cluster 
     df <- df %>% 
-      group_by(Gene, Cluster) %>% 
+      group_by(Gene, Cluster, Cell_class) %>% 
       summarize(Expression = mean(Expression))
+    
+    df <- df %>% filter(Cell_class %in% input_new()$heatmap_cells)
     
     # Select only certain clusters that can be categorized 
     # (from Selin's code, to be confirmed)
-    df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
+    # df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
     # df <- df %>% filter(!grepl("^B", Cluster)) 
     
     # Pivot the cluster rows to columns
     df <- df %>% 
+      select(Gene, Cluster, Expression) %>% 
       mutate(Expression = as.numeric(Expression)) %>% 
       tidyr::pivot_wider(names_from = "Cluster", values_from = "Expression")  
     
@@ -974,17 +991,12 @@ server <- function(input, output, session) {
                              cellheight = 13,
                              fontsize = 13,
                              annotation_col = hm_anno$anno_row,
-                             annotation_colors = hm_anno$side_colors,
-                             main = "Cell types clustered by mean expression of input genes")
+                             annotation_colors = hm_anno$side_colors)
 
     heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
     heatmap_dims$height <- glue("{get_plot_dims(hm)$height}in")
     hm
   })
-  
-  # Initial values, will show up briefly while plot is loading, so set 
-  # large height value so the plot that shows briefly is out of view
-  heatmap_dims <- reactiveValues(height = "100in", width = "12in")
   
   # Plot the heatmap using dynamic width and height values stored above
   output$heatmapUI <- renderUI({

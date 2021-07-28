@@ -76,6 +76,21 @@ ui <- function(request){
                                                            "Pons" = "joint_pons"))
                  ),
                  
+                 conditionalPanel(condition = "input.tabs == 'heatmap'",
+                                  checkboxGroupInput("heatmap_cells", label = "Cell type(s) for heatmap", 
+                                                     choices = list("Progenitors/cyc.",
+                                                                    "Oligodendrocytes",
+                                                                    "Ependymal", 
+                                                                    "Astrocytes",
+                                                                    "Neurons",
+                                                                    "Non-neuroect.",
+                                                                    "Other"),
+                                                     selected = c("Oligodendrocytes",
+                                                                  "Ependymal", 
+                                                                  "Astrocytes",
+                                                                  "Neurons"))
+                                  ),
+                 
                  # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
                                   
@@ -425,17 +440,19 @@ ui <- function(request){
       tabPanel("Cell types clustered by expression",
                
                tags$br(),
-               tags$b("This plot displays a heatmap clustering genes and cell types together based on their expression across selected cell clusters."),
+               tags$b("This plot is a heatmap clustering input genes and cell types together based on their mean expression within clusters."),
                tags$br(),
                tags$br(),
                p("• The heatmap's hierarchical clustering method requires at least two genes as input. An error message will display if only one gene is provided"),
+               
+               p("• At least one cell type must be selected: an error message will display if none are checked off"),
                
                p("• The coloured bar above the heatmap provides a categorization of cell clusters by general cell type"),
                
                p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
                
                # Enable horizontal scrolling for a very wide plot, but no vertical scroll
-               div(style = "width: 1500px; overflow-x: auto; overflow-y: visible;",
+               div(style = "width: 1500px; overflow-x: visible; overflow-y: visible;",
                  fluidRow(
                    uiOutput("heatmapUI") %>% ws
                  )
