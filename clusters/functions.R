@@ -918,3 +918,11 @@ makePheatmapAnno <- function(palette, column) {
               side_colors = side_colors))
   
 }
+
+# Code from https://stackoverflow.com/questions/61874876/get-size-of-plot-in-pixels-in-r 
+get_plot_dims <- function(heat_map)
+{
+  plot_height <- sum(sapply(heat_map$gtable$heights, grid::convertHeight, "in"))
+  plot_width  <- sum(sapply(heat_map$gtable$widths, grid::convertWidth, "in"))
+  return(list(height = plot_height, width = plot_width))
+}

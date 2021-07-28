@@ -878,18 +878,18 @@ server <- function(input, output, session) {
     plot_grid(p1, ticks, ncol = 1, align = "v")
   })
   
-  #### ---- Genes clustered by expression tab content ----
+  #### ---- Cell types clustered by expression tab content ----
   
   output$heatmap <- renderPlot({
     
     # Check whether a gene was provided or not
     validate(
-      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+      need(length(input_new()$gene) > 0, "\n\n\n     Please enter a gene.")
     )
     
     # Check if number of genes > 1 - need at least 2 genes to cluster
     validate(
-      need(length(input_new()$gene) > 1, "\n\n\nPlease enter more than one gene. Heatmap clustering requires at least two genes.")
+      need(length(input_new()$gene) > 1, "\n\n\n     Please enter more than one gene. Heatmap clustering requires at least two genes.")
     )
     
     # Check ALL gene inputs against the dataset & annotations
@@ -936,6 +936,7 @@ server <- function(input, output, session) {
     # Select only certain clusters that can be categorized 
     # (from Selin's code, to be confirmed)
     df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
+    # df <- df %>% filter(!grepl("^B", Cluster)) 
     
     # Pivot the cluster rows to columns
     df <- df %>% 
@@ -960,22 +961,34 @@ server <- function(input, output, session) {
     rownames(hm_anno$anno_row) <- hm_anno$anno_row$Cluster
     hm_anno$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
     
-    # Plot heatmap
-    mat %>% 
-      apply(1, scales::rescale) %>% 
-      t() %>% 
-      pheatmap::pheatmap(border_color = NA,
-                         color = colorRampPalette(c("blue", "white", "red"))(100),
-                         scale = "none",
-                         cluster_rows = TRUE,
-                         cluster_cols = TRUE,
-                         cellwidth = 13,
-                         cellheight = 13,
-                         fontsize = 13,
-                         annotation_col = hm_anno$anno_row,
-                         annotation_colors = hm_anno$side_colors,
-                         main = "Genes clustered by mean expression")
-    
+    # Plot heatmap, store dimensions for dynamically plotting full width
+    hm <- mat %>% 
+          apply(1, scales::rescale) %>% 
+          t() %>% 
+          pheatmap::pheatmap(border_color = NA,
+                             color = colorRampPalette(c("blue", "white", "red"))(100),
+                             scale = "none",
+                             cluster_rows = TRUE,
+                             cluster_cols = TRUE,
+                             cellwidth = 13,
+                             cellheight = 13,
+                             fontsize = 13,
+                             annotation_col = hm_anno$anno_row,
+                             annotation_colors = hm_anno$side_colors,
+                             main = "Cell types clustered by mean expression of input genes")
+
+    heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
+    heatmap_dims$height <- glue("{get_plot_dims(hm)$height}in")
+    hm
+  })
+  
+  # Initial values, will show up briefly while plot is loading, so set 
+  # large height value so the plot that shows briefly is out of view
+  heatmap_dims <- reactiveValues(height = "100in", width = "12in")
+  
+  # Plot the heatmap using dynamic width and height values stored above
+  output$heatmapUI <- renderUI({
+    plotOutput("heatmap", width = heatmap_dims$width, height = heatmap_dims$height)
   })
   
 }

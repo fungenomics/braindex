@@ -2,7 +2,7 @@
 source("../www/ui_functions.R")
 
 ui <- function(request){
-  
+
   bootstrapPage(
   
   # Custom styling
@@ -420,24 +420,26 @@ ui <- function(request){
                value = "rank_exp"
       ),
       
-      #### ---- Genes clustered by expression tab output ---- 
+      #### ---- Cell types clustered by expression tab output ---- 
       
-      tabPanel("Genes clustered by expression",
+      tabPanel("Cell types clustered by expression",
                
                tags$br(),
-               
-               tags$b("This plot displays a heatmap clustering genes together based on their expression across selected cell clusters."),
+               tags$b("This plot displays a heatmap clustering genes and cell types together based on their expression across selected cell clusters."),
                tags$br(),
                tags$br(),
-               p("• Heatmap clustering requires at least two genes as input"),
+               p("• The heatmap's hierarchical clustering method requires at least two genes as input. An error message will display if only one gene is provided"),
                
-               p("• The coloured bar above the plot provides a general categorization by cell type"),
+               p("• The coloured bar above the heatmap provides a categorization of cell clusters by general cell type"),
                
-               p("• The tree to the left of the plot indicates the clustering of genes, and the tree above the plot indicates clustering of cell clusters"),
+               p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
                
-               fluidRow(
-                 plotOutput("heatmap", width = "12in") %>% ws
-               ), 
+               # Enable horizontal scrolling for a very wide plot, but no vertical scroll
+               div(style = "width: 1500px; overflow-x: auto; overflow-y: visible;",
+                 fluidRow(
+                   uiOutput("heatmapUI") %>% ws
+                 )
+               ),
                
                # Specify the value to use when checking if this tab is selected       
                value = "heatmap"
