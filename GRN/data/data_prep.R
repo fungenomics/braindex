@@ -22,6 +22,9 @@ colour_palette_cluster <- metadata %>%
   # and the second column is converted to the values
   deframe() # VECTOR , not data frame
 
+colour_palette_cluster_underscore <- colour_palette_cluster
+names(colour_palette_cluster_underscore) <- gsub(" ", "_", names(colour_palette_cluster))
+
 all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
 # color palette for timeseries plot, tab3
@@ -156,9 +159,15 @@ data_pons <- list(
   "cluster_palette" = pons_cluster_palette
 )
 
-master_palette <- append(hm_anno_new$side_colors$Cluster, forebrain_cluster_palette)
-master_palette <- append(master_palette, pons_cluster_palette)
+
+
+master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint cluster with timepoint removed
+                    colour_palette_cluster,                 # per-timepoint cluster, with spaces
+		    colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
+		    forebrain_cluster_palette,              # joint clustering, forebrain
+		    pons_cluster_palette)                   # joint clustering, pons
 master_palette <- list("Cluster" = master_palette)
+
 #---------------------ct_e12 data----------------------------------------------
 #use a loop for this 
 for (reg in c("ct", "po")){
@@ -261,28 +270,34 @@ forebrain_fraction <- forebrain_data %>% select(Cell, Sample, Sample_cluster) %>
 forebrain_clusters <- forebrain_fraction$Cluster %>% unique
 
 unique_forebrain_fraction <- forebrain_fraction %>% select(-Cell) %>% 
-  unique %>% select(-Sample, -total_in_tp)
+  distinct() %>% select(-Sample, -total_in_tp)
 
 tp <- unique_forebrain_fraction$tp %>% unique()
 
-for (i in tp){
-  tp_clusters <- unique_forebrain_fraction %>% ungroup() %>%
-    filter(tp == i) %>% pull(Cluster)
+unique_forebrain_fraction_complete <- unique_forebrain_fraction %>%
+	mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
+	complete(Cluster, nesting(tp), fill = list(frac = 0))
+
+# for (i in tp){
+#   tp_clusters <- unique_forebrain_fraction %>% ungroup() %>%
+#     filter(tp == i) %>% pull(Cluster)
   #print(tp_clusters)
-  clust_not_in <- forebrain_clusters[!(forebrain_clusters %in% tp_clusters)]
+#   clust_not_in <- forebrain_clusters[!(forebrain_clusters %in% tp_clusters)]
   #print(clust_not_in)
-  to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
+#   to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
   # for(j in clust_not_in){
   #   row <- tibble(tp = i, Cluster = j, frac = 0)
   # }
-  unique_forebrain_fraction <- rbind(unique_forebrain_fraction, to_add)
-}
+#   print(to_add)
 
-unique_forebrain_fraction %>% ungroup() %>% group_by(tp)
-unique_forebrain_fraction$xpos = group_indices(unique_forebrain_fraction)
+  # unique_forebrain_fraction2 <- rbind(unique_forebrain_fraction, to_add)
+# }
+
+# unique_forebrain_fraction_complete %>% ungroup() %>% group_by(tp)
+unique_forebrain_fraction_complete$xpos = group_indices(unique_forebrain_fraction_complete)
 
 
-forebrain_plot <- unique_forebrain_fraction %>%
+forebrain_plot <- unique_forebrain_fraction_complete %>%
   ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
@@ -307,30 +322,35 @@ pons_fraction <- pons_data %>% select(Cell, Sample, Sample_cluster) %>%
 pons_clusters <- pons_fraction$Cluster %>% unique
 
 unique_pons_fraction <- pons_fraction %>% select(-Cell) %>% 
-  unique %>% select(-Sample, -total_in_tp) 
+  distinct() %>% select(-Sample, -total_in_tp) 
 
 test <- unique_pons_fraction %>% group_by(tp) %>% summarize(sum(frac))
 
 tp <- unique_pons_fraction$tp %>% unique()
 
-for (i in tp){
-  tp_clusters <- unique_pons_fraction %>% ungroup() %>%
-    filter(tp == i) %>% pull(Cluster)
+unique_pons_fraction_complete <- unique_pons_fraction %>%
+	        mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
+		complete(Cluster, nesting(tp), fill = list(frac = 0))
+
+
+# for (i in tp){
+#   tp_clusters <- unique_pons_fraction %>% ungroup() %>%
+#    filter(tp == i) %>% pull(Cluster)
   #print(tp_clusters)
-  clust_not_in <- pons_clusters[!(pons_clusters %in% tp_clusters)]
+#  clust_not_in <- pons_clusters[!(pons_clusters %in% tp_clusters)]
   #print(clust_not_in)
-  to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
+#  to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
   # for(j in clust_not_in){
   #   row <- tibble(tp = i, Cluster = j, frac = 0)
   # }
-  unique_pons_fraction <- rbind(unique_pons_fraction, to_add)
-}
+#  unique_pons_fraction <- rbind(unique_pons_fraction, to_add)
+#}
 
-unique_pons_fraction %>% ungroup() %>% group_by(tp)
-unique_pons_fraction$xpos = group_indices(unique_pons_fraction)
+# unique_pons_fraction %>% ungroup() %>% group_by(tp)
+unique_pons_fraction_complete$xpos = group_indices(unique_pons_fraction_complete)
 
 
-pons_plot <- unique_pons_fraction %>%
+pons_plot <- unique_pons_fraction_complete %>%
   ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +

@@ -803,7 +803,7 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type
   
   ggplot(data = cell_meta_with_activity, mapping = aes_string(x = x_axis, y = y_axis))+
     geom_point(aes(color = activity_tf), alpha = 0.2)+
-    scale_color_gradient(low = "grey", high = "red")+
+    scale_color_gradient(low = "grey90", high = "red")+
     theme_min() + labs(color = 'TF Activity')
   
 }
