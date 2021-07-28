@@ -14,6 +14,9 @@ ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
+  updateSelectizeInput(session, inputId = "gene", choices = genes_anno,
+                       server = TRUE)
+  
   # Capture all input from this tab as a list in case we want to add
   # more options in the future
   input_new <- eventReactive(input$update, {

@@ -23,7 +23,7 @@ ui <- function(request){
                  
                  conditionalPanel(condition = '!input.upload',
                                   # Gene input field, shared across tabs
-                                  selectInput("gene", "Gene", choices = genes_anno,
+                                  selectizeInput(inputId = "gene", label = "Gene", choices = NULL,
                                               multiple = TRUE)),
                  
                  conditionalPanel(condition = 'input.upload',
@@ -433,7 +433,7 @@ ui <- function(request){
                
                p("• The coloured bar above the plot provides a general categorization by cell type"),
                
-               p("• The tree to the left of the plot indicates the clustering of genes"),
+               p("• The tree to the left of the plot indicates the clustering of genes, and the tree above the plot indicates clustering of cell clusters"),
                
                fluidRow(
                  plotOutput("heatmap", width = "10in") %>% ws
