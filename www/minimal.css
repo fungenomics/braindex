@@ -120,3 +120,25 @@ a {
   display: block;
 }
 
+/* SCROLLBARS - code from https://www.digitalocean.com/community/tutorials/css-scrollbars */
+
+/* Works on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: grey white;
+}
+
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: white;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: grey;
+  border-radius: 20px;
+  border: 3px solid white;
+}
