@@ -168,7 +168,7 @@ master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint clus
 		    pons_cluster_palette)                   # joint clustering, pons
 master_palette <- list("Cluster" = master_palette)
 
-#---------------------ct_e12 data----------------------------------------------
+#---------------------time_point data----------------------------------------------
 #use a loop for this 
 for (reg in c("ct", "po")){
   

@@ -707,13 +707,21 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
   else if(method == "joint"){ #plot heat map by joint cluster 
     
     act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
-                                timepoint = timepoint)
-    #print(act)
+                                timepoint = timepoint) #%>% 
+      #filter(!grepl("BLACKLISTED", Cluster))
+    
+    print(act)
+    
     if(per_sample == TRUE){
+      #filter out the exclude clusters
+      act <- act %>% filter(!grepl("EXCLUDE", act$Cluster))
+      #print(act)
       col_to_row <- "Cluster"
       new_anno_row <- hm_anno$anno_row %>%
         mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-      rownames(new_anno_row) <- rownames(hm_anno$anno_row)
+      rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row))
+      
+     # print(new_anno_row)
       
     }
     else{
