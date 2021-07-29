@@ -209,7 +209,7 @@ ui <- function(request){
                      uiOutput("bubble_hover_info")),
   
                ),
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
                
@@ -241,6 +241,7 @@ ui <- function(request){
                                   downloadButton("download_bubble", 
                                                  "Download data (TSV)"))
                ),
+               HTML("<br><br><br>"), 
                
                # Specify the value to use when checking if this tab is selected
                value = "exp_table"
@@ -306,7 +307,7 @@ ui <- function(request){
                                                  "Download ribbon plot (PDF)")
                                 )
                ),
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
       ),
@@ -357,7 +358,7 @@ ui <- function(request){
                 fluidRow(
                   plotOutput("vln_joint", width = "11in", height = "4in") %>% ws
                 ),
-               
+                HTML("<br><br><br>"), 
                 # Specify the value to use when checking if this tab is selected
                 value = "joint"
       ),
@@ -408,7 +409,7 @@ ui <- function(request){
           )
                  
         ),
-        
+        HTML("<br><br><br>"), 
         # Specify the value to use when checking if this tab is selected       
         value = "sample"
       ),
@@ -431,7 +432,7 @@ ui <- function(request){
                fluidRow(
                  plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
                ), 
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "rank_exp"
       ),
@@ -458,7 +459,7 @@ ui <- function(request){
                    uiOutput("heatmapUI") %>% ws
                  )
                ),
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "heatmap"
       ),
