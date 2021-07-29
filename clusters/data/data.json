@@ -4,6 +4,14 @@
     
    {
      
+      "file": "all_mm10_genes.txt",
+      "path": "selin.jessa/from_hydra/atlas/data/references/all_mm10_genes.txt",
+      "description": "Names of all genes in the annotation",
+      "contents": "Plain text (.txt) file with one gene name on each line of the file"
+      
+   }, 
+   {
+     
       "file": "ID_20190715_dendrogram_order.Rda",
       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda",
       "description": "Cluster names in the short format ('F-e12 DRGC') in the order of the dendrogram in Fig 1 of Jessa et al, Nat Genet, 2019",

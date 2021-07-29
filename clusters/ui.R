@@ -2,7 +2,7 @@
 source("../www/ui_functions.R")
 
 ui <- function(request){
-  
+
   bootstrapPage(
   
   # Custom styling
@@ -23,15 +23,15 @@ ui <- function(request){
                  
                  conditionalPanel(condition = '!input.upload',
                                   # Gene input field, shared across tabs
-                                  selectInput("gene", "Gene", choices = genes_mouse,
+                                  selectizeInput(inputId = "gene", label = "Gene", choices = NULL,
                                               multiple = TRUE)),
                  
                  conditionalPanel(condition = 'input.upload',
                                   # Gene list input with a file, shared across tabs
-                                  fileInput(inputId = "genelist", label = "Gene list",
+                                  fileInput(inputId = "genelist", label = "Gene list (.txt, .csv, or .tsv)",
                                             buttonLabel = "Browse...",
                                             multiple = FALSE, 
-                                            accept = c(".csv", ".tsv"),
+                                            accept = c(".txt", ".csv", ".tsv"),
                                             placeholder = "No file selected")),
   
                  materialSwitch("upload", "Use gene list from file",
@@ -40,7 +40,7 @@ ui <- function(request){
                                 value = FALSE,
                                 right = TRUE),
 
-                 # Input for dendrogram tab and expression table tab
+                 # Input for dendrogram tab, expression table, and ranked clusters tab
                  conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
                                   (input.gene.length > 1 || input.upload)",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
@@ -64,9 +64,9 @@ ui <- function(request){
                  ),
                  
 
-                 # Input for all tabs other than dendrogram, ranked plot, & table
+                 # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
-                                  && input.tabs != 'rank_exp'",
+                                  && input.tabs != 'rank_exp' && input.tabs != 'heatmap'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -75,6 +75,22 @@ ui <- function(request){
                                                choices = c("Forebrain" = "joint_cortex",
                                                            "Pons" = "joint_pons"))
                  ),
+                 
+                 # Input for heatmap tab
+                 conditionalPanel(condition = "input.tabs == 'heatmap'",
+                                  checkboxGroupInput("heatmap_cells", label = "Cell type(s)", 
+                                                     choices = list("Progenitors/cycling" = "Progenitors/cyc.",
+                                                                    "Oligodendrocytes",
+                                                                    "Ependymal", 
+                                                                    "Astrocytes",
+                                                                    "Neurons",
+                                                                    "Non-neuroectoderm" = "Non-neuroect.",
+                                                                    "Other"),
+                                                     selected = c("Oligodendrocytes",
+                                                                  "Ependymal", 
+                                                                  "Astrocytes",
+                                                                  "Neurons"))
+                                  ),
                  
                  # Input for tabs on joint analysis by region or by sample
                  conditionalPanel(condition = "input.tabs == 'joint' || input.tabs == 'sample'",
@@ -418,6 +434,33 @@ ui <- function(request){
                
                # Specify the value to use when checking if this tab is selected       
                value = "rank_exp"
+      ),
+      
+      #### ---- Cell types clustered by expression tab output ---- 
+      
+      tabPanel("Cell types clustered by expression",
+               
+               tags$br(),
+               tags$b("This plot is a heatmap clustering input genes and cell types together based on their mean expression within clusters."),
+               tags$br(),
+               tags$br(),
+               p("• The heatmap's hierarchical clustering method requires at least two genes as input. An error message will display if only one gene is provided"),
+               
+               p("• At least one cell type must be selected: an error message will display if none are checked off"),
+               
+               p("• The coloured bar above the heatmap provides a categorization of cell clusters by general cell type"),
+               
+               p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
+               
+               # Enable horizontal scrolling for a very wide plot, but no vertical scroll
+               div(style = "width: 1500px; overflow-x: visible; overflow-y: visible;",
+                 fluidRow(
+                   uiOutput("heatmapUI") %>% ws
+                 )
+               ),
+               
+               # Specify the value to use when checking if this tab is selected       
+               value = "heatmap"
       ),
       
       id = "tabs"

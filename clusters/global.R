@@ -10,7 +10,6 @@ library(glue)
 library(stringr)
 library(ggplot2)
 library(ggrepel)
-#library(DT)
 library(purrr)
 library(readr)
 library(shinyWidgets)
@@ -34,11 +33,27 @@ pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 
+# General cell type palette
+general_palette <- c("Progenitors/cyc." = "#ffaf49",
+                       "Oligodendrocytes" = "#b7dd5f",
+                       "Astrocytes" = "#00a385",
+                       "Ependymal" = "#8ee5cf",
+                       "Neurons" = "#840200",
+                       "Non-neuroect." = "gray40",
+                       "Other" = "gray60")
+
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
 
-# Load names of genes detected in mouse to provide choices in input
+# Load names of genes detected in mouse - genes for which there is data in atlas
 genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", data.table = FALSE)$genes
+
+# Load all genes in mouse annotation - to validate input from users & provide as choices
+# Some of these genes may not have corresponding data in the atlas - 
+# i.e. genes_mouse (above) is a subset of genes_anno
+genes_anno <- data.table::fread("data/all_mm10_genes.txt", header = FALSE, data.table=FALSE)
+names(genes_anno) <- "Genes"
+genes_anno <- genes_anno[['Genes']]
 
 # ---- Shiny settings ----
 

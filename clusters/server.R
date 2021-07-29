@@ -14,6 +14,9 @@ ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
+  updateSelectizeInput(session, inputId = "gene", choices = genes_anno,
+                       server = TRUE)
+  
   # Capture all input from this tab as a list in case we want to add
   # more options in the future
   input_new <- eventReactive(input$update, {
@@ -30,7 +33,10 @@ server <- function(input, output, session) {
              tsv = scan(input$genelist$datapath, 
                         what = "string", sep = "\t", 
                         encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
-             validate("\n\n\nInvalid file; Please upload a .csv or .tsv file")
+             txt = scan(input$genelist$datapath, 
+                        what = "string", sep = "\t", 
+                        encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             validate("\n\n\nInvalid file; Please upload a .txt, .csv, or .tsv file")
       )
     })
     
@@ -51,7 +57,8 @@ server <- function(input, output, session) {
       "ft_palette"       = input$feature_palette,
       "vln_points" = input$vln_points,
       "plotly_ribbon" = input$plotly_ribbon,
-      "mean_exp" = input$mean_exp
+      "mean_exp" = input$mean_exp,
+      "heatmap_cells" = input$heatmap_cells
     )
     
     # Get the columns for the appropriate type of dim red
@@ -108,13 +115,26 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first 20 inputs against the dataset genes
-    error_genes <- check_genes(input_new()$gene, 20)
+    # Check first 20 gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, 20, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, 20, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
     
     # Only display mean if more than one gene is given AND the user requested it
     valid_mean <- FALSE
@@ -247,6 +267,9 @@ server <- function(input, output, session) {
     #                              .after = last_col())
     # }
     
+    # Create palette for expression level
+    orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
+    
     # Produce a data table
     reactable(table, 
               rownames = FALSE,
@@ -256,8 +279,13 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
-              defaultColDef = colDef(minWidth = 80),
-              # Override colDef manually for the first few rows
+              # Formatting for gene columns - color based on expression level
+              defaultColDef = colDef(minWidth = 80,
+                                     style = function(value) {
+                                       color <- orange_pal(value)
+                                       list(background = color)
+                                     }),
+              # Override colDef manually for the first few rows (not genes)
               columns = list(
                 Cluster = colDef(minWidth = 110,
                                  style = function(index){
@@ -276,10 +304,10 @@ server <- function(input, output, session) {
                                  # headerStyle = 
                                  #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
                                  ), 
-                Sample = colDef(minWidth = 125),
-                "Cell type" = colDef(minWidth = 200),
-                "Cell class" = colDef(minWidth = 150),
-                "Number of cells" = colDef(minWidth = 100)
+                Sample = colDef(minWidth = 125, style = list(background = "#FFFFFF")),
+                "Cell type" = colDef(minWidth = 200, style = list(background = "#FFFFFF")),
+                "Cell class" = colDef(minWidth = 150, style = list(background = "#FFFFFF")),
+                "Number of cells" = colDef(minWidth = 100, style = list(background = "#FFFFFF"))
                 )
     ) 
   })
@@ -336,17 +364,32 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check user-selected input against the dataset genes
-    error_genes <- check_genes(input$pick_timecourse, 1)
+    # Check the selected gene against the dataset & annotations
+    not_data_genes <- check_genes(input$pick_timecourse, 1, annotation = FALSE)
+    not_anno_genes <- check_genes(input$pick_timecourse, 1, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check if expression is all zero in the brain region
+    # TODO: fix this to make it work
     all_zero <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$zero
     
-    # Display message to the user instead of plot if 0 expression throughout region
     validate(
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
@@ -384,17 +427,32 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check first input against the dataset genes
-    error_genes <- check_genes(input$pick_timecourse, 1)
+    # Check the selected gene against the dataset & annotations
+    not_data_genes <- check_genes(input$pick_timecourse, 1, annotation = FALSE)
+    not_anno_genes <- check_genes(input$pick_timecourse, 1, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check if expression is all zero in the brain region
+    # TODO: fix this to make it work
     all_zero = ribbon_plot(gene   = input$pick_timecourse,
                            region = input_new()$region)$zero
     
-    # Display message to the user if there is 0 expression throughout region
     validate(
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
@@ -437,11 +495,25 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
     )
     
-    # Check ALL inputs against the dataset genes
-    error_genes <- check_genes(input_new()$gene)
+    # Check ALL gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     # Load the Cell barcode, 2D coordinates, and selected clustering solution
@@ -721,24 +793,32 @@ server <- function(input, output, session) {
     
     if(input_new()$mean_exp){
       # Check ALL inputs against the dataset genes
-      error_genes <- check_genes(input_new()$gene)
+      num_genes <- NULL
     } else{
       # Check only first input against the dataset genes
-      error_genes <- check_genes(input_new()$gene, 1)
+      num_genes <- 1
+    }
+    
+    # Check gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, num_genes, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, num_genes, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
     validate(
-      need(is.null(error_genes), 
-           glue("\n\n\nThe input gene \"{error_genes}\" does not exist in the dataset."))
+      need(is.null(anno_genes),
+           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
-    palette_tick_plot <- c("Progenitors/cyc." = "#ffaf49",
-                             "Oligodendrocytes" = "#b7dd5f",
-                             "Astrocytes" = "#00a385",
-                             "Ependymal" = "#8ee5cf",
-                             "Neurons" = "#840200",
-                             "Non-neuroect." = "gray40",
-                             "Other" = "gray60")
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
     
     if (input_new()$mean_exp){
       df <- bubble_prep(gene = input_new()$gene,
@@ -782,7 +862,7 @@ server <- function(input, output, session) {
       ylab(y_axis_text)
 
     ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
-                             palette = palette_tick_plot,
+                             palette = general_palette,
                              start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +
@@ -797,6 +877,131 @@ server <- function(input, output, session) {
             plot.margin = margin(t=0, unit="cm")) 
     
     plot_grid(p1, ticks, ncol = 1, align = "v")
+  })
+  
+  #### ---- Cell types clustered by expression tab content ----
+  
+  # Initial values, will show up briefly while plot is loading, so set 
+  # large height value so the plot that shows briefly is out of view
+  heatmap_dims <- reactiveValues(height = "100in", width = "12in")
+  
+  output$heatmap <- renderPlot({
+    
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\n    Please enter a gene.")
+    )
+    
+    # Check if number of genes > 1 - need at least 2 genes to cluster
+    validate(
+      need(length(input_new()$gene) > 1, "\n\n\n    Please enter more than one gene. Heatmap clustering requires at least two genes.")
+    )
+    
+    # Check ALL gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
+    validate(
+      need(is.null(anno_genes),
+           glue("\n\n\n    The input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\n    The input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Check that at least one cell type has been chosen by the user
+    validate(
+      need(length(input_new()$heatmap_cells) > 0,
+           glue("\n\n\n    Please select at least one cell type."))
+    )
+    
+    # Get gene expression values for input genes
+    df <- bubble_prep(gene = input_new()$gene) 
+    
+    df <- df %>% 
+      # Rename cell classes to more general names
+      mutate(Cell_class = case_when(
+        grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
+        grepl("Olig", Cell_class) ~ "Oligodendrocytes",
+        grepl("Epen", Cell_class) ~ "Ependymal",
+        grepl("Astr", Cell_class) ~ "Astrocytes",
+        grepl("[Nn]euron", Cell_class) ~ "Neurons",
+        grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
+        TRUE ~ "Other"
+      ))
+    
+    # Store this version of the df for later reference
+    df_for_cellclass <- df 
+    
+    # Store mean expression for each cluster 
+    df <- df %>% 
+      group_by(Gene, Cluster, Cell_class) %>% 
+      summarize(Expression = mean(Expression))
+    
+    df <- df %>% filter(Cell_class %in% input_new()$heatmap_cells)
+    
+    # Select only certain clusters that can be categorized 
+    # (from Selin's code, to be confirmed)
+    # df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
+    # df <- df %>% filter(!grepl("^B", Cluster)) 
+    
+    # Pivot the cluster rows to columns
+    df <- df %>% 
+      select(Gene, Cluster, Expression) %>% 
+      mutate(Expression = as.numeric(Expression)) %>% 
+      tidyr::pivot_wider(names_from = "Cluster", values_from = "Expression")  
+    
+    # Set NA values in df to 0 (from Selin's code)
+    df[is.na(df)] <- 0 
+    
+    # Flip dataframe over to match the order of user input (bubble_prep does reverse)
+    df <- df[nrow(df):1,]
+    
+    # Convert dataframe values to matrix, set rownames to genes for labeling purposes
+    mat <- df[,-1] %>%
+      data.matrix()  
+    rownames(mat) <- df$Gene
+    
+    # Set up values for heatmap annotation (cell class bar at top)
+    hm_anno <- makePheatmapAnno(general_palette, "Cell_class")
+    hm_anno$anno_row <- left_join(hm_anno$anno_row, 
+                                  unique(select(df_for_cellclass, Cluster, Cell_class)), by = "Cell_class") 
+    rownames(hm_anno$anno_row) <- hm_anno$anno_row$Cluster
+    hm_anno$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+    
+    # Plot heatmap, store dimensions for dynamically plotting full width
+    hm <- mat %>% 
+          apply(1, scales::rescale) %>% 
+          t() %>% 
+          pheatmap::pheatmap(border_color = NA,
+                             color = colorRampPalette(c("blue", "white", "red"))(100),
+                             scale = "none",
+                             cluster_rows = TRUE,
+                             cluster_cols = TRUE,
+                             cellwidth = 13,
+                             cellheight = 13,
+                             fontsize = 13,
+                             annotation_col = hm_anno$anno_row,
+                             annotation_colors = hm_anno$side_colors,
+                             na_col = "#e5e5e5")
+
+    heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
+    heatmap_dims$height <- glue("{get_plot_dims(hm)$height}in")
+    hm
+  })
+  
+  # Plot the heatmap using dynamic width and height values stored above
+  output$heatmapUI <- renderUI({
+    plotOutput("heatmap", width = heatmap_dims$width, height = heatmap_dims$height)
   })
   
 }
