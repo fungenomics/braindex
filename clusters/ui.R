@@ -76,14 +76,15 @@ ui <- function(request){
                                                            "Pons" = "joint_pons"))
                  ),
                  
+                 # Input for heatmap tab
                  conditionalPanel(condition = "input.tabs == 'heatmap'",
-                                  checkboxGroupInput("heatmap_cells", label = "Cell type(s) for heatmap", 
-                                                     choices = list("Progenitors/cyc.",
+                                  checkboxGroupInput("heatmap_cells", label = "Cell type(s)", 
+                                                     choices = list("Progenitors/cycling" = "Progenitors/cyc.",
                                                                     "Oligodendrocytes",
                                                                     "Ependymal", 
                                                                     "Astrocytes",
                                                                     "Neurons",
-                                                                    "Non-neuroect.",
+                                                                    "Non-neuroectoderm" = "Non-neuroect.",
                                                                     "Other"),
                                                      selected = c("Oligodendrocytes",
                                                                   "Ependymal", 
