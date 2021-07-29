@@ -991,7 +991,8 @@ server <- function(input, output, session) {
                              cellheight = 13,
                              fontsize = 13,
                              annotation_col = hm_anno$anno_row,
-                             annotation_colors = hm_anno$side_colors)
+                             annotation_colors = hm_anno$side_colors,
+                             na_col = "#e5e5e5")
 
     heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
     heatmap_dims$height <- glue("{get_plot_dims(hm)$height}in")
