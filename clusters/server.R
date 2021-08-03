@@ -784,7 +784,7 @@ server <- function(input, output, session) {
   
   #### ---- Clusters ranked by expression tab content ----
   
-  output$rank_tick_plot <- renderPlot({
+  ranked_plot <- reactive({
     
     # Check whether a gene was provided or not
     validate(
@@ -878,6 +878,22 @@ server <- function(input, output, session) {
     
     plot_grid(p1, ticks, ncol = 1, align = "v")
   })
+
+  output$rank_tick_plot <- renderPlot({
+    ranked_plot()
+  })
+  
+  output$download_ranked_plot <- 
+    downloadHandler(filename = "ranked_plot.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             ranked_plot(),
+                             width = 18,
+                             height = 6,
+                             units = "in", 
+                             scale = 1)
+                    },
+                    contentType = "application/pdf")
   
   #### ---- Cell types clustered by expression tab content ----
   
@@ -885,7 +901,7 @@ server <- function(input, output, session) {
   # large height value so the plot that shows briefly is out of view
   heatmap_dims <- reactiveValues(height = "100in", width = "12in")
   
-  output$heatmap <- renderPlot({
+  heatmap_plot <- reactive({
     
     # Check whether a gene was provided or not
     validate(
@@ -999,10 +1015,28 @@ server <- function(input, output, session) {
     hm
   })
   
+  output$heatmap <- renderPlot(heatmap_plot())
+  
   # Plot the heatmap using dynamic width and height values stored above
   output$heatmapUI <- renderUI({
-    plotOutput("heatmap", width = heatmap_dims$width, height = heatmap_dims$height)
+    plotOutput("heatmap", 
+               width = heatmap_dims$width, 
+               height = heatmap_dims$height)
   })
+  
+  output$download_heatmap <- 
+    downloadHandler(filename = "heatmap.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             heatmap_plot(),
+                             width = (as.numeric(substr(heatmap_dims$width,
+                                                       1, nchar(heatmap_dims$width)-2)) + 1.5),
+                             height = (as.numeric(substr(heatmap_dims$height,
+                                                        1, nchar(heatmap_dims$height)-2)) + 1.5),
+                             units = "in", 
+                             scale = 1)
+                    },
+                    contentType = "application/pdf")
   
 }
 
