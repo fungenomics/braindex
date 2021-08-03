@@ -429,9 +429,12 @@ ui <- function(request){
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
-               fluidRow(
-                 plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
-               ), 
+               # Plot will allow scrolling to view the full horizontal width
+               div(style = "width: 1152px; overflow-x: auto; overflow-y: visible;",
+                 fluidRow(
+                   plotOutput("rank_tick_plot", width = "17in", height = "5in") %>% ws
+                 ) 
+               ),
                HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "rank_exp"
@@ -453,12 +456,13 @@ ui <- function(request){
                
                p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
                
-               # Enable horizontal scrolling for a very wide plot, but no vertical scroll
+               # TODO: implement scroll - overflow-x: auto doesn't hide the scroll bar for smaller plots...
                div(style = "width: 1500px; overflow-x: visible; overflow-y: visible;",
                  fluidRow(
                    uiOutput("heatmapUI") %>% ws
                  )
                ),
+               
                HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "heatmap"
