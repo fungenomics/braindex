@@ -867,7 +867,7 @@ server <- function(input, output, session) {
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +
       theme(legend.position = "none",
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+            axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 6),
             axis.title.y = element_blank(),
             axis.text.y = element_blank(),
             axis.ticks.y = element_blank(),
