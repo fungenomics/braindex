@@ -269,20 +269,22 @@ ui <- function(request){
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
+               tags$br(),
+               
                fluidRow(
                  column(6, 
                         wellPanel(
-                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
-                                       # status doesn't have any effect other than color scheme. See bootstrap status values
-                                       status = "warning", 
-                                       value = FALSE, 
-                                       right = TRUE),
+                          selectInput("pick_timecourse", "Select gene to display",
+                                      c("Please enter a gene"))
                         )
                  ),
                  column(6,
                         wellPanel(
-                          selectInput("pick_timecourse", "Select gene to display",
-                                      c("Please enter a gene"))
+                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
+                                         # status doesn't have any effect other than color scheme. See bootstrap status values
+                                         status = "warning", 
+                                         value = FALSE, 
+                                         right = TRUE),
                         )
                  )
                ),
@@ -422,13 +424,26 @@ ui <- function(request){
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene's expression will be plotted"),
+               p("• Use the dropdown tool above the plot to choose which of the input genes to display (update button not required), or use the sidebar toggle to display mean expression over all input genes (update button required)"),
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
                p("• Use the horizontal scroll bar at the bottom of the plot to view the plot's full width"),
                
-               p("• Download the plot as a pdf using the button below the plot"),
+               p("• Download the plot as a PDF file using the button below the plot"),
+               
+               HTML("<br>"),
+               
+               fluidRow(
+                 column(6, 
+                        conditionalPanel(condition="!input.mean_exp",
+                                        wellPanel(
+                                          selectInput("pick_ranked", "Select gene to display",
+                                                      c("Please enter a gene"))
+                                        )
+                        )
+                 )
+               ),
                
                # Plot will allow scrolling to view the full horizontal width of the plot
                div(style = "width: 1152px; overflow-x: auto; overflow-y: visible;",
@@ -468,7 +483,7 @@ ui <- function(request){
                
                p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
                
-               p("• Download the plot as a pdf using the button below the plot"),
+               p("• Download the plot as a PDF file using the button below the plot"),
                
                # TODO: implement scroll accommodating variable widths:
                # overflow-x: auto doesn't hide the scroll bar for smaller plots...
