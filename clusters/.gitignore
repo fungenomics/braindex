@@ -22,6 +22,7 @@ data/*/*.Rda
 data/*/*.Rds
 data/*/*.tsv
 data/*/*.feather
+data/*/*.txt
 
 # Exclude illustrator files
 */img/*.ai
