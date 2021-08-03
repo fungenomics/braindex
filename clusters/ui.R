@@ -369,46 +369,41 @@ ui <- function(request){
       
       tabPanel("Single-cell expression, by sample",
                
-        tabsetPanel(
+               tags$br(),
+               
+               tags$b("Use these tabs to explore the expression of one or more genes at the single-cell level in each sample."),
+               tags$br(),
+               tags$br(),
+               p("• In the top row of tSNE plots, the cells are plot in the 2D tSNE space and coloured by cluster. In the bottom row, they are instead coloured by expression"),
+               
+               p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
+               
+               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed in both tabs"),
+               
+               tabsetPanel(
                  
-          tabPanel("tSNE plots",
-                   
-                   tags$br(),
-                   
-                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
-                   tags$br(),
-                   tags$br(),
-                   p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
-                   
-                   p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
-                   
-                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-                   
-                   fluidRow(
-                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
-                   ),
-                   
-                   fluidRow(
-                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
-                   )
-            
-          ),
+                     tabPanel("tSNE plots",
+                         
+                         tags$br(),
+                         
+                         fluidRow(
+                           plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
+                         ),
+                         
+                         fluidRow(
+                           plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
+                         )
+                  
+                     ),
                 
-          tabPanel("Violin plots",
-                   
-                   tags$br(),
-                   
-                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
-                   tags$br(),
-                   tags$br(),
-                   p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
-                   
-                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-                   
-                   fluidRow(
-                     plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
-                   )
-          )
+                      tabPanel("Violin plots",
+                               
+                         tags$br(),
+                               
+                         fluidRow(
+                            plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
+                         )
+                      )
                  
         ),
         HTML("<br><br><br>"), 
