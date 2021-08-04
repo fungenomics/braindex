@@ -51,7 +51,7 @@ genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", 
 # Load all genes in mouse annotation - to validate input from users & provide as choices
 # Some of these genes may not have corresponding data in the atlas - 
 # i.e. genes_mouse (above) is a subset of genes_anno
-genes_anno <- data.table::fread("data/all_mm10_genes.txt", header = FALSE, data.table=FALSE)
+genes_anno <- data.table::fread("data/joint_mouse/all_mm10_genes.txt", header = FALSE, data.table=FALSE)
 names(genes_anno) <- "Genes"
 genes_anno <- genes_anno[['Genes']]
 

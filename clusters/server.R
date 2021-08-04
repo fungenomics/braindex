@@ -333,23 +333,23 @@ server <- function(input, output, session) {
   observe({
     x <- input_new()$gene
     
-    # Can use character(0) to remove all choices
+    # Use character(0) to remove all choices when input hasn't been received
     if (is.null(x))
       x <- character(0)
     
     if (length(x) == 1){
-      text_pick_timecourse <- " input)"
+      text_select_input <- " input)"
     } else if (length(x) > 1){
-      text_pick_timecourse <- " inputs)"
+      text_select_input <- " inputs)"
     } else {
-      text_pick_timecourse <- NULL
+      text_select_input <- NULL
     }
     
-    # Can also set the label and select items
+    # Update the label based on length of input
     updateSelectInput(session, "pick_timecourse",
-                      label = paste("Select gene to display (from ", length(x), text_pick_timecourse),
+                      label = paste("Select gene to display (from ", length(x), text_select_input),
                       choices = x,
-                      selected = head(x, 1)
+                      selected = head(x, 1) # Select first one by default
     )
   })
   
@@ -784,7 +784,30 @@ server <- function(input, output, session) {
   
   #### ---- Clusters ranked by expression tab content ----
   
-  output$rank_tick_plot <- renderPlot({
+  observe({
+    x <- input_new()$gene
+    
+    # Use character(0) to remove all choices when input hasn't been received
+    if (is.null(x))
+      x <- character(0)
+    
+    if (length(x) == 1){
+      text_select_input <- " input)"
+    } else if (length(x) > 1){
+      text_select_input <- " inputs)"
+    } else {
+      text_select_input <- NULL
+    }
+    
+    # Update the label based on length of input
+    updateSelectInput(session, "pick_ranked",
+                      label = paste("Select gene to display (from ", length(x), text_select_input),
+                      choices = x,
+                      selected = head(x, 1) # Select first one by default
+    )
+  })
+  
+  ranked_plot <- reactive({
     
     # Check whether a gene was provided or not
     validate(
@@ -794,14 +817,14 @@ server <- function(input, output, session) {
     if(input_new()$mean_exp){
       # Check ALL inputs against the dataset genes
       num_genes <- NULL
+      # Check gene inputs against the dataset & annotations
+      not_data_genes <- check_genes(input_new()$gene, num_genes, annotation = FALSE)
+      not_anno_genes <- check_genes(input_new()$gene, num_genes, annotation = TRUE)
     } else{
-      # Check only first input against the dataset genes
-      num_genes <- 1
+      # Check selected gene input against the dataset & annotations
+      not_data_genes <- check_genes(input$pick_ranked, annotation = FALSE)
+      not_anno_genes <- check_genes(input$pick_ranked, annotation = TRUE)
     }
-    
-    # Check gene inputs against the dataset & annotations
-    not_data_genes <- check_genes(input_new()$gene, num_genes, annotation = FALSE)
-    not_anno_genes <- check_genes(input_new()$gene, num_genes, annotation = TRUE)
     
     # Store genes that are within the annotation but not in dataset 
     if (setequal(not_data_genes, not_anno_genes)){
@@ -827,9 +850,9 @@ server <- function(input, output, session) {
       y_axis_text <- "Mean gene expression"
       title_text <- "Mean expression over all selected genes"
     } else {
-      df <- bubble_prep(gene = input_new()$gene[1])
-      y_axis_text <- glue("Mean {input_new()$gene[1]} expression")
-      title_text <- input_new()$gene[1]
+      df <- bubble_prep(gene = input$pick_ranked)
+      y_axis_text <- glue("Mean {input$pick_ranked} expression")
+      title_text <- input$pick_ranked
     }
     
     df <- df %>% 
@@ -867,7 +890,7 @@ server <- function(input, output, session) {
       # Make sure to expand to the same value that's in p1
       expand_limits(x = -18) +
       theme(legend.position = "none",
-            axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6),
+            axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 6),
             axis.title.y = element_blank(),
             axis.text.y = element_blank(),
             axis.ticks.y = element_blank(),
@@ -878,6 +901,22 @@ server <- function(input, output, session) {
     
     plot_grid(p1, ticks, ncol = 1, align = "v")
   })
+
+  output$rank_tick_plot <- renderPlot({
+    ranked_plot()
+  })
+  
+  output$download_ranked_plot <- 
+    downloadHandler(filename = "ranked_plot.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             ranked_plot(),
+                             width = 18,
+                             height = 6,
+                             units = "in", 
+                             scale = 1)
+                    },
+                    contentType = "application/pdf")
   
   #### ---- Cell types clustered by expression tab content ----
   
@@ -885,7 +924,7 @@ server <- function(input, output, session) {
   # large height value so the plot that shows briefly is out of view
   heatmap_dims <- reactiveValues(height = "100in", width = "12in")
   
-  output$heatmap <- renderPlot({
+  heatmap_plot <- reactive({
     
     # Check whether a gene was provided or not
     validate(
@@ -999,10 +1038,28 @@ server <- function(input, output, session) {
     hm
   })
   
+  output$heatmap <- renderPlot(heatmap_plot())
+  
   # Plot the heatmap using dynamic width and height values stored above
   output$heatmapUI <- renderUI({
-    plotOutput("heatmap", width = heatmap_dims$width, height = heatmap_dims$height)
+    plotOutput("heatmap", 
+               width = heatmap_dims$width, 
+               height = heatmap_dims$height)
   })
+  
+  output$download_heatmap <- 
+    downloadHandler(filename = "heatmap.pdf",
+                    content = function(file) {
+                      ggsave(file, 
+                             heatmap_plot(),
+                             width = (as.numeric(substr(heatmap_dims$width,
+                                                       1, nchar(heatmap_dims$width)-2)) + 1.5),
+                             height = (as.numeric(substr(heatmap_dims$height,
+                                                        1, nchar(heatmap_dims$height)-2)) + 1.5),
+                             units = "in", 
+                             scale = 1)
+                    },
+                    contentType = "application/pdf")
   
 }
 
