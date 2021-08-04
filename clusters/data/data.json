@@ -1,91 +1,172 @@
 {
   
+  "2021_files": [
+    
+     {
+
+       "file": "ID_20210710_dendrogram_order.Rda",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse/ID_20210710_dendrogram_order.Rda",
+       "description": "Dendrogram order with new labels",
+       "contents": ""
+
+     },
+     {
+
+       "file": "palette_ID_20210710_per_cluster.Rds",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_per_cluster.Rds",
+       "description": "Cluster palette per-sample analysis",
+       "contents": ""
+
+     },
+     {
+
+       "file": "palette_ID_20210710_joint_clustering.Rds",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_joint_clustering.Rds",
+       "description": "Cluster palette per-region analysis (2021)",
+       "contents": ""
+
+     },
+     {
+
+       "file": "metadata_20210710_with_qc.tsv",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_with_qc.tsv",
+       "description": "Cluster metadata per-sample analysis",
+       "contents": ""
+
+     },
+     {
+
+       "file": "metadata_20210710_joint_extended.tsv",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_joint_extended.tsv",
+       "description": "Cluster metadata per-region analysis (2021)",
+       "contents": ""
+
+     },
+     {
+
+       "file": "joint_cortex_extended.embedding_and_genes.feather",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes.feather",
+       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes_small.feather",
+       "description": "Cortex data",
+       "contents": ""
+
+     },
+     {
+
+       "file": "joint_pons_extended.embedding_and_genes.feather",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes.feather",
+       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes_small.feather",
+       "description": "Pons data",
+       "contents": ""
+
+     },
+     {
+
+       "file": "mean_expression_per_cluster.feather",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster.feather",
+       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster_small.feather",
+       "description": "Mean expression data",
+       "contents": ""
+
+     },
+     {
+
+       "file": "pct_per_cluster.feather",
+       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster.feather",
+       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster_small.feather",
+       "description": "Pct1 data",
+       "contents": ""
+
+     }
+
+   ],
+
   "joint_mouse": [
     
-   {
+     {
      
-      "file": "all_mm10_genes.txt",
-      "path": "selin.jessa/from_hydra/atlas/data/references/all_mm10_genes.txt",
-      "description": "Names of all genes in the annotation",
-      "contents": "Plain text (.txt) file with one gene name on each line of the file"
+       "file": "all_mm10_genes.txt",
+       "path": "selin.jessa/from_hydra/atlas/data/references/all_mm10_genes.txt",
+       "description": "Names of all genes in the annotation",
+       "contents": "Plain text (.txt) file with one gene name on each line of the file"
       
-   }, 
-   {
+     }, 
+     {
      
-      "file": "ID_20190715_dendrogram_order.Rda",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda",
-      "description": "Cluster names in the short format ('F-e12 DRGC') in the order of the dendrogram in Fig 1 of Jessa et al, Nat Genet, 2019",
-      "contents": "R object containing a vector called 'dendrogram_order', where elements are cluster names"
+       "file": "ID_20190715_dendrogram_order.Rda",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/ID_20190715_dendrogram_order.Rda",
+       "description": "Cluster names in the short format ('F-e12 DRGC') in the order of the dendrogram in Fig 1 of Jessa et al, Nat Genet, 2019",
+       "contents": "R object containing a vector called 'dendrogram_order', where elements are cluster names"
       
-    },
-    {
+      },
+      {
       
-      "file": "mean_expression_per_ID_20190715_cluster.feather",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster_small.feather",
-      "description": "Feather file with mean expression of every gene in every cluster",
-      "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the mean expression of each gene in each cluster"
+        "file": "mean_expression_per_ID_20190715_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
+        "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/mean_expression_per_ID_20190715_cluster_small.feather",
+        "description": "Feather file with mean expression of every gene in every cluster",
+        "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the mean expression of each gene in each cluster"
       
-    },
-    {
+      },
+      {
       
-      "file": "pct1_per_ID_20190715_cluster.feather",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster_small.feather",
-      "description": "Feather file with proportion of cells in each cluster where each gene is detected",
-      "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the 'Pct1' value for each cluster"
+        "file": "pct1_per_ID_20190715_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
+        "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/pct1_per_ID_20190715_cluster_small.feather",
+        "description": "Feather file with proportion of cells in each cluster where each gene is detected",
+        "contents": "Table with first column 'Cluster' and the rest corresponding to genes, containing the 'Pct1' value for each cluster"
       
-    },
-    {
+      },
+      {
       
-      "file": "joint_mouse.gene_names.tsv",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.gene_names.tsv",
-      "description": "Names of all genes detected in the joint mouse dataset",
-      "contents": "Data frame with one column, 'genes', containing gene symbols"
+        "file": "joint_mouse.gene_names.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.gene_names.tsv",
+        "description": "Names of all genes detected in the joint mouse dataset",
+        "contents": "Data frame with one column, 'genes', containing gene symbols"
       
-    },
-    {
+      },
+      {
       
-      "file": "joint_mouse.embedding_and_genes.feather",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes.feather",
-      "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes_small.feather",
-      "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint mouse space",
-      "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
+        "file": "joint_mouse.embedding_and_genes.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes.feather",
+        "small_ver_path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.embedding_and_genes_small.feather",
+        "description": "Feather file with cluster assignments, low-dimensional embeddings, QC stats, and expression values for all genes in all cells in the joint mouse space",
+        "contents": "Table with columns corresponding to features or cell metadata info, and rows corresponding to cells"
       
-    },
-    {
+      },
+      {
       
-      "file": "joint_mouse.palette_ID_20190715.Rda",
-      "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.palette_ID_20190715.Rda",
-      "description": "Colour palette for clusters derived from individual samples",
-      "contents": "R object containing a named vector, where names are cluster names, and values are hex colour codes"
+        "file": "joint_mouse.palette_ID_20190715.Rda",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse/joint_mouse.palette_ID_20190715.Rda",
+        "description": "Colour palette for clusters derived from individual samples",
+        "contents": "R object containing a named vector, where names are cluster names, and values are hex colour codes"
       
-    },
-    {
+      },
+      {
       
-     "file": "metadata_20190715_select.tsv",
-     "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata/metadata_20190715.tsv",
-     "description": "Cluster metadata for all clusters derived from individual samples including Age, Species, full cell type, number of cells, etc; roughly matching Table 2a in Jessa et al, Nat Genet, 2019",
-     "contents": "TSV file where columns correspond to metadata features, one row per cluster",
-     "script": "data_prep/prep_data.R"
+       "file": "metadata_20190715_select.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata/metadata_20190715.tsv",
+       "description": "Cluster metadata for all clusters derived from individual samples including Age, Species, full cell type, number of cells, etc; roughly matching Table 2a in Jessa et al, Nat Genet, 2019",
+       "contents": "TSV file where columns correspond to metadata features, one row per cluster",
+       "script": "data_prep/prep_data.R"
       
-    },
-    {
+      },
+      {
       
-      "file": "metadata_20190715.tsv",
-      "path": "selin.jessa/from_hydra/atlas/data/metadata/metadata_20190715.tsv",
-      "description": "",
-      "contents": ""
+        "file": "metadata_20190715.tsv",
+        "path": "selin.jessa/from_hydra/atlas/data/metadata/metadata_20190715.tsv",
+        "description": "",
+        "contents": ""
       
-    },
-    {
+      },
+      {
       
-      "file": "palettes.Rda",
-      "description": "Common colour palettes for red-blue gradients and for cortex/pons samples",
-      "contents": "R data file with three objects, rdbu (red-blue palette), cortex_palette, and pons_palette",
-      "script": "data_prep/prep_data.R"
+        "file": "palettes.Rda",
+        "description": "Common colour palettes for red-blue gradients and for cortex/pons samples",
+        "contents": "R data file with three objects, rdbu (red-blue palette), cortex_palette, and pons_palette",
+        "script": "data_prep/prep_data.R"
       
-    }
+      }
     
    ],
    
