@@ -5,7 +5,7 @@
      {
 
        "file": "ID_20210710_dendrogram_order.Rda",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse/ID_20210710_dendrogram_order.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_mouse/ID_20210710_dendrogram_order.Rda",
        "description": "Dendrogram order with new labels",
        "contents": ""
 
@@ -13,7 +13,7 @@
      {
 
        "file": "palette_ID_20210710_per_cluster.Rds",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_per_cluster.Rds",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_per_cluster.Rds",
        "description": "Cluster palette per-sample analysis",
        "contents": ""
 
@@ -21,7 +21,7 @@
      {
 
        "file": "palette_ID_20210710_joint_clustering.Rds",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_joint_clustering.Rds",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/palette_ID_20210710_joint_clustering.Rds",
        "description": "Cluster palette per-region analysis (2021)",
        "contents": ""
 
@@ -29,7 +29,7 @@
      {
 
        "file": "metadata_20210710_with_qc.tsv",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_with_qc.tsv",
+       "path": "selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_with_qc.tsv",
        "description": "Cluster metadata per-sample analysis",
        "contents": ""
 
@@ -37,7 +37,7 @@
      {
 
        "file": "metadata_20210710_joint_extended.tsv",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_joint_extended.tsv",
+       "path": "selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20210710_joint_extended.tsv",
        "description": "Cluster metadata per-region analysis (2021)",
        "contents": ""
 
@@ -45,8 +45,8 @@
      {
 
        "file": "joint_cortex_extended.embedding_and_genes.feather",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes.feather",
-       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes_small.feather",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes.feather",
+       "small_ver_path": "selin.jessa/from_hydra/atlas/data/joint_cortex_extended/joint_cortex_extended.embedding_and_genes_small.feather",
        "description": "Cortex data",
        "contents": ""
 
@@ -54,8 +54,8 @@
      {
 
        "file": "joint_pons_extended.embedding_and_genes.feather",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes.feather",
-       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes_small.feather",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes.feather",
+       "small_ver_path": "selin.jessa/from_hydra/atlas/data/joint_pons_extended/joint_pons_extended.embedding_and_genes_small.feather",
        "description": "Pons data",
        "contents": ""
 
@@ -63,8 +63,8 @@
      {
 
        "file": "mean_expression_per_cluster.feather",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster.feather",
-       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster_small.feather",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster.feather",
+       "small_ver_path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/mean_expression_per_cluster_small.feather",
        "description": "Mean expression data",
        "contents": ""
 
@@ -72,8 +72,8 @@
      {
 
        "file": "pct_per_cluster.feather",
-       "path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster.feather",
-       "small_ver_path": "/project/kleinman/selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster_small.feather",
+       "path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster.feather",
+       "small_ver_path": "selin.jessa/from_hydra/atlas/data/joint_mouse_extended/pct_per_cluster_small.feather",
        "description": "Pct1 data",
        "contents": ""
 
