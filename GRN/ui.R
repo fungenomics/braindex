@@ -72,9 +72,9 @@ ui <- fluidPage(
                                           selected = "joint"),
                        selectInput(inputId = "time",
                                    label = "Time-point to Visualize",
-                                   choices = c("All","e12", "e15", "p0", "p3", "p6"),
+                                   choices = c("All", dev_time_points),
                                    multiple = FALSE,
-                                   selected = "All")
+                                   selected = "e12")
                                           
                        ),
 # -----------------DR plots ---------------------------------------------
@@ -114,6 +114,43 @@ ui <- fluidPage(
 # -----------------Main Panel ---------------------------------------------
     mainPanel(
       tabsetPanel(
+        
+        #-----------------------Bubble-plot-------------------
+        tabPanel(
+         title = "Dendrogram",
+         # Display the bubbleplot
+         # fluidRow(
+         #   column(width = 3, materialSwitch(inputId = "bb_toggle", label = "Explore per Time-Point Data",
+         #                                    value = FALSE, status = "success")),
+         #   column(width = 3, actionButton("info5", "What Is This?"))
+         # ),
+         htmlOutput("bb_data"),
+         div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;
+                   overflow-x: visible; overflow-y: visible;",
+             
+             fluidRow(
+               # Set cellWidths equal to the actual width of each plot (server.R)
+               splitLayout(cellWidths = c(1103, 200),
+                           
+                           # Bubble plot(s)
+                           (plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE),
+                                       height = 2000) %>% ws),
+                           
+                           # Gene labels
+                           # No spinner to prevent confusing user, because there is only 1 plot
+                           (plotOutput("bubble_labels", height = 2000)) 
+               )
+               
+             ),
+             
+             # UI for tooltip
+             fluidRow(
+               uiOutput("bubble_hover_info")),
+             
+         ),
+         value = "bubble" 
+        ),
         
         # -----------------ggNet visualisation ---------------------------------------------       
         tabPanel(
@@ -206,11 +243,16 @@ ui <- fluidPage(
         fluidRow(
           plotOutput("heatmap_joint")
         ),
-        downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
-        div(style = "margin-left: 1.3em; margin-right: 1.3em;",
-        fluidRow(
-          plotOutput("heatmap_cluster")
-        )),
+       
+         downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
+        
+        (div(style='width:800px;overflow-x: scroll;',
+             uiOutput("heatmap_cluster"))),
+        
+        # div(style = "margin-left: 1.3em; margin-right: 1.3em;",
+        # fluidRow(
+        #   plotOutput("heatmap_cluster")
+        # )),
         downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
         #imageOutput("color_hm_palette", width = "6in", height = "4in")
       ),

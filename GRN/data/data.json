@@ -9,10 +9,31 @@
                         
         },
         {
+        "file": "metadata_20210710_with_qc.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata_extended/metadata_20210710_with_qc.tsv",
+        "description": "For extended mouse brain atlas (joint cortex and pons analysis uses these cluster labels as the latest labelling): the whole metadata with important columns as Cluster (matching all the data),Cell_type (the full name of the cell type),Age (the time point of the sample),Colour (a hex value to use as a colour for that cluster)",
+        "contents": "Dataframe with cluster metadata (extended mouse brain atlas)."
+                        
+        },
+        {
+        "file": "metadata_20201028_with_qc.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata_extended/metadata_20201028_with_qc.tsv",
+        "description": "For extended mouse brain atlas (per sample analysis uses these cluster labels as the latest labelling): the whole metadata with important columns as Cluster (matching all the data),Cell_type (the full name of the cell type),Age (the time point of the sample),Colour (a hex value to use as a colour for that cluster)",
+        "contents": "Dataframe with cluster metadata (extended mouse brain atlas)."
+                        
+        },
+        {
         "file": "Mus_musculus_TF_one_TF_per_line.txt",
         "path": "selin.jessa/from_hydra/atlas/data/references/Mus_musculus_TF_one_TF_per_line.txt",
         "description": "TF input into the SCENIC pipeline. Actives TFs in each dataset represents a subset of this.",
         "contents": "Text file with each TF on one line"
+                        
+        },
+        {
+        "file": "palette_ID_20210710_joint_clustering.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_mouse_extended/palette_ID_20210710_joint_clustering.Rds",
+        "description": "Colour palette for the joint clusters in the extended mouse dataset. Values are colour hex codes and names are the cluster labels.",
+        "contents": "Named vector"
                         
         },
         {
@@ -21,6 +42,12 @@
         "contents": "R object containing colour palettes, and heatmap annotations",
         "script": "data_prep.R"
                         
+        },
+        {
+        "file": "timeseries_proportion_plots.Rda",
+        "description": "Ribbon plot of the proportion of each cluster across developmental time, for forebrain and pons.",
+        "contents": "List of ggplot objects ",
+        "script": "data_prep.R"        	
         }
         ],
 
@@ -100,6 +127,140 @@
      }
      
    ],
+"joint_cortex_extended": [ 
+     {
+       "file": "cortex_extended_prep.Rda",
+       "description": "Rda file containing datasets generated in data_prep.R, to be loaded at the beginning of app.R to optimize run-time speed and efficiency. ",
+       "contents": "Several R objects generated in the script for visualising the joint cortex extended dataset in the app",
+       "script": "data_prep.R"
+        
+     },
+     {
+       "file": "joint_cortex_extended.metadata.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.metadata.tsv",
+       "description": "Cell-level information for extended forebrain dataset, including corresponding clusters and UMAP/tSNE/PCA coordinates, used to plot scatterplots",
+       "contents": "Data frame with columns, 'Cell' 'Sample' 'Sample_cluster', followed by columns for embedding coordinates."     
+        
+     },
+     {
+       
+       "file": "joint_cortex_extended.regulon_target_info.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.regulon_target_info.Rds",
+       "description": "Rds file containing data specific for the first tab, where the table is generated from this data file and used for plotting the cytoscape network to see correlations of different tfs with different/same genes related, note that the tf contai",
+       "contents": "Rds data specific each transcription factor and its corresponding genes and activity data, weight, highconfAnnotation data, motifs."
+       
+     },
+     {
+       
+       "file": "joint_cortex_extended.regulon_activity_per_cluster.joint_extended.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.regulon_activity_per_cluster.joint_extended.feather",
+       "description": "A feather file of tf activity with respect to each cluster in the joint space",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       
+       "file": "joint_cortex_extended.regulon_activity_per_cluster.per_sample.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.regulon_activity_per_cluster.per_sample.feather",
+       "description": "A feather file of tf activity with respect to each cluster in the per sample space ",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       
+       "file": "joint_cortex_extended.regulon_activity_per_cell.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.regulon_activity_per_cell.feather",
+       "description": "A feather file of tf activity with respect to each cell that is used for reading by a certain column to optimize speed, used for plotting tab2(clustering and heatmap) ",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       "file": "joint_cortex_extended.active_regulons.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_cortex_extended/joint_cortex_extended.active_regulons.Rds",
+       "description": "Rds file that is read as tibble containing all tf names with suffix(extended and weight) in the dataset of the second/third tab, note that the tfs are not the same as the first tab data. This vector contains fewer tf than the data in the first tab",
+       "contents": "A character vector(read as tibble later) containing all tf names with suffix(extended and weight) in the dataset of the second/third tab."
+       
+     },
+     {
+       "file": "joint_cortex_extended.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/joint_cortex_extended.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     },
+     {
+       "file": "dendrogram_order_joint_extended_forebrain.Rds",
+       "path": "howard.li/from_hydra/dendrograms/output/dendrogram_figures/dendrogram_order_joint_extended_forebrain.Rds",
+       "description": "vector of all clusters in the joint cortex extended dataset ordered in the order of the extended joint cortex dendrogram",
+       "contents": "A character vector of clusters"
+     }
+   ],
+"joint_pons_extended": [ 
+     {
+       "file": "pons_extended_prep.Rda",
+       "description": "Rda file containing datasets generated in data_prep.R, to be loaded at the beginning of app.R to optimize run-time speed and efficiency. ",
+       "contents": "Several R objects generated in the script for visualising the joint pons extended dataset in the app",
+       "script": "data_prep.R"
+        
+     },
+     {
+       "file": "joint_pons_extended.metadata.tsv",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.metadata.tsv",
+       "description": "Cell-level information for extended pons dataset, including corresponding clusters and UMAP/tSNE/PCA coordinates, used to plot scatterplots",
+       "contents": "Data frame with columns, 'Cell' 'Sample' 'Sample_cluster', followed by columns for embedding coordinates."     
+        
+     },
+     {
+       
+       "file": "joint_pons_extended.regulon_target_info.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.regulon_target_info.Rds",
+       "description": "Rds file containing data specific for the first tab, where the table is generated from this data file and used for plotting the cytoscape network to see correlations of different tfs with different/same genes related, note that the tf contai",
+       "contents": "Rds data specific each transcription factor and its corresponding genes and activity data, weight, highconfAnnotation data, motifs."
+       
+     },
+     {
+       
+       "file": "joint_pons_extended.regulon_activity_per_cluster.joint_extended.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.regulon_activity_per_cluster.joint_extended.feather",
+       "description": "A feather file of tf activity with respect to each cluster in the joint space",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       
+       "file": "joint_pons_extended.regulon_activity_per_cluster.per_sample.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.regulon_activity_per_cluster.per_sample.feather",
+       "description": "A feather file of tf activity with respect to each cluster in the per sample space ",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       
+       "file": "joint_pons_extended.regulon_activity_per_cell.feather",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.regulon_activity_per_cell.feather",
+       "description": "A feather file of tf activity with respect to each cell that is used for reading by a certain column to optimize speed, used for plotting tab2(clustering and heatmap) ",
+       "contents": "A dataframe, the first column is cluster, subsequent columns correspond to active TF (TF_active) the values describe the NES(activity score of TF in each cluster),"
+       
+     },
+     {
+       "file": "joint_pons_extended.active_regulons.Rds",
+       "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/joint_pons_extended/joint_pons_extended.active_regulons.Rds",
+       "description": "Rds file that is read as tibble containing all tf names with suffix(extended and weight) in the dataset of the second/third tab, note that the tfs are not the same as the first tab data. This vector contains fewer tf than the data in the first tab",
+       "contents": "A character vector(read as tibble later) containing all tf names with suffix(extended and weight) in the dataset of the second/third tab."
+       
+     },
+     {
+       "file": "joint_pons_extended.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/joint_pons_extended.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     },
+     {
+       "file": "dendrogram_order_joint_extended_pons.Rds",
+       "path": "howard.li/from_hydra/dendrograms/output/dendrogram_figures/dendrogram_order_joint_extended_pons.Rds",
+       "description": "vector of all clusters in the joint cortex extended dataset ordered in the order of the extended joint cortex dendrogram",
+       "contents": "A character vector of clusters"
+     }
+   ],
    
    "joint_pons": [ 
    {
@@ -177,7 +338,56 @@
      }
      
    ],
-
+"ct_e10": [
+        {
+        "file": "ct_e10.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e10/ct_e10.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e10.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e10/ct_e10.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e10.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e10/ct_e10.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e10.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e10/ct_e10.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e10.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e10/ct_e10.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e10_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "ct_e10.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e10.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
 "ct_e12": [
         {
         "file": "ct_e12.metadata.tsv",
@@ -228,6 +438,56 @@
        "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
         ],
+"ct_e13": [
+        {
+        "file": "ct_e13.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e13/ct_e13.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e13.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e13/ct_e13.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e13.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e13/ct_e13.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e13.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e13/ct_e13.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e13.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e13/ct_e13.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e13_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "ct_e13.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e13.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
 "ct_e15": [
         {
         "file": "ct_e15.metadata.tsv",
@@ -274,6 +534,106 @@
      {
        "file": "ct_e15.active_specific_tf.Rds",
        "path": "howard.li/from_hydra/active_and_specific/data/ct_e15.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
+"ct_e16": [
+        {
+        "file": "ct_e16.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e16/ct_e16.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e16.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e16/ct_e16.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e16.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e16/ct_e16.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e16.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e16/ct_e16.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e16.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e16/ct_e16.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e16_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "ct_e16.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e16.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
+"ct_e18": [
+        {
+        "file": "ct_e18.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e18/ct_e18.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "ct_e18.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e18/ct_e18.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "ct_e18.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e18/ct_e18.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "ct_e18.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e18/ct_e18.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "ct_e18.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/ct_e18/ct_e18.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "ct_e18_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "ct_e18.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/ct_e18.active_specific_tf.Rds",
        "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
        "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
@@ -428,6 +788,56 @@
        "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
         ],
+"po_e10": [
+        {
+        "file": "po_e10.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e10/po_e10.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e10.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e10/po_e10.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e10.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e10/po_e10.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e10.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e10/po_e10.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e10.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e10/po_e10.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e10_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "po_e10.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e10.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
 "po_e12": [
         {
         "file": "po_e12.metadata.tsv",
@@ -478,6 +888,56 @@
        "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }
         ],
+"po_e13": [
+        {
+        "file": "po_e13.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e13/po_e13.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e13.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e13/po_e13.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e13.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e13/po_e13.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e13.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e13/po_e13.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e13.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e13/po_e13.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e13_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "po_e13.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e13.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
 "po_e15": [
         {
         "file": "po_e15.metadata.tsv",
@@ -524,6 +984,106 @@
      {
        "file": "po_e15.active_specific_tf.Rds",
        "path": "howard.li/from_hydra/active_and_specific/data/po_e15.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
+"po_e16": [
+        {
+        "file": "po_e16.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e16/po_e16.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e16.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e16/po_e16.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e16.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e16/po_e16.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e16.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e16/po_e16.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e16.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e16/po_e16.regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e16_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "po_e16.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e16.active_specific_tf.Rds",
+       "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
+       "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
+     }
+        ],
+"po_e18": [
+        {
+        "file": "po_e18.metadata.tsv",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18.metadata.tsv",
+        "description": "Per cell metadata for this timepoint with cluster assignments and embedding coordinates",
+        "contents": "Dataframe with cell metadata. - Has multiple cluster assignments"
+                        
+        },
+	{
+        "file": "po_e18.active_regulons.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18.active_regulons.Rds",
+        "description": "Active TFs in this sample",
+        "contents": "Character list with TF names"
+                        
+        },
+	{
+        "file": "po_e18.regulon_target_info.Rds",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18.regulon_target_info.Rds",
+        "description": "Active TFs in this sample and their gene target information: number of motifs, GENIE3 weight, best motif, motif logo URL",
+        "contents": "data frame"
+                        
+        },
+	{
+        "file": "po_e18.regulon_activity_per_cell.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18.regulon_activity_per_cell.feather",
+        "description": "Activity of each TF in each cell in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+	{
+        "file": "po_e18.regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18regulon_activity_per_cluster.feather",
+        "description": "Activity of each TF in each cluster in this sample",
+        "contents": "A feather file containing a data frame"
+                        
+        },
+        {
+        "file": "po_e18_prep.Rda",
+        "description": "Colour palettes and cluster annotations used for heatmaps, GRN, info table, dr-plots",
+        "contents": "R list object containing 3 tibbles and one vector; see details in data_prep.R",
+        "script": "data_prep.R"
+                        
+        },
+     {
+       "file": "po_e18.active_specific_tf.Rds",
+       "path": "howard.li/from_hydra/active_and_specific/data/po_e18.active_specific_tf.Rds",
        "description": "data calculating the activity and specificity of each TF in each cluster in the sample, used to plot plots in the active and specific tab of the app",
        "contents": "A list containing: a matrix with clusters as observations and AUC of tfs as variables, a matrix with clusters as observations and fold change of the average AUC of a tf in a given cluster compared to all other clusters, a large list the same length as the number of clusters in the sample with each element as a tibble containing AUC, and FC for that cluster"
      }

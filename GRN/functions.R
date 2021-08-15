@@ -41,169 +41,7 @@ addMotifPic <- function(subset_data){ #need to comment this and test to see if i
   return(subset_data)
 }
 
-#------------------------------Bubble plot--------------------------------------
-#' Prepare input for bubble_plot
-#' 
-#' Load gene expression data from feather, tidy & optionally scale expression,
-#' and return the dataframe required as input for the bubble_plot() function
-#' 
-#' @param gene Character vector, one or more genes of interest to plot
-#' @param scale Logical, whether or not to linearly scale gene expression across
-#' clusters to [0,1] to improve visualization. Default: TRUE
-#' @param show_mean Logical, whether or not to display the mean expression of
-#' given genes in a new bubble plot line. Default: FALSE
-#' TODO: Use this to provide an option to download the underlying data.
-#' 
-#' @examples 
-#' bubble_prep("Dlx1")
-#' bubble_prep <- function(tf,
-#'                         scale = TRUE,
-#'                         show_mean = FALSE,
-#'                         region) {
-#'   
-#'   # Load the mean expression of genes across clusters, given gene of interest
-#'   file_path <- glue("data/joint_{region}/joint_cortex.regulon_activity_per_cluster.feather")
-#'   exp <- read_feather(path = file_path,
-#'                       columns = c("Cluster", tf)) #%>% 
-#'     #dendogram_order from hydra file, commented out for now because no dendogram
-#'     #filter(Cluster %in% dendrogram_order)
-#'   
-#'   # Scale expression of each gene linearly across clusters to [0, 1]
-#'   if (scale) {
-#'     
-#'     exp <- exp %>%
-#'       as.data.frame() %>%
-#'       tibble::column_to_rownames(var = "Cluster") %>%
-#'       apply(2, scales::rescale, to = c(0, 1)) %>%
-#'       as.data.frame %>%
-#'       tibble::rownames_to_column(var = "Cluster")
-#'     
-#'   }
-#'   
-#'   # Convert to long / tidy format with columns: Cluster, Gene, Expression
-#'   exp <- exp %>%
-#'     gather(., "TF", "Activity", 2:ncol(.))
-#'   
-#'   # Probably don't need this in the TF plot
-#'   # # Load the proportion of cells in each cluster in which each gene was detected,
-#'   # # and convert to long / tidy format with columns: Cluster, Gene, Pct1
-#'   # pct1 <- read_feather("data/joint_mouse/pct1_per_ID_20190715_cluster.feather",
-#'   #                      columns = c("Cluster", gene)) %>%
-#'   #   gather(., "Gene", "Pct1", 2:ncol(.))
-#'   
-#'   # # Join with cluster metadata
-#'   # df <- left_join(exp, pct1, by = c("Cluster", "Gene"))  %>% 
-#'   #   left_join(metadata, by = c("Cluster" = "Cluster_nounderscore"))
-#'   
-#'   # Tidy data for plotting
-#'   df <- df %>%
-#'     
-#'     # Order genes to match order input by user
-#'     mutate(TF = factor(TF, levels = rev(TF))) %>% 
-#'     arrange(TF) %>% 
-#'     
-#'     # Pad gene names so that the plot takes up a more standardized
-#'     # width; to roughly the the # of characters in the gene w/ longest name
-#'     # However, letters take up more pixels than spaces, so do less padding
-#'     # for genes with longer names
-#'     # TODO: Test the (commented) third line inside mutate() and adjust padding as required
-#'     mutate(TF_padded = case_when(
-#'       str_length(TF) <= 5 ~ str_pad(TF, 15, side = 'right', pad = " "),
-#'       between(str_length(TF), 5, 8) ~ str_pad(TF, 12, side = 'right', pad = " ")
-#'       #, str_length(Gene) > 8 ~ str_pad(Gene, 9, side = 'right', pad = " ")
-#'     )
-#'     ) %>% 
-#'     mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
-#'     
-#'     # Order the clusters on the x-axis to match the dendrogram image
-#'     mutate(Cluster = factor(Cluster, levels = dendrogram_order)) %>%
-#'     
-#'     filter(!is.na(Cluster)) %>% 
-#'     
-#'     # Convert NAs (undetected genes) to 0s -- this ensures all
-#'     # clusters have a value for all genes, so that all clusters are plot,
-#'     # even if the gene was undetected
-#'     replace_na(list(Expression = 0, Pct1 = 0)) %>% 
-#'     
-#'     # Keep columns
-#'     select(Gene, Cluster, Sample, Cell_type, Cell_class, N_cells, Expression, Pct1, Sample, Colour, Gene_padded)
-#'   
-#'   # Create & append set of rows containing mean expression over all selected genes
-#'   if(show_mean) {
-#'     
-#'     # Create mean expression rows, preserving information for tooltip
-#'     mean_exp <- df %>% 
-#'       group_by(Cluster, Sample, Cell_type, N_cells, Cell_class, Colour) %>%
-#'       summarize(#Gene = "MEAN", 
-#'         #Cluster = Cluster,
-#'         #Sample = Sample,
-#'         #Cell_type = Cell_type,
-#'         #Cell_class = Cell_class,
-#'         #N_cells = N_cells,
-#'         Expression = mean(Expression) 
-#'         #Pct1 = mean(Pct1),
-#'         #Colour = Colour,
-#'         #Gene_padded = "MEAN"
-#'       ) %>% 
-#'       # Remove the Pct1 value from the mean expression
-#'       # and label the mean expression
-#'       mutate(Pct1 = 1, Gene = "MEAN", Gene_padded = "MEAN") 
-#'     
-#'     # Add the rows containing mean expression to the original dataframe,
-#'     # removing duplicate rows and ordering them once more by user input,
-#'     # except the mean which is placed at the bottom
-#'     gene_order_padded <- levels(df$Gene_padded)
-#'     df <- bind_rows(df, mean_exp) %>% 
-#'       distinct(.) %>%
-#'       mutate(Gene_padded = factor(Gene_padded, levels = c("MEAN", gene_order_padded)))
-#'     
-#'   }
-#'   
-#'   return(df)
-#'   
-#' }
-#' 
-#' 
-#' #' Bubbleplot of gene expression
-#' #' 
-#' #' Generate a bubble plot for genes of interest across clusters in the mouse
-#' #' dendrogram, where bubble colour encodes the mean expression in each cluster
-#' #' and bubble size encodes the proportion of cells where each gene is detected
-#' #'
-#' #' @param df Data frame as returned by bubble_prep(), with require columns Cluster,
-#' #' Gene_padded, Pct1, and Expression
-#' #'
-#' #' @return ggplot2 object
-#' #'
-#' #' @examples
-#' #' bubble_prep("Dlx1") %>% bubbleplot()
-#' #' 
-#' #' @export
-#' bubble_plot <- function(df, max_point_size) {
-#'   
-#'   # Generate plot
-#'   p1 <- df %>% 
-#'     ggplot(aes(x = Cluster, y = Gene_padded)) +
-#'     geom_point(aes(size = Pct1, colour = Expression), alpha = 0.8) +
-#'     scale_size_area(max_size = max_point_size) +
-#'     scale_color_gradientn(colours = tail(rdbu, 70)) +
-#'     theme_min() +
-#'     ylab(NULL) +
-#'     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5,
-#'                                      colour = joint_mouse_palette, size = rel(0.7)),
-#'           panel.grid.major.x = element_line(colour = "grey90"),
-#'           panel.border = element_blank(),
-#'           axis.ticks.x = element_blank(),
-#'           axis.ticks.y = element_blank(),
-#'           # Do not show the legend because it is included in the static
-#'           # dendrogram image displayed above the bubbleplot
-#'           legend.position = "bottom") +
-#'     # Put gene labels on the right hand side to improve alignment
-#'     scale_y_discrete(position = "right")
-#'   
-#'   return(p1)
-#'   
-#' }
+
 #----------------------------ggNet visualisation---------------------------------------------
 #function to create an igraph object
 #' @param tf the user input vector of transcription factors
@@ -213,7 +51,7 @@ addMotifPic <- function(subset_data){ #need to comment this and test to see if i
 make_network <- function(tf, tf_target_gene_info, gene_list){
   #add a step to select only the transcription factors that are in the list 
   #create edgelist
-  edges <- tf_target_gene_info %>% select(TF, gene, nMotifs, Genie3Weight.weight) %>%
+  edges <- tf_target_gene_info %>% select(TF, gene, nMotifs, starts_with("Genie3Weight")) %>%
     #and filter it to only the transcription factors that are the input
     filter(TF %in% tf)
   #print(edges)
@@ -265,79 +103,7 @@ plot_network <- function(net, labelNodes, tf){
   
 }
 
-# --------------------------OBSOLETE-cytoscape network visualization----------------------------------------------
-# function to create network
 
-
-#' Create rcytoscape network data
-#' 
-#' Takes a vector input that contains user selected TFs and output a list of nodeData and edgeData
-#' which will be used for createCytoscapeJsNetwork
-#' A good to visualize correlations among multiple TFs
-#' 
-#' @param tf one single tf name character
-#' @param TF_target_gene TF_target_gene data, specific for cortex/pon
-#' @param unique_TF unique_TF data, specific for cortex/pon
-#'
-#' @return a list of nodeData and edgeData that are required for generating a rcytoscapejs network object
-#' 
-#' @examples 
-#' TF <- c("Arx","Lef1")
-#' # Note that TF_target_gene and unique_TF will be saved in data_cortex list, by data_prep.R
-#' nodeData <- create_network(TF, TF_target_gene_pon, unique_TF)$nodes
-#' edgeData <- create_network(TF, TF_target_gene_pon, unique_TF)$edges
-#' network <- createCytoscapeJsNetwork(nodeData, edgeData)
-#' rcytoscapejs2(network$nodes, network$edges)
-#' 
-# create_network <- function(tf, TF_target_gene, unique_TF, pathway_genes = c(),
-#                            shrink_gray = FALSE){ 
-#   TF_interest <- filter(TF_target_gene, TF %in% tf)[["TF"]]
-#   gene_target <- filter(TF_target_gene, TF %in% tf)[["gene"]]
-#   
-#   source <- TF_interest
-#   target <- gene_target
-#   
-#   id <- c(TF_interest, gene_target)
-#   name <- id
-#   nodeData <- data.frame(id,name, stringsAsFactors = FALSE)
-#   edgeData <- data.frame(source, target, stringsAsFactors = FALSE)
-#   
-#   #unique_TF <- unique(TF_target_gene[["TF"]])
-#   
-#   mutual_target <- edgeData %>% 
-#     # a character vector that indicates the nodes that are target of multiple selected TFs
-#     count(target) %>%
-#     filter(n > 1 & !target %in% tf ) %>%
-#     .[[1]]
-#   
-#   nodeData <- nodeData %>%
-#     # you can customize the color using the case_when structure easily,
-#     # check the tfs in id column that exist in your vector, then you can control its size,
-#     # shape and color easily
-#     mutate(color = case_when(id %in% tf ~ "#9d4097", # orange
-#                              # orange nodes are tfs that are active in this region
-#                              id %in% pathway_genes ~ "green",
-#                              id %in% unique_TF ~ "#D6604D", 
-#                              id %in% mutual_target ~ "#4fafc6",
-#                              TRUE ~ "lightgrey")) %>%
-#     mutate(height = case_when(id %in% tf ~ "100",
-#                            TRUE ~ "70")) %>%
-#     mutate(width = case_when(id %in% tf ~ "100",
-#                             TRUE ~ "70"))
-#   
-#   if(shrink_gray){
-#     nodeData <- nodeData %>%
-#       mutate(height = case_when(color %in% "lightgrey" ~ "40",
-#                                 TRUE ~ "70")) %>%
-#       mutate(width = case_when(color %in% "lightgrey" ~ "40",
-#                                TRUE ~ "70"))
-#     
-#   }
-#   
-#   return(list(nodes = nodeData,
-#               edges = edgeData
-#   ))
-# }
 # --------------------------------Helper functions----------------------------------------------------
 #' Identify transcription factor data type
 #' 
@@ -510,8 +276,8 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
   
   #building path of the feather object to read if the per sample toggle is on
   #method should be joint if per_sample is true
-  #print(per_sample)
-  #print("ahhh")
+
+  # set up the path of the feather file to read dependingo on region and cluster or cell
   if(per_sample == TRUE){
   
     reg <- switch(region, "cortex" = "ct", "pons" = "po")
@@ -531,14 +297,17 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
   else{
     if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons")
     if(method == "joint"){
-      method2 <- "joint_cluster"
+      path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cluster.joint_extended.feather')
+    }
+    else if (method == "Cluster"){
+      path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cluster.per_sample.feather')
     }
     else{
-      method2 <- str_to_lower(method)
+      path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cell.feather')
     }
  
     # set up the path of the feather file to read dependingo on region and cluster or cell
-    path <- glue('data/joint_{region}/joint_{region}.regulon_activity_per_{method2}.feather')
+    #path <- glue('data/joint_{region}/joint_{region}.regulon_activity_per_{method2}.feather')
   }
   # case-insensitive checking and reading in the first column which corresponds to cell or cluster label
   #why even do this if method2 object has all lowercase already?
@@ -546,7 +315,8 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     cell_col <- read_feather(path, "Cell")
   }
   else if(str_detect(method,"(?i)Cluster")){
-    cell_col <- read_feather(path,"Cluster")
+    cell_col <- read_feather(path,"ID_20210710")
+    colnames(cell_col) <- "Cluster"
   }
   else if(str_detect(method,"(?i)joint")){
     if(per_sample){
@@ -556,7 +326,8 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
       method <- "Cluster"
     }
     else{
-      cell_col <- read_feather(path, "Joint_cluster")
+      cell_col <- read_feather(path, "ID_20210710_joint_clustering")
+      colnames(cell_col) <- "Joint_cluster"
       method <- "Joint_cluster"
     }
   }
@@ -598,9 +369,9 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     if(identical(tp, "F-All") || identical(tp, "P-All")){
     }
     else{
-      activity <- separate(activity, Cluster, into = c("Timepoint", "Cluster"), sep = " ")
+      activity <- separate(activity, Cluster, into = c("Timepoint", "Cluster"), sep = "_")
       activity <- filter(activity, Timepoint == tp)
-      activity <- unite(activity, Cluster, Timepoint, Cluster, sep = " ")
+      activity <- unite(activity, Cluster, Timepoint, Cluster, sep = "_")
     }
   }
   else if(identical(method, "Cell") & per_sample){ #gets rid of blacklisted cells in the per sample data
@@ -660,47 +431,24 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
   if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons")
   if(!method %in% c("Cell","Cluster", "joint")) return("Wrong usage, method should be Cell/Cluster")
   
-  # if(method == "Cell"){
-  #   # 1. create the activity data for plotting 
-  #   act_cell <- create_activity_data(tf, "Cell",region, TF_and_ext) %>%
-  #     mutate(Cluster = gsub("_"," ",brain_data[["Sample_cluster"]])) %>%
-  #     filter(!grepl("BLACKLIST", Cluster)) %>% # filter out bad samples
-  #     sample_n(cell_plot_num) %>%  # randomly sample it
-  #     tibble::column_to_rownames(var = "Cell") # make that column name as row name ...
-  #   
-  #   anno_row_cell <- select(act_cell, Cluster)
-  #   # change the anno_row, since we change the color palettes
-  #   new_anno_row_cell <- anno_row_cell %>%
-  #   mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-  #   rownames(new_anno_row_cell) <- rownames(anno_row_cell) # re-assign the rownames
-  #   
-  #   act <- select(act_cell, -Cluster) # must remove Cluster data before plotting
-  #   
-  #   # customized for plotting by cell
-  #   anno_col <- new_anno_row_cell # assign to the same variable for plotting
-  #   cell_width_plot <- 2
-  #   show_colname_plot <- FALSE
-  # }
+  
   if(method == "Cluster"){
-    act <- create_activity_data(tf, "Cluster",region, TF_and_ext, timepoint)
-      #sample_n(cluster_plot_num) %>% # randomly sample it
+    act <- create_activity_data(tf, "Cluster",region, TF_and_ext, timepoint) 
+      
     #str(act)
     act <- column_to_rownames(act, var = "Cluster") # make that column name as row name ...
     
+    #print(act)
+    
     # change the anno_row, since we change the color palettes
-    new_anno_row <- hm_anno$anno_row %>%
-      mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-    rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
+    new_anno_row <- hm_anno$anno_row #%>%
+      #mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
+    rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row)) # re-assign the rownames
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
+   # print(new_anno_row)
     anno_col <- new_anno_row # this is loaded by data_prep.R
     #print(anno_col)
-    cell_width_plot <- 20
-    cell_height_plot <- 20
-    if (identical(timepoint, "F-All") || identical(timepoint, "P-All")){
-      cell_width_plot <- 7
-      cell_height_plot <- 10
-    }
     show_colname_plot <- TRUE
     title <- glue('Transcription Factor Regulon Activity at Developmental Time: {timepoint}')
   }
@@ -710,52 +458,42 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                                 timepoint = timepoint) #%>% 
       #filter(!grepl("BLACKLISTED", Cluster))
     
-    print(act)
+    #print(act)
     
     if(per_sample == TRUE){
       #filter out the exclude clusters
       act <- act %>% filter(!grepl("EXCLUDE", act$Cluster))
       #print(act)
       col_to_row <- "Cluster"
-      new_anno_row <- hm_anno$anno_row %>%
-        mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-      rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row))
       
-     # print(new_anno_row)
+      new_anno_row <- act %>% mutate(rownames = Cluster) %>%
+        column_to_rownames("rownames") %>% select(Cluster)
       
     }
     else{
       col_to_row <- "Joint_cluster"
       new_anno_row <- act %>% mutate(Cluster = Joint_cluster) %>%
         column_to_rownames("Joint_cluster") %>% select(Cluster)
-      #print(new_anno_row)
-      
-      #%>%
-       # column_to_rownames("Cluster")
-      #row.names(new_anno_row) <- new_anno_row$Cluster
     }
   
     act <- act %>%
       column_to_rownames(var = col_to_row) 
-  
-    # change the anno_row, since we change the color palettes
-    # new_anno_row <- hm_anno$anno_row %>%
-    #   mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
-    # rownames(new_anno_row) <- rownames(hm_anno$anno_row) # re-assign the rownames
+
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
     #print(anno_col)
-    cell_width_plot <- 20
-    cell_height_plot <- 20
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
   }
   cluster_row <- FALSE
- #do not do row clustering if there is only one TF selected
+ 
+  #do not do row clustering if there is only one TF selected
   if(length(tf) > 1){
    cluster_row <- TRUE
   }
+  
+  #print(anno_col)
   pheatmap::pheatmap(t(act),
                      show_colnames = show_colname_plot,
                      scale = "none",
@@ -767,8 +505,8 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
                      # change the default color annotation
                      annotation_colors = master_palette, # loaded by data_prep.R
                      annotation_legend = FALSE,
-                     cellwidth = cell_width_plot,
-                     cellheight = cell_height_plot)
+                     cellwidth = 20,
+                     cellheight = 20)
 } 
 
 #----------------------------Dimension reduction---------------------------------------------
@@ -804,6 +542,8 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type
   activity_tf <- cell_activity_data[,tf_plot][[1]] #extracts the TF activity from the cell_activity_data
   #and appends it to the cell_metadata to make cell meta with activity to plot
   
+  TF <- colnames(cell_activity_data)[tf_plot]
+  
   cell_meta_with_activity <- mutate(cell_metadata, activity_tf = activity_tf)
   
   x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
@@ -812,13 +552,13 @@ plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type
   ggplot(data = cell_meta_with_activity, mapping = aes_string(x = x_axis, y = y_axis))+
     geom_point(aes(color = activity_tf), alpha = 0.2)+
     scale_color_gradient(low = "grey90", high = "red")+
-    theme_min() + labs(color = 'TF Activity')
+    theme_min() + labs(color = 'TF Activity') + ggtitle(TF)
   
 }
 #if I want to include labeled clusters, then I need to map cells to the clusters 
 #place a label at the mean of the umap coordinates for the cells that belong in that cluster
 
-color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, cluster_label, 
+color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label, 
                              per_sample = FALSE){
   
   x_axis <- switch(dim_red_type, "umap" = "UMAP1", "tsne" = "tSNE_1", "pca" = "PC1")
@@ -828,7 +568,7 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   
   var_group <- "Joint_cluster"
   if(per_sample){
-    var_group <- "ID_20190715_with_blacklist"
+    var_group <- "ID_20201028_with_exclude"
   }
   # centers <- cell_metadata %>%
   #   group_by(get(var_group)) %>%
@@ -840,7 +580,7 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
   
   gg <- ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
     geom_point(aes(color = get(var_group)), alpha = 0.2) + theme_min() + theme(legend.position="bottom") + 
-    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = cluster_palette) +
+    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = master_palette$Cluster) +
     labs(color = 'Cluster Label')
   
  # print("step2")
@@ -883,18 +623,27 @@ color_by_cluster <- function(cell_metadata, cluster_palette, dim_red_type, clust
 #' cell_metadata_cortex <- create_cell_metadata(cell_metadata_cortex)
 #' 
 create_metadata_timeseries <- function(cell_metadata, part){
-  if(part == "cortex") level <- c("Forebrain E12.5",
+  if(part == "cortex") level <- c("Forebrain E10.5",
+                                  "Forebrain E12.5",
+                                  "Forebrain E13.5",
                                   "Forebrain E15.5",
+                                  "Forebrain E16.5",
+                                  "Forebrain E18.5",
                                   "Forebrain P0",
                                   "Forebrain P3",
                                   "Forebrain P6")
-  else if (part == "pons") level <- c("Hindbrain E12.5",
+  else if (part == "pons") level <- c("Pons E10.5",
+                                      "Pons E12.5",
+                                      "Pons E13.5",
                                       "Pons E15.5",
+                                      "Pons E16.5",
+                                      "Pons E18.5",
                                       "Pons P0",
                                       "Pons P3",
                                       "Pons P6")
   else{(return("Wrong usage, input either cortex or pons"))}
   
+  #print(level)
   cell_metadata %>% 
     select(Age = Sample, Cell, Cluster = Sample_cluster) %>% 
     # In this case, we remove the "prefix" of the Cluster column, so that we are
@@ -1090,13 +839,11 @@ plot_scatter <- function(data, fc, cluster){
 plot_bar_list <- function(data, tf){
   
   data <- data %>% mutate(Cluster = gsub("_", " ", Cluster))
-  #print(data)
-  palette <- hm_anno$side_colors$Cluster[names(hm_anno$side_colors$Cluster) %in% data$Cluster]
+    
+  #print(data$Cluster)
+  palette <- master_palette$Cluster[names(master_palette$Cluster) %in% data$Cluster]
   #print(palette)
-  #print(length(data$Cluster))
-  #print(length(palette))
-  #(data)
-  #purrr::map(tf, ~print(.x) )
+  
   # 1. loop over genes, then each index can be referred to with .x
    purrr::map(.x = tf, .f = ~data %>% select(.x, Cluster) %>% 
                        arrange(desc(.x)) %>% head(30) %>%
@@ -1111,5 +858,106 @@ plot_bar_list <- function(data, tf){
     {plot_grid(plotlist = .)}
   
 }
+
+#-------------Bubble-plot--------------------
+bubble_prep <- function(sample, tf, dend_order, scale){
+  path <- glue("data/{sample}/{sample}.active_specific_tf.Rds")
+  data <- readRDS(path)
+  
+  AUC <- data$AUC_df %>% select(Cluster, tf) %>%
+    filter(Cluster %in% dend_order)
+  
+ # print(AUC)
+  
+  # Scale activity of each tf linearly across clusters to [0, 1]
+  if (scale) {
+    
+    AUC <- AUC %>%
+      as.data.frame() %>%
+      select(-Cluster) %>%
+      apply(2, scales::rescale, to = c(0, 1)) %>%
+      as.data.frame %>%
+      mutate(Cluster = rownames(AUC)) %>% 
+      select(Cluster, everything())
+    
+  }
+  # Convert to long / tidy format with columns: Cluster, TF, AUC
+  AUC <- AUC %>%
+    gather(., "TF", "AUC", 2:ncol(.))
+  
+  #print(AUC)
+  
+  FC <- data$FC_df %>% select(Cluster, tf) %>%
+    filter(Cluster %in% dend_order) %>%
+    gather(., "TF", "FC", 2:ncol(.))
+  
+  #print(AUC)
+  
+  # print(FC)
+  
+  df <- left_join(AUC, FC, by = c("Cluster", "TF"))
+  #print(df)
+  
+  # Tidy data for plotting
+  df <- df %>%
+    
+    # Order genes to match order input by user
+    mutate(TF = factor(TF, levels = rev(tf))) %>% 
+    arrange(TF) %>% 
+    
+    # Pad gene names so that the plot takes up a more standardized
+    # width; to roughly the the # of characters in the gene w/ longest name
+    # However, letters take up more pixels than spaces, so do less padding
+    # for genes with longer names
+    # TODO: Fix alignment of bubble plot w/ dendrogram for long gene names (issue #7)
+    mutate(TF_padded = case_when(
+      str_length(TF) <= 5 ~ str_pad(TF, 15, side = 'right', pad = " "),
+      str_length(TF) > 5 ~ str_pad(TF, 12, side = 'right', pad = " ")
+    )
+    ) %>% 
+    mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
+    
+    # Order the clusters on the x-axis to match the dendrogram image
+    slice(match(dend_order_joint_cortex_extended, Cluster)) %>%
+    
+    # Keep columns
+    select(TF, Cluster, AUC, FC, TF_padded)
+  
+  label_palette <- hm_anno$side_colors$Cluster
+  names(label_palette) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
+  label_palette <- label_palette[dend_order]
+  
+  return(list("data" = df, "label_palette" = label_palette))
+}
+
+plot_bubble <- function(data, label_palette){
+  p1 <- data %>% 
+    ggplot(aes(x = Cluster, y = TF_padded)) +
+    geom_point(aes(size = FC, colour = AUC), alpha = 0.8) +
+    scale_size_area(max_size = 4) +
+    scale_color_gradientn(colours = tail(rdbu, 70)) +
+    theme_min() +
+    ylab(NULL) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, 
+                                     colour = label_palette,
+                                     size = rel(0.7)),
+          panel.grid.major.x = element_line(colour = "grey90"),
+          panel.border = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank(),
+          # Do not show the legend because it is included in the static
+          # dendrogram image displayed above the bubbleplot
+          legend.position = "bottom") +
+    # Put gene labels on the right hand side to improve alignment
+    scale_y_discrete(position = "right")
+  
+  gene_labels <- cowplot::get_y_axis(plot = p1, position = "right")
+  
+  p1 <- p1 + scale_y_discrete(labels = NULL)
+  
+  return(list(plot = p1, labels = gene_labels))
+}
+
+
 
 

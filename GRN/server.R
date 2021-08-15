@@ -12,14 +12,14 @@ server <- function(input, output, session) {
     if(input$region == "cortex"){
        updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
                             selected = c("Arx","Lef1"), server = TRUE)
-      updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex$TF_target_gene_info$gene), 
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_cortex_extended$TF_target_gene_info$gene), 
                            selected = c("Dlx6","Sox6"), server = TRUE )
       
     }
     else{
       updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
                             selected = c("Lhx5","Pax7"), server = TRUE)
-      updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons$TF_target_gene_info$gene), 
+      updateSelectizeInput(session, inputId = "gene", choices = unique(data_pons_extended$TF_target_gene_info$gene), 
                            selected = c("Gad2"), server = TRUE)
       
     }
@@ -33,19 +33,21 @@ server <- function(input, output, session) {
     #data files (defined in data_prep.R)
     l <- list()
     if(input$region == "cortex"){
-      l <- data_cortex
+      l <- data_cortex_extended
       temp <- paste("F-", input$time, sep = "")
+      l$dend_order <- dend_order_joint_cortex_extended
     }
     else if(input$region == "pons"){
-      l <- data_pons
+      l <- data_pons_extended
       temp <- paste("P-", input$time, sep = "")
+      l$dend_order <- dend_order_joint_pons_extended
       }
     #str(input$TF)
     l$tf <- input$TF
     l$region <- input$region
     #l$input_pathway <- input$input_pathway
     l$method <- input$method
-    l$num_cell_plot <- input$num_cell_plot
+    #l$num_cell_plot <- input$num_cell_plot
     l$time_point <- temp
     l$gene <- input$gene
     l$label <- input$label
@@ -195,8 +197,8 @@ server <- function(input, output, session) {
                                selected = "joint")
       updateSelectInput(session, inputId = "time",
                         label = "Time-point to Visualize",
-                        choices = c("All", "e12", "e15", "p0", "p3", "p6"),
-                        selected = "All")
+                        choices = c("All", dev_time_points),
+                        selected = "e12")
       output$hm_data <- renderText({
         ""
       })
@@ -298,8 +300,54 @@ server <- function(input, output, session) {
     }
   })
   
+  # observeEvent(input$tabs, {
+  #   if (input$bb_toggle == TRUE & !identical(input$tabs,
+  #                                             "bubble")){
+  #     removeUI(
+  #       selector = "div:has(>> #bb_tp)"
+  #     )
+  #   }
+  #   else if (input$bb_toggle == TRUE & identical(input$tabs,
+  #                                                 "bubble")){
+  #     insertUI(
+  #       selector = "#region",
+  #       where = "afterEnd",
+  #       ui = selectInput(inputId = "bb_tp",
+  #                        label = "Developmental Time-Point to Explore",
+  #                        choices = dev_time_points,
+  #                        multiple = FALSE,
+  #                        selected = "e12")
+  #     )
+  #   }
+  # })
+  # #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
+  # observeEvent(input$bb_toggle,{
+  #   if(input$bb_toggle){
+  #     insertUI(
+  #       selector = "#region",
+  #       where = "afterEnd",
+  #       ui = selectInput(inputId = "bb_tp",
+  #                        label = "Developmental Time-Point to Explore",
+  #                        choices = dev_time_points,
+  #                        multiple = FALSE,
+  #                        selected = "e12")
+  #     )
+  #     output$bb_data <- renderText({
+  #       glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$bb_tp}</b>")
+  #     })
+  #   }
+  #   else if (input$bb_toggle == FALSE){
+  #     removeUI(
+  #       selector = "div:has(>> #bb_tp)"
+  #     )
+  #     output$bb_data <- renderText({
+  #       ""
+  #     })
+  #   }
+  # }) 
+  
   #update inputs when toggle is turned so that the plots auto-update
-  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle, {
+  observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle|input$bb_toggle, {
     click(id = "update")
   }, ignoreInit = TRUE, priority = 1)
   
@@ -359,7 +407,14 @@ server <- function(input, output, session) {
         
         subset_data <- get(datafile)$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
+          select(TF, gene, starts_with("Genie3Weight"), highConfAnnot, nMotifs, bestMotif)
+        
+        #the column name for the SCENIC inference weight has a different name depending on if the timepoint
+        #is in the original dataset from 2019 nat genetic or if it is the extended dataset
+        #so need to have a variable weight_col to rename the appropriate column in the datatable() function below
+        if(input$table_tp %in% c("e12", "e15", "p0", "p3", "p6")){weight_col <- "Genie3Weight.weight"}
+        else{weight_col <- "Genie3Weight"}
+           
       }
       
       else{
@@ -372,7 +427,8 @@ server <- function(input, output, session) {
         
         subset_data <- input_new()$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
-          select(TF, gene, Genie3Weight.weight, highConfAnnot, nMotifs, bestMotif)
+          select(TF, gene, starts_with("Genie3Weight"), highConfAnnot, nMotifs, bestMotif)
+        weight_col <- "Genie3Weight"
       }
       
       subset_data <- addMotifPic(subset_data)
@@ -380,7 +436,7 @@ server <- function(input, output, session) {
       datatable(subset_data, escape = FALSE,
                 colnames = c('Gene' = 'gene', 'Number of Motifs' = 'nMotifs',
                              'Best Motif' = 'bestMotif', 
-                             'Strength of Association' = 'Genie3Weight.weight',
+                             'Strength of Association' = weight_col,
                              'Logo' = 'motif_logo'),
                 rownames = FALSE)
     })
@@ -510,7 +566,7 @@ server <- function(input, output, session) {
         req(input$time != "All")
         
         plot_heatmap(tf_list$TF_in_data, "joint",input_new()$region,
-                     get(datafile)$TF_and_ext, per_sample = input_new()$heatmap_toggle,
+                     get(datafile)$TF_and_ext, per_sample = TRUE,
                      timepoint = input$time)
       }
       else{
@@ -561,9 +617,18 @@ server <- function(input, output, session) {
                                                         width = 20, height = 25)
                                                })
     
-    output$heatmap_cluster <- renderPlot({
-      #req(length(input_new()$tf) != 23 ) #change this line after the tf input check has been done
+    output$heatmap_cluster <- renderUI({
+      
+      if(input$time == "All"){plot_width = '3500px'}
+      else{plot_width = '800px'}
+      
+      plotOutput('heatmap_cluster_plot', width = plot_width)             
+    })
+    
+     output$heatmap_cluster_plot <- renderPlot({
+       
       hm_sample_cluster_plot() 
+      
 
     })
     
@@ -584,6 +649,7 @@ server <- function(input, output, session) {
       if(input_new()$cluster_toggle){
         
         datafile <- glue("data_{reg()}_{input$cluster_tp}")
+        #print(datafile)
         
         temp <- check_tf_input(input_new()$tf, unique(get(datafile)$TF_and_ext[["type"]]))
         tf_list$TF_in_data <- temp$TF_in_data
@@ -654,12 +720,12 @@ server <- function(input, output, session) {
         
         req(input$cluster_tp)
         
-        color_by_cluster(get(datafile)$cell_metadata, get(datafile)$cluster_palette, 
+        color_by_cluster(get(datafile)$cell_metadata, 
                          input_new()$dim_red, input_new()$cluster_label,
                          per_sample = input_new()$cluster_toggle)
       }
       else{
-        color_by_cluster(input_new()$cell_metadata, input_new()$cluster_palette, 
+        color_by_cluster(input_new()$cell_metadata, 
                          input_new()$dim_red, input_new()$cluster_label)
       }
     })
@@ -841,14 +907,15 @@ server <- function(input, output, session) {
         req(input$as_tp)
         
         datafile <- glue("data_{reg2()}_{input$as_tp}")
-        get(datafile)$cell_metadata %>% select(ID_20190715_with_blacklist) %>% unique() %>% deframe()
+        get(datafile)$cell_metadata %>% select(ID_20201028_with_exclude) %>% unique() %>%
+          filter(!grepl("EXCLUDE", ID_20201028_with_exclude)) %>% deframe()
         
       }
       else{
-        datafile <- glue("data_{input$region}")
+        datafile <- glue("data_{input$region}_extended")
         
         get(datafile)$cell_metadata %>% select(Sample_cluster) %>% unique() %>% 
-          filter(!grepl("BLACKLISTED", Sample_cluster)) %>% deframe()
+          filter(!grepl("EXCLUDE", Sample_cluster)) %>% deframe()
       }
     })
     update_in <- observe({
@@ -866,8 +933,8 @@ server <- function(input, output, session) {
         sample_name <- glue("data_{reg()}_{input$as_tp}")
       }
       else{
-        data_sample <- glue("joint_{input_new()$region}")
-        sample_name <- glue("data_{input_new()$region}")
+        data_sample <- glue("joint_{input_new()$region}_extended")
+        sample_name <- glue("data_{input_new()$region}_extended")
       }
 
       #print(input_new()$as_cluster)
@@ -878,12 +945,14 @@ server <- function(input, output, session) {
       #active_specific_prep(data_sample, input_new()$as_cluster)
     })
     
-
     
     output$as_clust <- renderUI({
        fluidRow(
          column(width = 7, plotOutput("active_specific_scatter")),
-         column(width = 5, tableOutput("active_specific_table"))
+         column(width = 5, 
+                
+                (div(style='height:400px;overflow-y: scroll; width:450px;overflow-x: scroll;',
+                     tableOutput("active_specific_table"))))
        )
       #fluidRow(plotOutput("active_specific_cluster"))
     })
@@ -899,8 +968,8 @@ server <- function(input, output, session) {
       names(awo) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
       to_color <- replace(awo, !grepl(input_new()$as_cluster, names(awo)), "#e5e5e5")
       #print(to_color)
-      gg <- color_by_cluster(data$cell_metadata, data$cluster_palette, 
-                             "tsne", FALSE,
+      gg <- color_by_cluster(data$cell_metadata, 
+                             "umap", FALSE,
                              per_sample = input_new()$as_toggle)
       if(input$as_toggle == FALSE){
         gg <- gg + geom_point(aes(color = Sample_cluster), alpha = 0.2)
@@ -924,6 +993,7 @@ server <- function(input, output, session) {
           head(4)
         tf_list$TF_not_data <- temp$TF_not_data
         
+    
       }
       else{
         temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
@@ -932,8 +1002,7 @@ server <- function(input, output, session) {
         tf_list$TF_not_data <- temp$TF_not_data
         
       }
-      #print(tf_list$TF_in_data)
-      #print(active_specific_data())
+
       req(length(tf_list$TF_in_data) > 0)
       plot_bar_list(active_specific_data()$data$AUC_df, tf_list$TF_in_data)
     }) 
@@ -981,6 +1050,111 @@ server <- function(input, output, session) {
     })
     
     
+    
+#-------------------------Bubbles--------------------
+    #reactively changes data for bubble plot depending on inputs
+    bubble_data <- reactive({
+      # if(identical(input_new()$region, "cortex")){
+      #   dend_source <- dend_order_forebrain_tp
+      # }
+      # else{
+      #   dend_source <- dend_order_pons_tp
+      # }
+        
+      temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
+      tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(input_new()$TF_and_ext) %>%
+        head(12)
+      tf_list$TF_not_data <- temp$TF_not_data
+        
+      data_sample <- glue("joint_{input_new()$region}_extended")
+
+      #dend_order <- dend_source[data_sample]
+      
+      bubble_prep(sample = data_sample,
+                  tf = tf_list$TF_in_data,
+                  dend_order = input_new()$dend_order,
+                  scale = FALSE)
+      #active_specific_prep(data_sample, input_new()$as_cluster)
+    })
+    
+    
+    # Generate the bubbleplot
+    output$bubble <- renderPlot({
+      
+      #print(bubble_data()$data)
+      
+      plot_bubble(data = bubble_data()$data,
+                  label_palette = bubble_data$label_palette)$plot # Get plot part of output
+      
+    },
+    
+    # Choose width to align horizontally with dendrogram image
+    width = 1103,
+    
+    # Customize the height of the bubbleplot to scale with the number of genes which
+    # are being displayed, after allocating a baseline height for the x-axis & legend
+    height = function() 150 + 30 * length(tf_list$tf_in_data))
+    
+    # Create a tooltip with cluster / expression information 
+    # that appears when hovering over a bubble 
+    # This was adapted from this example: https://gitlab.com/snippets/16220
+   
+     output$bubble_hover_info <- renderUI({
+      
+      hover <- input$bubble_hover
+      
+      # Find the nearest data point to the mouse hover position
+      point <- nearPoints(bubble_data()$data,
+                          hover,
+                          xvar = "Cluster",
+                          yvar = "TF_padded",
+                          maxpoints = 1) %>% 
+        select(TF, Cluster, AUC, FC)
+      
+      # Hide the tooltip if mouse is not hovering over a bubble
+      if (nrow(point) == 0) return(NULL)
+      
+      # Create style property for tooltip
+      # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
+      # z-index is set so we are sure are tooltip will be on top
+      style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
+                      "left: -350px; top: 500px; width: 350px;")
+      
+      # Set text to white if the background colour is dark, else it's black (default)
+      if (dark(point$Colour)) {
+        style <- paste0(style, "color: #FFFFFF")
+      }
+      
+      # Specify text content of tooltips - special content for mean expression plot
+        tooltip_text <- paste0("<b> TF: </b>",       point$TF, "<br/>",
+                               "<b> Cluster: </b>",    point$Cluster, "<br/>",
+                               "<b> TF Activity: </b>",  point$AUC, "<br/>",
+                               "<b> TF Fold Change: </b>",     point$FC, "<br/>")
+      
+      # Actual tooltip created as wellPanel
+      wellPanel(
+        style = style,
+        p(HTML(tooltip_text))
+      )
+    })
+    
+    # Render the bubble plot gene labels separately with ggdraw
+    output$bubble_labels <- renderPlot({
+      
+      ggdraw(plot_bubble(data = bubble_data()$data,
+                         label_palette = bubble_data$label_palette)$labels) # Get labels part of output
+      
+    },
+    
+    # Set height of bubble plot gene labels to (hopefully) align with plots
+    height = function() 28.5 + 29 * length(input_new()$gene),
+    
+    # Max length of a gene is 200px
+    # NOTE: If altering this, also change the corresponding cellWidth for 
+    # splitLayout in ui.R
+    width = 200
+    
+    )
     
 }
 

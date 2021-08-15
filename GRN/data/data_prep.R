@@ -12,10 +12,20 @@ source("../functions.R")
 # make color palette
 metadata <- read_tsv("shared/metadata_20190716.tsv")
 
+metadata_extended <- read_tsv("shared/metadata_20210710_with_qc.tsv")
+
+metadata_per_sample <- read_tsv("shared/metadata_20201028_with_qc.tsv")
+
+colour_palette_per_sample <- metadata_per_sample %>% select(Label, Colour) %>% deframe()
+colour_palette_per_sample_space <- colour_palette_per_sample
+names(colour_palette_per_sample_space) <- gsub("_", " ", names(colour_palette_per_sample))
+
 # color palette for heatmap
-colour_palette_cluster <- metadata %>%
+
+colour_palette_cluster <- metadata_extended %>% 
+  mutate(Label_with_exclude = gsub("_EXCLUDE", "", Label_with_exclude)) %>%
   # use gsub to change all contents in Cluster (cluster name format)
-  mutate(Cluster = gsub("_", " ", Cluster)) %>%
+  mutate(Cluster = gsub("_", " ", Label_with_exclude)) %>%
   # Get two columns
   select(Cluster, Colour) %>%
   # Convert to vector of colours, where the first column gives the names
@@ -28,8 +38,8 @@ names(colour_palette_cluster_underscore) <- gsub(" ", "_", names(colour_palette_
 all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
 # color palette for timeseries plot, tab3
-colour_palette <- metadata %>% 
-  mutate(Cluster = gsub("_", " ", Cluster)) %>% 
+colour_palette <- metadata_extended %>% 
+  mutate(Cluster = gsub("_", " ", Label_with_exclude)) %>% 
   separate(Cluster, into = c("Prefix", "Cluster"), sep = " ") %>% 
   # Get two columns
   select(Cluster, Colour) %>% 
@@ -47,8 +57,84 @@ hm_anno_new <- makePheatmapAnno(colour_palette, "Cluster")
 # this is used in: annotation_colors = hm_anno_new$side_colors, in both heatmaps (by cluster/cells)
 
 
+# -----------------------joint_cortex_extended-----------------------------------
+forebrain_data_extended <- read_tsv("joint_cortex_extended/joint_cortex_extended.metadata.tsv", 
+                                    col_types = cols(.default = col_character(), 
+                                                     Joint_extended_PC_1 = col_double(),
+                                                     Joint_extended_PC_2 = col_double(),
+                                                     Joint_extended_tSNE_1 = col_double(),
+                                                     Joint_extended_tSNE_2 = col_double(),
+                                                     Joint_extended_UMAP_1 = col_double(),
+                                                     Joint_extended_UMAP_2 = col_double())) %>% 
+  transmute("Cell" = Cell_clean, "Sample" = Sample, "Sample_cluster" = ID_20210710_with_exclude,
+            "Joint_cluster_number" = Joint_extended_cluster, "Joint_cluster" = ID_20210710_joint_clustering,
+            "PC1" = Joint_extended_PC_1, "PC2" = Joint_extended_PC_2, 
+            "tSNE_1" = Joint_extended_tSNE_1, "tSNE_2" = Joint_extended_tSNE_2,
+            "UMAP1" = Joint_extended_UMAP_1, "UMAP2" = Joint_extended_UMAP_2)
 
-# ———————————————————————————————————Cortex data————————————————————————————————————————
+TF_active_cortex_extended <- as_tibble(read_rds("joint_cortex_extended/joint_cortex_extended.active_regulons.Rds"))
+
+TF_target_gene_joint_cortex_extended <- as_tibble(read_rds(
+  "joint_cortex_extended/joint_cortex_extended.regulon_target_info.Rds")) %>%
+  select(-logo)
+
+unique_TF_cortex_extended <- unique(TF_target_gene_joint_cortex_extended[["TF"]])
+
+TF_and_ext_cortex_extended <- identify_tf(TF_active_cortex_extended)
+
+timeseries_input_meta_cortex_extended <- create_metadata_timeseries(forebrain_data_extended, "cortex")
+
+data_cortex_extended <- list(
+  "cell_metadata"  = forebrain_data_extended,
+  "TF_and_ext" = TF_and_ext_cortex_extended,
+  "TF_target_gene_info" = TF_target_gene_joint_cortex_extended,
+  "unique_active_TFs_bare" = unique_TF_cortex_extended,
+  "active_TFs" = TF_active_cortex_extended,
+  "timeseries_input_meta" = timeseries_input_meta_cortex_extended
+  
+)
+
+save(data_cortex_extended, file = "joint_cortex_extended/cortex_extended_prep.Rda")
+
+# -----------------------joint_pons_extended-----------------------------------
+pons_data_extended <- read_tsv("joint_pons_extended/joint_pons_extended.metadata.tsv", 
+                                    col_types = cols(.default = col_character(), 
+                                                     Joint_extended_PC_1 = col_double(),
+                                                     Joint_extended_PC_2 = col_double(),
+                                                     Joint_extended_tSNE_1 = col_double(),
+                                                     Joint_extended_tSNE_2 = col_double(),
+                                                     Joint_extended_UMAP_1 = col_double(),
+                                                     Joint_extended_UMAP_2 = col_double())) %>% 
+  transmute("Cell" = Cell_clean, "Sample" = Sample, "Sample_cluster" = ID_20210710_with_exclude,
+            "Joint_cluster_number" = Joint_extended_cluster, "Joint_cluster" = ID_20210710_joint_clustering,
+            "PC1" = Joint_extended_PC_1, "PC2" = Joint_extended_PC_2, 
+            "tSNE_1" = Joint_extended_tSNE_1, "tSNE_2" = Joint_extended_tSNE_2,
+            "UMAP1" = Joint_extended_UMAP_1, "UMAP2" = Joint_extended_UMAP_2)
+
+TF_active_pons_extended <- as_tibble(read_rds("joint_pons_extended/joint_pons_extended.active_regulons.Rds"))
+
+TF_target_gene_joint_pons_extended <- as_tibble(read_rds(
+  "joint_pons_extended/joint_pons_extended.regulon_target_info.Rds")) %>%
+  select(-logo)
+
+unique_TF_pons_extended <- unique(TF_target_gene_joint_pons_extended[["TF"]])
+
+TF_and_ext_pons_extended <- identify_tf(TF_active_pons_extended)
+
+timeseries_input_meta_pons_extended <- create_metadata_timeseries(pons_data_extended, "pons")
+
+data_pons_extended <- list(
+  "cell_metadata"  = pons_data_extended,
+  "TF_and_ext" = TF_and_ext_pons_extended,
+  "TF_target_gene_info" = TF_target_gene_joint_pons_extended,
+  "unique_active_TFs_bare" = unique_TF_pons_extended,
+  "active_TFs" = TF_active_pons_extended,
+  "timeseries_input_meta" = timeseries_input_meta_pons_extended
+  
+)
+save(data_pons_extended, file = "joint_pons_extended/pons_extended_prep.Rda")
+
+# --------------------Cortex data---------------------
 forebrain_data <- read_tsv("joint_cortex/Forebrain_join.2D.tsv") %>% # for UMAP cluster
   mutate(Sample_cluster = str_replace(Sample_cluster," ","_"))
 # clean some samples with space in between ...
@@ -159,20 +245,23 @@ data_pons <- list(
   "cluster_palette" = pons_cluster_palette
 )
 
-
+extended_mouse_joint_cluster_palette <- readRDS("shared/palette_ID_20210710_joint_clustering.Rds")
 
 master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint cluster with timepoint removed
                     colour_palette_cluster,                 # per-timepoint cluster, with spaces
 		    colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
 		    forebrain_cluster_palette,              # joint clustering, forebrain
-		    pons_cluster_palette)                   # joint clustering, pons
+		    pons_cluster_palette,                   # joint clustering, pons
+        extended_mouse_joint_cluster_palette,
+		    colour_palette_per_sample_space,
+		    colour_palette_per_sample)
 master_palette <- list("Cluster" = master_palette)
 
 #---------------------time_point data----------------------------------------------
 #use a loop for this 
 for (reg in c("ct", "po")){
   
-  for(tp in c("e12", "e15", "p0", "p3", "p6")){
+  for(tp in c("e10", "e12", "e13", "e15", "e16", "e18", "p0", "p3", "p6")){
     TF_target_gene_info <- as_tibble(read_rds(glue("{reg}_{tp}/{reg}_{tp}.regulon_target_info.Rds"))) %>%
       select(-logo)
     
@@ -183,19 +272,19 @@ for (reg in c("ct", "po")){
     
     cell_data <- read_tsv(glue("{reg}_{tp}/{reg}_{tp}.metadata.tsv")) 
     
-    black_list_cells <- cell_data %>% select(Cell, ID_20190715_with_blacklist) %>%
-      filter(grepl("BLACKLISTED", ID_20190715_with_blacklist)) %>% select(Cell) %>%
+    black_list_cells <- cell_data %>% select(Cell, ID_20201028_with_exclude) %>%
+      filter(grepl("EXCLUDE", ID_20201028_with_exclude)) %>% select(Cell) %>%
       deframe()
     
     #print(black_list_cells)
     
-    cell_data <- cell_data %>% filter(!grepl("BLACKLISTED", ID_20190715_with_blacklist))
+    cell_data <- cell_data %>% filter(!grepl("EXCLUDE", ID_20201028_with_exclude))
       
-    
+   #can get rid of palette here and use master_palette in the DR plots 
     awoo <- switch(reg, "ct" = "F-", "po" = "P-")
     
-    dr_palette <- metadata %>% 
-      separate(Cluster, into = c("Timepoint", "Cluster"), sep = "_") %>%
+    dr_palette <- metadata_extended %>% 
+      separate(Label, into = c("Timepoint", "Cluster"), sep = "_") %>%
       filter(Timepoint == glue("{awoo}{tp}")) %>%
       unite(col = "Cluster", c("Timepoint", "Cluster"), sep = "_") %>%
       select(Cluster, Colour) %>% 
