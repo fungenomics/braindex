@@ -118,19 +118,26 @@ ui <- fluidPage(
         #-----------------------Bubble-plot-------------------
         tabPanel(
          title = "Dendrogram",
-         # Display the bubbleplot
-         # fluidRow(
-         #   column(width = 3, materialSwitch(inputId = "bb_toggle", label = "Explore per Time-Point Data",
-         #                                    value = FALSE, status = "success")),
-         #   column(width = 3, actionButton("info5", "What Is This?"))
-         # ),
-         htmlOutput("bb_data"),
-         div(style = "margin-top: 2em; margin-left: 1em; margin-bottom: -5em;
+         tags$br(),
+         tags$b("This tab displays the activity and activity fold change of up to 20 TFs over each cluster in the selected brain region."),
+         tags$br(),
+         tags$br(),
+         p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+         
+         p("• Below the dendrogram, clusters are annotated by brain region, and time point."),
+         
+         p("• Bubble colour encodes the mean TF activity within the cluster, and bubble size encodes the fold change of TF activity in each cluster compared to all other clusters - effectively describing TF specificity."),
+         
+         p("• Hover over each bubble to get additional details about each cluster & its expression level"),
+         
+        uiOutput("dend_image"),
+         
+         div(style = "margin-top: 2em; margin-left: 0em; margin-bottom: -5em;
                    overflow-x: visible; overflow-y: visible;",
              
              fluidRow(
                # Set cellWidths equal to the actual width of each plot (server.R)
-               splitLayout(cellWidths = c(1103, 200),
+               splitLayout(cellWidths = c(1148, 200),
                            
                            # Bubble plot(s)
                            (plotOutput("bubble",

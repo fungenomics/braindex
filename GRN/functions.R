@@ -239,6 +239,32 @@ transform_tf_input <- function(tf, tf_and_ext){
   return(tf_to_read)
 }
 
+
+#' Determine if a background colour is dark enough to warrant white text
+#' 
+#' @param hex_color String, colour in hex colour format e.g. #000000
+#' 
+#' @return TRUE if the colour is dark enough (arbitrary)
+dark <- function(hex_color) {
+  
+  red <- substr(hex_color, 2, 2)
+  green <- substr(hex_color, 4, 4)
+  blue <- substr(hex_color, 6, 6)
+  dark_nums <- c(0:8)
+  
+  if ((red %in% dark_nums && blue %in% dark_nums) || 
+      (red %in% dark_nums && green %in% dark_nums) ||
+      (green %in% dark_nums && blue %in% dark_nums)) {
+    
+    return(TRUE)
+    
+  } else {
+    
+    return(FALSE)
+    
+  }
+}
+
 # --------------------------------Create data for plots--------------------------------
 # NOTE: TF_and_ext is a dataframe (loaded already) that created in order to identify 
 # whether the TF data is a regular TF (with high confidence annotation) 
@@ -882,7 +908,7 @@ bubble_prep <- function(sample, tf, dend_order, scale){
     
   }
   # Convert to long / tidy format with columns: Cluster, TF, AUC
-  AUC <- AUC %>%
+  AUC <- AUC %>% 
     gather(., "TF", "AUC", 2:ncol(.))
   
   #print(AUC)
@@ -918,19 +944,26 @@ bubble_prep <- function(sample, tf, dend_order, scale){
     mutate(TF_padded = factor(TF_padded, levels = unique(.$TF_padded))) %>% 
     
     # Order the clusters on the x-axis to match the dendrogram image
-    slice(match(dend_order_joint_cortex_extended, Cluster)) %>%
+    #slice(match(dend_order_joint_cortex_extended, Cluster)) %>%
     
     # Keep columns
     select(TF, Cluster, AUC, FC, TF_padded)
   
+ # df$Cluster <- factor(df$Cluster, levels = dend_order)
+  
   label_palette <- hm_anno$side_colors$Cluster
   names(label_palette) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
   label_palette <- label_palette[dend_order]
+
+  
   
   return(list("data" = df, "label_palette" = label_palette))
 }
 
-plot_bubble <- function(data, label_palette){
+plot_bubble <- function(data, label_palette, dend_order){
+  
+  data$Cluster <- factor(data$Cluster, levels=dend_order)
+  
   p1 <- data %>% 
     ggplot(aes(x = Cluster, y = TF_padded)) +
     geom_point(aes(size = FC, colour = AUC), alpha = 0.8) +

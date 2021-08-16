@@ -1052,6 +1052,19 @@ server <- function(input, output, session) {
     
     
 #-------------------------Bubbles--------------------
+    output$dend_image <- renderUI({
+      image_source <- switch(input$region,
+                             "cortex" = "joint_cortex_extended_tree.png",
+                             "pons" = "joint_pons_extended_tree.png")
+      image_height <- switch(input$region,
+                             "cortex" = "143",
+                             "pons" = "120")
+      div(style = "margin-top: 3em; margin-bottom: -2em !important;",
+          fluidRow(tags$img(src = image_source, width = "1150", height = image_height))
+      )
+    })
+    
+    
     #reactively changes data for bubble plot depending on inputs
     bubble_data <- reactive({
       # if(identical(input_new()$region, "cortex")){
@@ -1063,7 +1076,7 @@ server <- function(input, output, session) {
         
       temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
       tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(input_new()$TF_and_ext) %>%
-        head(12)
+        head(20)
       tf_list$TF_not_data <- temp$TF_not_data
         
       data_sample <- glue("joint_{input_new()$region}_extended")
@@ -1077,6 +1090,9 @@ server <- function(input, output, session) {
       #active_specific_prep(data_sample, input_new()$as_cluster)
     })
     
+    num_of_tf <- reactive({
+       length(tf_list$TF_in_data)
+    })
     
     # Generate the bubbleplot
     output$bubble <- renderPlot({
@@ -1084,16 +1100,21 @@ server <- function(input, output, session) {
       #print(bubble_data()$data)
       
       plot_bubble(data = bubble_data()$data,
-                  label_palette = bubble_data$label_palette)$plot # Get plot part of output
-      
+                  label_palette = bubble_data()$label_palette, 
+                  input_new()$dend_order)$plot # Get plot part of output
+     
     },
     
     # Choose width to align horizontally with dendrogram image
-    width = 1103,
+    width = 1143,
     
     # Customize the height of the bubbleplot to scale with the number of genes which
     # are being displayed, after allocating a baseline height for the x-axis & legend
-    height = function() 150 + 30 * length(tf_list$tf_in_data))
+    
+    
+    height = function() 150 + 30 * num_of_tf()
+    )
+    
     
     # Create a tooltip with cluster / expression information 
     # that appears when hovering over a bubble 
@@ -1102,6 +1123,8 @@ server <- function(input, output, session) {
      output$bubble_hover_info <- renderUI({
       
       hover <- input$bubble_hover
+      
+      
       
       # Find the nearest data point to the mouse hover position
       point <- nearPoints(bubble_data()$data,
@@ -1117,19 +1140,19 @@ server <- function(input, output, session) {
       # Create style property for tooltip
       # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
       # z-index is set so we are sure are tooltip will be on top
-      style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
-                      "left: -350px; top: 500px; width: 350px;")
+      style <- paste0("position:absolute; z-index:100; background-color: ", bubble_data()$label_palette[point$Cluster], "F2;",
+                      "left: -350px; top: 400px; width: 350px;")
       
       # Set text to white if the background colour is dark, else it's black (default)
-      if (dark(point$Colour)) {
+      if (dark(bubble_data()$label_palette[point$Cluster])) {
         style <- paste0(style, "color: #FFFFFF")
       }
       
       # Specify text content of tooltips - special content for mean expression plot
         tooltip_text <- paste0("<b> TF: </b>",       point$TF, "<br/>",
                                "<b> Cluster: </b>",    point$Cluster, "<br/>",
-                               "<b> TF Activity: </b>",  point$AUC, "<br/>",
-                               "<b> TF Fold Change: </b>",     point$FC, "<br/>")
+                               "<b> TF Activity: </b>",  point$AUC %>% round(3), "<br/>",
+                               "<b> TF Activity Fold Change: </b>",     point$FC %>% round(3), "<br/>")
       
       # Actual tooltip created as wellPanel
       wellPanel(
@@ -1142,12 +1165,12 @@ server <- function(input, output, session) {
     output$bubble_labels <- renderPlot({
       
       ggdraw(plot_bubble(data = bubble_data()$data,
-                         label_palette = bubble_data$label_palette)$labels) # Get labels part of output
+                         label_palette = bubble_data()$label_palette)$labels) # Get labels part of output
       
     },
     
     # Set height of bubble plot gene labels to (hopefully) align with plots
-    height = function() 28.5 + 29 * length(input_new()$gene),
+    height = function() 8 + 29 * num_of_tf(),
     
     # Max length of a gene is 200px
     # NOTE: If altering this, also change the corresponding cellWidth for 
