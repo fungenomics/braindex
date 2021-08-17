@@ -112,7 +112,7 @@ server <- function(input, output, session) {
     
     # Check whether a gene was provided or not
     validate(
-      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+      need(length(input_new()$gene) > 0, "\n\n\n\nPlease enter a gene.")
     )
     
     # Check first 20 gene inputs against the dataset & annotations
@@ -128,12 +128,12 @@ server <- function(input, output, session) {
 
     validate(
       need(is.null(anno_genes),
-           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+           glue("\n\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
     validate(
       need(is.null(not_anno_genes),
-           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+           glue("\n\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     # Only display mean if more than one gene is given AND the user requested it
@@ -811,7 +811,7 @@ server <- function(input, output, session) {
     
     # Check whether a gene was provided or not
     validate(
-      need(length(input_new()$gene) > 0, "\n\n\nPlease enter a gene.")
+      need(length(input_new()$gene) > 0, "\n\n\n      Please enter a gene.")
     )
     
     if(input_new()$mean_exp){
@@ -835,12 +835,12 @@ server <- function(input, output, session) {
     
     validate(
       need(is.null(anno_genes),
-           glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+           glue("\n\n\n     The input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
     
     validate(
       need(is.null(not_anno_genes),
-           glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+           glue("\n\n\n     The input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
     if (input_new()$mean_exp){
