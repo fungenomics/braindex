@@ -209,7 +209,7 @@ ui <- function(request){
                      uiOutput("bubble_hover_info")),
   
                ),
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected
                value = "dendrogram"
                
@@ -235,12 +235,15 @@ ui <- function(request){
                    ),
                #),
                
+               HTML("<br>"),
+               
                # Only display download button if update has been pressed at least once
                conditionalPanel(condition='input.update!=0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
                                                  "Download data (TSV)"))
                ),
+               HTML("<br><br><br>"), 
                
                # Specify the value to use when checking if this tab is selected
                value = "exp_table"
@@ -266,20 +269,22 @@ ui <- function(request){
                
                p("• Be aware of the y-axis, which is computed as the max for each gene"),
                
+               tags$br(),
+               
                fluidRow(
                  column(6, 
                         wellPanel(
-                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
-                                       # status doesn't have any effect other than color scheme. See bootstrap status values
-                                       status = "warning", 
-                                       value = FALSE, 
-                                       right = TRUE),
+                          selectInput("pick_timecourse", "Select gene to display",
+                                      c("Please enter a gene"))
                         )
                  ),
                  column(6,
                         wellPanel(
-                          selectInput("pick_timecourse", "Select gene to display",
-                                      c("Please enter a gene"))
+                          materialSwitch("plotly_ribbon", strong("Interactive ribbon plot"),
+                                         # status doesn't have any effect other than color scheme. See bootstrap status values
+                                         status = "warning", 
+                                         value = FALSE, 
+                                         right = TRUE),
                         )
                  )
                ),
@@ -306,7 +311,7 @@ ui <- function(request){
                                                  "Download ribbon plot (PDF)")
                                 )
                ),
-               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected
                value = "timecourse"
       ),
@@ -357,7 +362,7 @@ ui <- function(request){
                 fluidRow(
                   plotOutput("vln_joint", width = "11in", height = "4in") %>% ws
                 ),
-               
+                HTML("<br><br><br>"), 
                 # Specify the value to use when checking if this tab is selected
                 value = "joint"
       ),
@@ -366,49 +371,44 @@ ui <- function(request){
       
       tabPanel("Single-cell expression, by sample",
                
-        tabsetPanel(
+               tags$br(),
+               
+               tags$b("Use these tabs to explore the expression of one or more genes at the single-cell level in each sample."),
+               tags$br(),
+               tags$br(),
+               p("• In the top row of tSNE plots, the cells are plot in the 2D tSNE space and coloured by cluster. In the bottom row, they are instead coloured by expression"),
+               
+               p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
+               
+               p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed in both tabs"),
+               
+               tabsetPanel(
                  
-          tabPanel("tSNE plots",
-                   
-                   tags$br(),
-                   
-                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
-                   tags$br(),
-                   tags$br(),
-                   p("• In the top row, the cells are plot in the 2D tSNE space, coloured by cluster"),
-                   
-                   p("• In the bottom row, the cells are plot in the 2D tSNE space, coloured by expression"),
-                   
-                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-                   
-                   fluidRow(
-                     plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
-                   ),
-                   
-                   fluidRow(
-                     plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
-                   )
-            
-          ),
+                     tabPanel("tSNE plots",
+                         
+                         tags$br(),
+                         
+                         fluidRow(
+                           plotOutput("dr_sample", width = "12.5in", height = "2.6in") %>% ws
+                         ),
+                         
+                         fluidRow(
+                           plotOutput("feature_sample", width = "12.5in", height = "3in") %>% ws
+                         )
+                  
+                     ),
                 
-          tabPanel("Violin plots",
-                   
-                   tags$br(),
-                   
-                   tags$b("Use this tab to explore the expression of one or more genes at the single-cell level in each sample."),
-                   tags$br(),
-                   tags$br(),
-                   p("• Each violin plot is coloured by cluster and ordered by the expression level within the given sample"),
-                   
-                   p("• If more than one gene is provided, the mean expression of all genes is automatically computed and displayed"),
-                   
-                   fluidRow(
-                     plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
-                   )
-          )
+                      tabPanel("Violin plots",
+                               
+                         tags$br(),
+                               
+                         fluidRow(
+                            plotOutput("vln_sample", width = "10in", height = "20in") %>% ws
+                         )
+                      )
                  
         ),
-        
+        HTML("<br><br><br>"), 
         # Specify the value to use when checking if this tab is selected       
         value = "sample"
       ),
@@ -424,14 +424,45 @@ ui <- function(request){
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• If more than one gene is provided, use the sidebar toggle to plot the mean expression over these genes. If this option is off, only the first gene's expression will be plotted"),
+               p("• Use the dropdown tool above the plot to choose which of the input genes to display (update button not required), or use the sidebar toggle to display mean expression over all input genes (update button required)"),
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
-               fluidRow(
-                 plotOutput("rank_tick_plot", width = "12in", height = "5in") %>% ws
-               ), 
+               p("• Use the horizontal scroll bar at the bottom of the plot to view the plot's full width"),
                
+               p("• Download the plot as a PDF file using the button below the plot"),
+               
+               HTML("<br>"),
+               
+               fluidRow(
+                 column(6, 
+                        conditionalPanel(condition="!input.mean_exp",
+                                        wellPanel(
+                                          selectInput("pick_ranked", "Select gene to display",
+                                                      c("Please enter a gene"))
+                                        )
+                        )
+                 )
+               ),
+               
+               # Plot will allow scrolling to view the full horizontal width of the plot
+               div(style = "width: 1152px; overflow-x: auto; overflow-y: visible;",
+                 fluidRow(
+                   plotOutput("rank_tick_plot", width = "17in", height = "5in") %>% ws
+                 ) 
+               ),
+               
+               HTML("<br>"),
+               
+               # Only display download button if update has been pressed at least once
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_ranked_plot",
+                                                 "Download ranked plot (PDF)")
+                                )
+               ),
+               
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "rank_exp"
       ),
@@ -452,13 +483,27 @@ ui <- function(request){
                
                p("• The tree to the left of the heatmap indicates the clustering of genes, and the tree above the heatmap indicates the clustering of cell types"),
                
-               # Enable horizontal scrolling for a very wide plot, but no vertical scroll
-               div(style = "width: 1500px; overflow-x: visible; overflow-y: visible;",
+               p("• Download the plot as a PDF file using the button below the plot"),
+               
+               # TODO: implement scroll accommodating variable widths:
+               # overflow-x: auto doesn't hide the scroll bar for smaller plots...
+               #div(style = "width: 1500px; overflow-x: visible; overflow-y: visible;",
                  fluidRow(
                    uiOutput("heatmapUI") %>% ws
-                 )
+                 ),
+               #),
+               
+               HTML("<br>"),
+               
+               # Only display download button if update has been pressed at least once
+               conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  downloadButton("download_heatmap",
+                                                 "Download heatmap (PDF)")
+                                )
                ),
                
+               HTML("<br><br><br>"), 
                # Specify the value to use when checking if this tab is selected       
                value = "heatmap"
       ),

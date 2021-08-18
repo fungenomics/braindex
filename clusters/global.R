@@ -51,11 +51,26 @@ genes_mouse <- data.table::fread("data/joint_mouse/joint_mouse.gene_names.tsv", 
 # Load all genes in mouse annotation - to validate input from users & provide as choices
 # Some of these genes may not have corresponding data in the atlas - 
 # i.e. genes_mouse (above) is a subset of genes_anno
-genes_anno <- data.table::fread("data/all_mm10_genes.txt", header = FALSE, data.table=FALSE)
+genes_anno <- data.table::fread("data/joint_mouse/all_mm10_genes.txt", header = FALSE, data.table=FALSE)
 names(genes_anno) <- "Genes"
 genes_anno <- genes_anno[['Genes']]
 
 # ---- Shiny settings ----
 
-# Enable bookmarking
+# -- Enable bookmarking
 enableBookmarking(store = "url")
+
+# ---- R settings ----
+
+# -- Overwrite pheatmap function so the heatmap labels can flipped and 45 degrees
+library(grid)
+
+draw_colnames_45 <- function (coln, gaps, ...) {
+  coord = pheatmap:::find_coordinates(length(coln), gaps)
+  x = coord$coord - 0.5 * coord$size
+  res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
+  return(res)}
+
+## 'Overwrite' default draw_colnames with a new version 
+assignInNamespace(x="draw_colnames", value="draw_colnames_45",
+                  ns=asNamespace("pheatmap"))
