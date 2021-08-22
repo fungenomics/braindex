@@ -10,11 +10,11 @@ source("../functions.R")
 
 # ———————————————————————————————————color palette————————————————————————————————————————
 # make color palette
-metadata <- read_tsv("shared/metadata_20190716.tsv")
+metadata <- read_tsv("shared/metadata_20190716.tsv") #for the non-extended dataset
 
-metadata_extended <- read_tsv("shared/metadata_20210710_with_qc.tsv")
+metadata_extended <- read_tsv("shared/metadata_20210710_with_qc.tsv") #for the extended dataset in the joint space
 
-metadata_per_sample <- read_tsv("shared/metadata_20201028_with_qc.tsv")
+metadata_per_sample <- read_tsv("shared/metadata_20201028_with_qc.tsv") #for the per-timepoint analyses 
 
 colour_palette_per_sample <- metadata_per_sample %>% select(Label, Colour) %>% deframe()
 colour_palette_per_sample_space <- colour_palette_per_sample
@@ -82,6 +82,11 @@ unique_TF_cortex_extended <- unique(TF_target_gene_joint_cortex_extended[["TF"]]
 
 TF_and_ext_cortex_extended <- identify_tf(TF_active_cortex_extended)
 
+# activity for cortex timeseries graph data
+binary_activity_cortex_extended <- readRDS("joint_cortex_extended/4.2_binaryRegulonActivity_nonDupl_cortex_extended.Rds")
+colnames(binary_activity_cortex_extended) <- gsub("_.","", colnames(binary_activity_cortex_extended))
+tf_df_cortex_extended <- as_tibble(rownames(binary_activity_cortex_extended))
+
 timeseries_input_meta_cortex_extended <- create_metadata_timeseries(forebrain_data_extended, "cortex")
 
 data_cortex_extended <- list(
@@ -90,7 +95,9 @@ data_cortex_extended <- list(
   "TF_target_gene_info" = TF_target_gene_joint_cortex_extended,
   "unique_active_TFs_bare" = unique_TF_cortex_extended,
   "active_TFs" = TF_active_cortex_extended,
-  "timeseries_input_meta" = timeseries_input_meta_cortex_extended
+  "timeseries_input_meta" = timeseries_input_meta_cortex_extended,
+  "binary_active_TFs" = tf_df_cortex_extended,
+  "binary_activity" = binary_activity_cortex_extended
   
 )
 
@@ -123,13 +130,19 @@ TF_and_ext_pons_extended <- identify_tf(TF_active_pons_extended)
 
 timeseries_input_meta_pons_extended <- create_metadata_timeseries(pons_data_extended, "pons")
 
+binary_activity_pons_extended <- readRDS("joint_pons_extended/4.2_binaryRegulonActivity_nonDupl_pons_extended.Rds")
+colnames(binary_activity_pons_extended) <- gsub("_.","", colnames(binary_activity_pons_extended))
+tf_df_pons_extended <- as_tibble(rownames(binary_activity_pons_extended))
+
 data_pons_extended <- list(
   "cell_metadata"  = pons_data_extended,
   "TF_and_ext" = TF_and_ext_pons_extended,
   "TF_target_gene_info" = TF_target_gene_joint_pons_extended,
   "unique_active_TFs_bare" = unique_TF_pons_extended,
   "active_TFs" = TF_active_pons_extended,
-  "timeseries_input_meta" = timeseries_input_meta_pons_extended
+  "timeseries_input_meta" = timeseries_input_meta_pons_extended,
+  "binary_active_TFs" = tf_df_pons_extended,
+  "binary_activity" = binary_activity_pons_extended
   
 )
 save(data_pons_extended, file = "joint_pons_extended/pons_extended_prep.Rda")
@@ -348,7 +361,7 @@ save(colour_palette_cluster,
 
 #-----------------cell proportion over time ribbon plot--------------------
 
-forebrain_fraction <- forebrain_data %>% select(Cell, Sample, Sample_cluster) %>%
+forebrain_fraction <- forebrain_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
   filter(!grepl("BLACKLIST", Sample_cluster)) %>%
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
   group_by(Sample) %>% mutate (total_in_tp = n()) %>%
@@ -367,22 +380,7 @@ unique_forebrain_fraction_complete <- unique_forebrain_fraction %>%
 	mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
 	complete(Cluster, nesting(tp), fill = list(frac = 0))
 
-# for (i in tp){
-#   tp_clusters <- unique_forebrain_fraction %>% ungroup() %>%
-#     filter(tp == i) %>% pull(Cluster)
-  #print(tp_clusters)
-#   clust_not_in <- forebrain_clusters[!(forebrain_clusters %in% tp_clusters)]
-  #print(clust_not_in)
-#   to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
-  # for(j in clust_not_in){
-  #   row <- tibble(tp = i, Cluster = j, frac = 0)
-  # }
-#   print(to_add)
 
-  # unique_forebrain_fraction2 <- rbind(unique_forebrain_fraction, to_add)
-# }
-
-# unique_forebrain_fraction_complete %>% ungroup() %>% group_by(tp)
 unique_forebrain_fraction_complete$xpos = group_indices(unique_forebrain_fraction_complete)
 
 
@@ -390,9 +388,9 @@ forebrain_plot <- unique_forebrain_fraction_complete %>%
   ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
-  scale_x_continuous(breaks = c(1,2,3,4,5),
-                     labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
-                     limits = c(1, 5)) +
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
+                     labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
+                     limits = c(1, 9)) +
   labs(x = "Developmental Age", y = "Proportion") +
   guides(fill = guide_legend(ncol = 5)) +
   theme_min() + 
@@ -400,7 +398,7 @@ forebrain_plot <- unique_forebrain_fraction_complete %>%
 
 #same for pons
 
-pons_fraction <- pons_data %>% select(Cell, Sample, Sample_cluster) %>%
+pons_fraction <- pons_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
   filter(!grepl("BLACKLIST", Sample_cluster)) %>%
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
   group_by(tp) %>% mutate (total_in_tp = n()) %>%
@@ -422,20 +420,7 @@ unique_pons_fraction_complete <- unique_pons_fraction %>%
 		complete(Cluster, nesting(tp), fill = list(frac = 0))
 
 
-# for (i in tp){
-#   tp_clusters <- unique_pons_fraction %>% ungroup() %>%
-#    filter(tp == i) %>% pull(Cluster)
-  #print(tp_clusters)
-#  clust_not_in <- pons_clusters[!(pons_clusters %in% tp_clusters)]
-  #print(clust_not_in)
-#  to_add <- tibble(tp = rep(i, length(clust_not_in)), Cluster = clust_not_in, frac = rep(0, length(clust_not_in)))
-  # for(j in clust_not_in){
-  #   row <- tibble(tp = i, Cluster = j, frac = 0)
-  # }
-#  unique_pons_fraction <- rbind(unique_pons_fraction, to_add)
-#}
 
-# unique_pons_fraction %>% ungroup() %>% group_by(tp)
 unique_pons_fraction_complete$xpos = group_indices(unique_pons_fraction_complete)
 
 
@@ -443,9 +428,9 @@ pons_plot <- unique_pons_fraction_complete %>%
   ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
-  scale_x_continuous(breaks = c(1,2,3,4,5),
-                     labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
-                     limits = c(1, 5)) +
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
+                     labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
+                     limits = c(1, 9)) +
   labs(x = "Developmental Age", y = "Proportion") +
   guides(fill = guide_legend(ncol = 5)) +
   theme_min() + 

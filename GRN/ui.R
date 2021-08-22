@@ -72,9 +72,9 @@ ui <- fluidPage(
                                           selected = "joint"),
                        selectInput(inputId = "time",
                                    label = "Time-point to Visualize",
-                                   choices = c("All", dev_time_points),
+                                   choices = c("All Time-Points", dev_time_points),
                                    multiple = FALSE,
-                                   selected = "e12")
+                                   selected = "All Time-Points")
                                           
                        ),
 # -----------------DR plots ---------------------------------------------
@@ -158,6 +158,74 @@ ui <- fluidPage(
          ),
          value = "bubble" 
         ),
+        # -----------------Heatmap ---------------------------------------------       
+        tabPanel(
+          strong("This tab displays a heatmap of user selected TF activity per cluster") %>% p(),
+          p("• Values in the heatmap represent the mean TF activity per cluster."),
+          p("• Joint clusters are classified based on the combined data from every developmental 
+          time-point in a brain region (forebrain or pons); sample cluster are identified based on data from each 
+          individual time-point per brain region."),
+          p("• Use the \"Time-point to Visalise\" option to select which (if not all) time-points
+          to visualise in the sample cluster heatmap."),
+          
+          fluidRow(
+            column(width = 3,  materialSwitch(inputId = "heatmap_toggle", 
+                                              label = "Explore per Time-Point Heatmap", 
+                                              value = FALSE, status = "success")),
+            column(width = 3, actionButton("info2", "What Is This?"))
+          ),
+          # materialSwitch(inputId = "heatmap_toggle", 
+          #                label = "Explore per Time-Point Heatmap", 
+          #                value = FALSE, status = "success"),
+          htmlOutput("hm_data"),
+          title = "TF Activity Heatmap",
+          value = "Heatmap",
+          fluidRow(
+            plotOutput("heatmap_joint")
+          ),
+          
+          downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
+          
+          (div(style='width:800px;overflow-x: scroll;',
+               uiOutput("heatmap_cluster"))),
+          
+          # div(style = "margin-left: 1.3em; margin-right: 1.3em;",
+          # fluidRow(
+          #   plotOutput("heatmap_cluster")
+          # )),
+          downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
+          #imageOutput("color_hm_palette", width = "6in", height = "4in")
+        ),
+        
+        # -----------------DR plots ---------------------------------------------     
+        tabPanel(
+          title = "TF Activity, by Region",
+          value = "Clustering",
+          
+          p("This tab displays the activity of selected transcription factors") %>% strong(),
+          p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
+          p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
+          p("• Only the first two transcriptions factors are displayed"),
+          fluidRow(
+            column(width = 3, materialSwitch(inputId = "cluster_toggle", 
+                                             label = "Explore per Time-Point TF Activity",
+                                             value = FALSE, status = "success")),
+            column(width = 6, actionButton("info3", "What Is This?"))
+          ),
+          htmlOutput("dr_data"),
+          fluidRow(
+            column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
+          ),
+          fluidRow(
+            
+            column(width = 6, plotOutput("cluster1",width = "4.2in", height = "4in"),
+                   downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PDF)")),
+            
+            column(width = 6, plotOutput("cluster2", width = "4.2in",height = "4in"),
+                   downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PDF)")),
+            
+          )
+        ),
         
         # -----------------ggNet visualisation ---------------------------------------------       
         tabPanel(
@@ -225,80 +293,15 @@ ui <- fluidPage(
           value = "Transcription Factor Target Information"
         ),
 
-        # -----------------Heatmap ---------------------------------------------       
-      tabPanel(
-        strong("This tab displays a heatmap of user selected TF activity per cluster") %>% p(),
-        p("• Values in the heatmap represent the mean TF activity per cluster."),
-        p("• Joint clusters are classified based on the combined data from every developmental 
-          time-point in a brain region (forebrain or pons); sample cluster are identified based on data from each 
-          individual time-point per brain region."),
-        p("• Use the \"Time-point to Visalise\" option to select which (if not all) time-points
-          to visualise in the sample cluster heatmap."),
-        
-        fluidRow(
-          column(width = 3,  materialSwitch(inputId = "heatmap_toggle", 
-                                            label = "Explore per Time-Point Heatmap", 
-                                            value = FALSE, status = "success")),
-          column(width = 3, actionButton("info2", "What Is This?"))
-        ),
-        # materialSwitch(inputId = "heatmap_toggle", 
-        #                label = "Explore per Time-Point Heatmap", 
-        #                value = FALSE, status = "success"),
-        htmlOutput("hm_data"),
-        title = "TF Activity Heatmap",
-        value = "Heatmap",
-        fluidRow(
-          plotOutput("heatmap_joint")
-        ),
-       
-         downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
-        
-        (div(style='width:800px;overflow-x: scroll;',
-             uiOutput("heatmap_cluster"))),
-        
-        # div(style = "margin-left: 1.3em; margin-right: 1.3em;",
-        # fluidRow(
-        #   plotOutput("heatmap_cluster")
-        # )),
-        downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
-        #imageOutput("color_hm_palette", width = "6in", height = "4in")
-      ),
-      # -----------------DR plots ---------------------------------------------     
-      tabPanel(
-        title = "TF Activity, by Region",
-        value = "Clustering",
-
-          p("This tab displays the activity of selected transcription factors") %>% strong(),
-          p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
-          p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
-          p("• Only the first two transcriptions factors are displayed"),
-        fluidRow(
-          column(width = 3, materialSwitch(inputId = "cluster_toggle", 
-                                           label = "Explore per Time-Point TF Activity",
-                                          value = FALSE, status = "success")),
-          column(width = 6, actionButton("info3", "What Is This?"))
-        ),
-          htmlOutput("dr_data"),
-        fluidRow(
-          column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
-        ),
-        fluidRow(
-  
-          column(width = 6, plotOutput("cluster1",width = "4.2in", height = "4in"),
-                 downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PDF)")),
-
-          column(width = 6, plotOutput("cluster2", width = "4.2in",height = "4in"),
-                 downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PDF)")),
-
-        )
-      ),
+      
+   
       # -----------------Time Series ---------------------------------------------
       tabPanel("Time Series",
                p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given
                  TF is active, broken down by cell type, to allow for visualizing activity 
                  across time.") %>% strong(),
                p("• For any given cell, any given TF is considered active if its activity in that cell
-                  is higher than a TF activity threshold."),
+                  is higher than a TF activity threshold determined in the SCENIC pipeline."),
                p("• The time series for the first TF selected in the sidebar will be an interactive plot, with
                  the remaining plots being static."),
                

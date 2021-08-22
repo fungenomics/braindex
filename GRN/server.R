@@ -197,8 +197,8 @@ server <- function(input, output, session) {
                                selected = "joint")
       updateSelectInput(session, inputId = "time",
                         label = "Time-point to Visualize",
-                        choices = c("All", dev_time_points),
-                        selected = "e12")
+                        choices = c("All Time-Points", dev_time_points),
+                        selected = "All Time-Points")
       output$hm_data <- renderText({
         ""
       })
@@ -687,11 +687,11 @@ server <- function(input, output, session) {
         
         req(input$cluster_tp)
         
-        plot_UMAP(tf_number = 1, get(datafile)$cell_metadata, 
+        plot_dr(tf_number = 1, get(datafile)$cell_metadata, 
                   activity_data_cluster(), input_new()$dim_red)
       }
       else{
-        plot_UMAP(tf_number = 1,input_new()$cell_metadata, 
+        plot_dr(tf_number = 1,input_new()$cell_metadata, 
                   activity_data_cluster(), input_new()$dim_red)
       }
     })
@@ -704,11 +704,11 @@ server <- function(input, output, session) {
         
         req(input$cluster_tp)
         
-        plot_UMAP(tf_number = 2, get(datafile)$cell_metadata, 
+        plot_dr(tf_number = 2, get(datafile)$cell_metadata, 
                   activity_data_cluster(), input_new()$dim_red)
       }
       else{
-        plot_UMAP(tf_number = 2,input_new()$cell_metadata,
+        plot_dr(tf_number = 2,input_new()$cell_metadata,
                   activity_data_cluster(), input_new()$dim_red)
       }
     })
@@ -844,7 +844,7 @@ server <- function(input, output, session) {
     
     output$timeseries1 <- renderPlotly({ # a plotly list
       req(length(input_new()$tf)>0)
-      plot_timeseries(TF_transformed()[1][1], input_new()$timeseries_input_meta, input_new()$binary_activity,make_plotly = TRUE)
+      plot_timeseries(TF_transformed()[1][1], input_new()$timeseries_input_meta, input_new()$binary_activity, make_plotly = TRUE)
      })
     
     output$timeseries2 <- renderPlot({ # a ggplot list
@@ -859,12 +859,12 @@ server <- function(input, output, session) {
                                                          width = 20, height = 15)
                                                 })
     
-    output$pons_timeseries <- renderImage({
-         
-         list(src = "www/pons_timeseries.png",
-              alt = "This is alternate text")
-         
-       }, deleteFile = FALSE)
+    # output$pons_timeseries <- renderImage({
+    #      
+    #      list(src = "www/pons_timeseries.png",
+    #           alt = "This is alternate text")
+    #      
+    #    }, deleteFile = FALSE)
     
     output$cell_proportion_timeseries <- renderPlotly({
       

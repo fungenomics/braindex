@@ -192,6 +192,14 @@
        "path": "howard.li/from_hydra/dendrograms/output/dendrogram_figures/dendrogram_order_joint_extended_forebrain.Rds",
        "description": "vector of all clusters in the joint cortex extended dataset ordered in the order of the extended joint cortex dendrogram",
        "contents": "A character vector of clusters"
+     },
+     {
+       
+       "file": "4.2_binaryRegulonActivity_nonDupl_cortex_extended.Rds",
+       "path": "selin.jessa/from_hydra/atlas/2020-12_SCENIC_extended_dataset/results/joint_cortex_extended/int/4.2_binaryRegulonActivity_nonDupl.Rds",
+       "description": "Binary activity of every tf in each cell, used for plotting pons timeseries, we also use the rownames to generate a dataframe that saves all the tf names",
+       "contents": "A giant matrix with columns of each cell and rows of tfs, with 1 or 0 denoting the presence of that tf in the cell."
+       
      }
    ],
 "joint_pons_extended": [ 
@@ -259,6 +267,14 @@
        "path": "howard.li/from_hydra/dendrograms/output/dendrogram_figures/dendrogram_order_joint_extended_pons.Rds",
        "description": "vector of all clusters in the joint cortex extended dataset ordered in the order of the extended joint cortex dendrogram",
        "contents": "A character vector of clusters"
+     },
+     {
+       
+       "file": "4.2_binaryRegulonActivity_nonDupl_pons_extended.Rds",
+       "path": "selin.jessa/from_hydra/atlas/2020-12_SCENIC_extended_dataset/results/joint_pons_extended/int/4.2_binaryRegulonActivity_nonDupl.Rds",
+       "description": "Binary activity of every tf in each cell, used for plotting pons timeseries, we also use the rownames to generate a dataframe that saves all the tf names",
+       "contents": "A giant matrix with columns of each cell and rows of tfs, with 1 or 0 denoting the presence of that tf in the cell."
+       
      }
    ],
    

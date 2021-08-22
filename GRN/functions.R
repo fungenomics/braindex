@@ -554,7 +554,7 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
 #' activity_test_tf1 <- create_activity_data(tf, "Cell","cortex", data_cortex$TF_and_ext)
 #' plot_UMAP(tf_number = 1,data_cortex$overall, activity_test_tf1)
 #' 
-plot_UMAP <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){ #cell_metadata is the tsv with the 
+plot_dr <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){ #cell_metadata is the tsv with the 
   #embedding coordinates for each cell in the dataset
   # if(tf_number == 1) tf_plot <- 2 # number of col, the first col is Cell, so start from 2
   # else if(tf_number == 2) tf_plot <- 3 
@@ -755,10 +755,18 @@ translate_tf <- function(tf_list, tf_dataframe){
 #' 
 plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, show_legend = TRUE){
   
+  cell_names <- colnames(activity)
+  
   activity <- activity[TF, ] %>% 
-    {data.frame("TF" = .)} %>% 
-    tibble::rownames_to_column(var = "Cell") %>% # the original activity vector has names
-    arrange(Cell)
+    {data.frame("TF" = .)} 
+  
+  activity$Cell <- cell_names
+  
+  activity <- activity %>% arrange(Cell)
+  
+  #%>% 
+   # tibble::rownames_to_column(var = "Cell") %>% # the original activity vector has names
+    #arrange(Cell)
   
   if(!all(cell_metadata$Cell == activity$Cell)) return (-1)
   # Add the TF activity to the new dataframe
@@ -804,7 +812,7 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
     geom_area(stat = "identity", show.legend = show_legend) +
     scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
     scale_x_continuous(breaks = seq_along(unique(df$stage)),
-                       labels = c("E12.5", "E15.5", "P0", "P3", "P6"),
+                       labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
                        limits = c(1, length(unique(df$stage)))) +
     labs(x = "Developmental Age", y = "Proportion", title = TF) +
     guides(fill = guide_legend(ncol = 5)) +
