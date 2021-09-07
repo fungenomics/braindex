@@ -1,4 +1,5 @@
 ##----------------------------ggplot style---------------------------------------------
+#theme for plots, adopted from Selin in the Clusters App
 theme_min <- function(base_size = 11, base_family = "",
                       border_colour = "black",
                       border_size = 1) {
@@ -28,8 +29,10 @@ theme_min <- function(base_size = 11, base_family = "",
 
 
 #----------------------------TF information table---------------------------------------------
-#function to add a column to data-table containing the HTML code necessary to display the motif logo
-addMotifPic <- function(subset_data){ #need to comment this and test to see if it works when I have wifi
+#function to add a column to data-table containing the HTML necessary to display the binding motif logo
+#for use in the Table tab
+#' @param subset_data dataframe containing user selected TFs and its predicted regulatory relationships
+addMotifPic <- function(subset_data){
   subset_data <- mutate(subset_data, motif_logo = bestMotif)
  
    for (i in 1:nrow(subset_data)){
@@ -73,7 +76,13 @@ make_network <- function(tf, tf_target_gene_info, gene_list){
     set_vertex_attr("Gene_Type", index = gene_list_in_network, "Input Target Genes") %>%
     set_vertex_attr("Gene_Type", index = unique_TF, "TF") 
   
-}  
+} 
+
+#plots igraph network using ggNet
+#' @param net igraph object made with make_network function
+#' @param labelNodes User input that allows all nodes to be labelled; if false, only TF nodes are labelled
+#' @param tf list of TFs input by user; used to label just the TF nodes if labelNodes is false
+
 plot_network <- function(net, labelNodes, tf){ 
   #print(net)
   if(labelNodes){
@@ -214,6 +223,11 @@ tf_ext <- function(TF, TF_and_ext){
   filter(TF_and_ext, type==TF & ext=="ext")[[1,1]]
 }
 
+
+#'@param TF a user selected TF list
+#'@param TF_ref a list of TFs that are in the dataset
+#'
+#'subsets TF based on if each element appears in TF_ref
 check_tf_input <- function(TF, TF_ref){
   TF_in_data <- TF[TF %in% TF_ref]
   TF_not_data <- TF[!(TF %in% TF_ref)]
@@ -223,16 +237,20 @@ check_tf_input <- function(TF, TF_ref){
   )
 }
 
+#'@param tf a user selected TF list, gene symbols
+#'@param TF_and_ext a list of TFs in the dataset and whether the regulon is a regular or extended regulon
+#'
+#'Converts gene symbols in tf to the regulon name that is used in the TF activity feather files  
 transform_tf_input <- function(tf, tf_and_ext){
   tf_to_read <- character(0)
   for(TF in tf){ # tf is input tf list, could contain many tfs
     
     if(has_regular(TF, tf_and_ext)){
-      tf_to_read[TF] <- tf_regular(TF, tf_and_ext)
-    } # a helper to read the corresponding data
+      tf_to_read[TF] <- tf_regular(TF, tf_and_ext) #if the TF has a non-extended/regular regulon, then the regular regulong name is used
+    } 
     
     else{
-      tf_to_read[TF] <- tf_ext(TF, tf_and_ext)
+      tf_to_read[TF] <- tf_ext(TF, tf_and_ext) #gets the extended regulon name for the TF
     }
   }
   names(tf_to_read) <- NULL
@@ -273,42 +291,41 @@ dark <- function(hex_color) {
 # if we have no data related to this tf, we will either give an error message or do nothing
 
 
-#' create Cell/Cluster activity data
-#' 
-#' Make activity data used in tab2 by either Cell or Cluster, the method would be provided by
-#' user's input in Shiny app
-#' This function uses feather file that will be read by a certain col to maximize speed,
-#' so we switch the paths of the feather file for different brain region
+
 #' 
 #' @param tf character vector, containing one or more TF names
 #' @param method either by Cell --> use cell data, or by cluster --> use cluster data, 
 #' this should be a string indicating the column name
+#' @param region cortex or pons
 #' @param TF_and_ext TF_and_ext data, specific for cortex/pons
+#' @param timepoint user input developmental timepoint, only used if looking at per sample data
+#' @param per_sample boolean
+#' @param bad_cells list of cells that belong to excluded/blacklisted clusters that needs to be filtered out 
 #' @return a dataframe that has a column containing all the cell names and columns of the input tfs
 #' the corresponding activity
 #' data value (NES) 
 #'
-#' @examples
-#' create_activity_data("Arx", "Cell", "cortex", TF_and_ext)
-#' create_activity_data("Pax6", "Cluster", "pons", TF_and_ext_pon)
+#' 
+#' This function subsets a TF activity feather (basically a dataframe with cell/cluster identifiers as rows
+#' and regulons as columns) based on the user TF input, region of interest, timepoint (if looking at 
+#' per-sample data), and the cell/cluster identification method (methd can be joint for joint space cluster, 
+#' cell for TF activity per cell, or cluster for TF activity per sample clustering)
+
 
 
 create_activity_data <- function(tf, method, region, TF_and_ext,
                                  timepoint = NULL, per_sample = FALSE,
                                  bad_cells = ""){ 
-  # use the feature of feather data to read certain col to optimize speed
-  #if(tf_exist(tf, TF_and_ext) != TRUE){return("TF does not exist")}
   tp <- timepoint
   
-  #building path of the feather object to read if the per sample toggle is on
-  #method should be joint if per_sample is true
+  #building path of the feather file to read if the per sample toggle is on
 
-  # set up the path of the feather file to read dependingo on region and cluster or cell
+  # set up the path of the feather file to read depending on region and cluster or cell
   if(per_sample == TRUE){
   
     reg <- switch(region, "cortex" = "ct", "pons" = "po")
   
-    #time <- substring(timepoint, 3) commented out for now
+
     meth <- str_to_lower(method) #per_sample should only be true for method: "joint" or "Cell"
                                  #if its "Cell", turn to lower case and use for DR plots
                                  #if its "joint", then its for per-sample heatmap and load feather
@@ -320,23 +337,28 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     
     path <- glue("data/{reg}_{timepoint}/{reg}_{timepoint}.regulon_activity_per_{meth}.feather")
   }
+  # set up the path of the feather file to read depending on region and cluster or cell
+  #per_sample is false here so read rether files for the joint_extended data
   else{
-    if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons")
+    
+    if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons") #sanity check
+    
     if(method == "joint"){
       path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cluster.joint_extended.feather')
     }
     else if (method == "Cluster"){
       path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cluster.per_sample.feather')
     }
+    #method is Cell 
     else{
       path <- glue('data/joint_{region}_extended/joint_{region}_extended.regulon_activity_per_cell.feather')
     }
  
-    # set up the path of the feather file to read dependingo on region and cluster or cell
-    #path <- glue('data/joint_{region}/joint_{region}.regulon_activity_per_{method2}.feather')
+
   }
   # case-insensitive checking and reading in the first column which corresponds to cell or cluster label
-  #why even do this if method2 object has all lowercase already?
+  # the first step just reads in the cell or cluster labels column -> collectively called cell_col
+  #the TF columns are read after 
   if(str_detect(method,"(?i)Cell")){
     cell_col <- read_feather(path, "Cell")
   }
@@ -345,6 +367,7 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     colnames(cell_col) <- "Cluster"
   }
   else if(str_detect(method,"(?i)joint")){
+    #per sample data has a different name for the cluster column compared to the joint_extended data
     if(per_sample){
       ID <- "ID_20201028"
       cell_col <- read_feather(path, ID)
@@ -357,16 +380,21 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
       method <- "Joint_cluster"
     }
   }
-  else{return("Wrong usage, method should be Cell/Cluster")} #this should never return
+  else{return("Wrong usage, method should be Cell/Cluster")} #this should never return when called from the app
   
   
   
-  # add certain tf activity data to the Cell column
+  #Read TF activity columns and add to the cell/cluster identifier column read above
   #loops through each factor in tf input and checks to see if the entry has regular or ext forms and extracts
-  #data prioritizing the regular factor data and not extended
+  #data prioritizing the regular regulon data and not extended
   #puts each regular or ext TF name in a list 
+  
+  #activity is the matrix that will contain a subset of the entire feather depending on what TFs the user selected
   activity <- cell_col
-  #print(tf)
+
+  
+  #buids tf_to_read vector: a list of regulon names that should be read from the feather file
+  
   for(TF in tf){ # tf is input tf list, could contain many tfs
     tf_to_read <- TF #wouldnt this line combined with the if else if statement double up the data for TF 
                     #with both regular and ext forms 
@@ -379,16 +407,15 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     else{
       next # means we don't have that data, we jump over it and do nothing
     }
-    #both outcomes are the same here? why is there an if else statement
-    #reads the data from file specificed in path using the tf_to_read list 
-    #should check what the tf_to_read list actually says 
+
+    #reads the data from file specified in path using the tf_to_read list  
     
     col <- read_feather(path,tf_to_read)
-    
+  
     activity <- add_column(activity,col)
   }
   activity %>%
-    select(method, everything()) # move method col to start
+    select(method, everything()) # move the cell/cluster identifier column to start
   
   if(!(is.null(tp)) & per_sample == FALSE & identical(method, "Cluster")){ #when timepoint has an input and the input is not All
     #split column, select rows for the corresponding timepoints using filter 
@@ -401,10 +428,10 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
     }
   }
   else if(identical(method, "Cell") & per_sample){ #gets rid of blacklisted cells in the per sample data
-    #print(method)
+
      activity <- activity %>%
        filter(!(Cell %in% bad_cells))
-    #print(str(activity))
+ 
   }
   activity
 }
@@ -439,59 +466,52 @@ makePheatmapAnno <- function(palette, column) {
 #' @param method 
 #' @param region 
 #' @param TF_and_ext 
-#' @param brain_data either forebrain_data or pon_data, eventually will be saved by data_prep.R
-#' and loaded at the beginning of app.R as an element in a list
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#' plot_heatmap(c("Arx","Lef1"), "Cluster","cortex", TF_and_ext,forebrain_data)
-#' plot_heatmap(c("Arx","Lef1"), "Cell","cortex", TF_and_ext,forebrain_data)
-#' plot_heatmap(c("Pax6","Lef1"), "Cluster","pons", TF_and_ext_pon, pon_data)
-#' plot_heatmap(c("Pax6","Lef1"), "Cell","pons", TF_and_ext_pon,pon_data)
+#' @param timepoint
+#' @param per_sample 
 #' 
-plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_num = 300, 
+#' params same as create_activity_data inputs because the function is called in this one
+#'
+
+#
+#' 
+plot_heatmap <- function(tf, method, region, TF_and_ext,
                          timepoint = NULL, per_sample = FALSE){
   # sanity checking
   if(!region %in% c("cortex", "pons")) return("Wrong usage: region should be either cortex/pons")
   if(!method %in% c("Cell","Cluster", "joint")) return("Wrong usage, method should be Cell/Cluster")
   
   
+  #generates heatmap for the per sample clusters in the joint_extended datasets
   if(method == "Cluster"){
     act <- create_activity_data(tf, "Cluster",region, TF_and_ext, timepoint) 
-      
-    #str(act)
+
     act <- column_to_rownames(act, var = "Cluster") # make that column name as row name ...
     
-    #print(act)
+    # hm_anno$anno_row contains the cluster labels of all clusters in the joint_extended datasets
+    # used to colour the cluster by a palette
+    new_anno_row <- hm_anno$anno_row 
     
-    # change the anno_row, since we change the color palettes
-    new_anno_row <- hm_anno$anno_row #%>%
-      #mutate(Cluster = gsub(pattern = ".* ", replacement = "", Cluster))
     rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row)) # re-assign the rownames
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
-   # print(new_anno_row)
+ 
     anno_col <- new_anno_row # this is loaded by data_prep.R
-    #print(anno_col)
+
     show_colname_plot <- TRUE
     title <- glue('Transcription Factor Regulon Activity at Developmental Time: {timepoint}')
   }
-  else if(method == "joint"){ #plot heat map by joint cluster 
+  else if(method == "joint"){ #plot heat map by joint cluster for the joint_extended dataset, or for the per-sample analyses
     
     act <- create_activity_data(tf, "joint", region, TF_and_ext, per_sample = per_sample,
-                                timepoint = timepoint) #%>% 
-      #filter(!grepl("BLACKLISTED", Cluster))
-    
-    #print(act)
+                                timepoint = timepoint) 
     
     if(per_sample == TRUE){
       #filter out the exclude clusters
       act <- act %>% filter(!grepl("EXCLUDE", act$Cluster))
-      #print(act)
+
       col_to_row <- "Cluster"
       
+      #generate the labels for the clusters in the data-set so that the palette can be properly displayed
       new_anno_row <- act %>% mutate(rownames = Cluster) %>%
         column_to_rownames("rownames") %>% select(Cluster)
       
@@ -508,18 +528,18 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     anno_col <- new_anno_row # this is loaded by data_prep.R
-    #print(anno_col)
+
     show_colname_plot <- TRUE
     title <- "Transcription Factor Regulon Activity per Cluster"
   }
   cluster_row <- FALSE
  
-  #do not do row clustering if there is only one TF selected
+  #do not do row heirarchal clustering if there is only one TF selected
   if(length(tf) > 1){
    cluster_row <- TRUE
   }
   
-  #print(anno_col)
+ 
   pheatmap::pheatmap(t(act),
                      show_colnames = show_colname_plot,
                      scale = "none",
@@ -536,31 +556,21 @@ plot_heatmap <- function(tf, method, region, TF_and_ext, #brain_data, cell_plot_
 } 
 
 #----------------------------Dimension reduction---------------------------------------------
-#' Make UMAP clustering scatterplot
+#' Make DR clustering scatterplot
 #'
 #' @param tf_number Either 1 or 2. In the tf input vector we get from user in Shiny app, there could be
 #' multiple tfs, but we only support plotting two tfs since the scatterplot is big
-#' @param overall_brain_data metadata (forebrain_data or pon_data), saved in data_cortex
+#' @param cell_metadata metadata containing DR coordinates , saved in data_cortex
 #' and data_pons
 #' @param cell_activity_data made by create_activity_data() function given the tf input
-#' @param sample_number we eliminate half of the cell samples to relieve the burden of 
-#' the RAM to speed up plotting, since we have over 37000 cells(samples), we randomly sample 
-#' 13000 to optimize speed, but one can also specify this value to see fewer or more sample points
+#' @param dim_red_type allow user to select between UMAP, tSNE, PCA DR methods
 #'
-#' @return a UMAP scatter plot that shows in which cluster(region) the tf expresses the most
+#' @return a DR scatter plot coloured by TF activity
 #'
-#' @examples
-#' tf <- c("Arx","Lef1")
-#' activity_test_tf1 <- create_activity_data(tf, "Cell","cortex", data_cortex$TF_and_ext)
-#' plot_UMAP(tf_number = 1,data_cortex$overall, activity_test_tf1)
-#' 
+
 plot_dr <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){ #cell_metadata is the tsv with the 
   #embedding coordinates for each cell in the dataset
-  # if(tf_number == 1) tf_plot <- 2 # number of col, the first col is Cell, so start from 2
-  # else if(tf_number == 2) tf_plot <- 3 
-  # else{return(
-  #   "Wrong usage, now we only support plotting two tfs since the scatterplot is big"
-  # )}
+
   
   tf_plot <- tf_number + 1 #replaces the above control flow
 
@@ -581,8 +591,13 @@ plot_dr <- function(tf_number, cell_metadata, cell_activity_data, dim_red_type){
     theme_min() + labs(color = 'TF Activity') + ggtitle(TF)
   
 }
-#if I want to include labeled clusters, then I need to map cells to the clusters 
-#place a label at the mean of the umap coordinates for the cells that belong in that cluster
+
+#' @param cluster_label boolean: include ggrepel label of clusters or not
+#' @param cell_metadata metadata containing DR coordinates
+#' @param per_sample indicates if the function call is for a per_sample dataset 
+#' @param dim_red_type allow user to select between UMAP, tSNE, PCA DR methods
+#'
+#' @return a DR scatter plot coloured by cluster label
 
 color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label, 
                              per_sample = FALSE){
@@ -596,13 +611,6 @@ color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label,
   if(per_sample){
     var_group <- "ID_20201028_with_exclude"
   }
-  # centers <- cell_metadata %>%
-  #   group_by(get(var_group)) %>%
-  #   summarise(center_x = median(get(x_axis)),
-  #             center_y = median(get(y_axis)))
-  
-  #print("step1")
-  #print(centers)
   
   gg <- ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
     geom_point(aes(color = get(var_group)), alpha = 0.2) + theme_min() + theme(legend.position="bottom") + 
@@ -630,12 +638,11 @@ color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label,
                                          segment.size = 0.5,
                                          arrow = arrow(length = unit(0.01, 'npc')))
   }
- #print("step3")
   return(gg)
 }
 
 #----------------------------Time Course Ribbon Plot---------------------------------------------
-#need to maybe change the colors, select out the numbers and rename legend, just cosmetic things
+
 
 #' make cell metadata of certain region, cortex/pon
 #'
@@ -680,22 +687,6 @@ create_metadata_timeseries <- function(cell_metadata, part){
     arrange(Cell)
   
 }
-
-# create_cell_metadata_pon <- function(metadata_part){
-#   metadata_part %>% 
-#     select(Age = orig.ident, Cell, Cluster = ID_20190715_with_blacklist_and_refined) %>% 
-#     # In this case, we remove the "prefix" of the Cluster column, so that we are
-#     # simply left with the abbreviation representing the cell type, so that 
-#     # we can link the cells of the same cell type across ages
-#     separate(Cluster, into = c("Prefix", "Cluster"), sep = "_") %>% 
-#     mutate(Age = factor(Age, levels = c("Hindbrain E12.5",
-#                                         "Pons E15.5",
-#                                         "Pons P0",
-#                                         "Pons P3",
-#                                         "Pons P6"))) %>% 
-#     arrange(Cell)
-#   
-# }
 
 
 #' Translate transcription factor name version
@@ -764,9 +755,14 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
   
   activity <- activity %>% arrange(Cell)
   
-  #%>% 
-   # tibble::rownames_to_column(var = "Cell") %>% # the original activity vector has names
-    #arrange(Cell)
+  #there is one cell in the pons metadata file that is not in the binary activity matrix so im gonna remove it
+  #not sure why its here
+  
+  
+  cell_diff <- setdiff(cell_metadata$Cell, activity$Cell)
+  if(length(cell_diff) > 0) {cell_metadata <- cell_metadata %>% filter(cell_metadata$Cell != cell_diff)}
+  
+  
   
   if(!all(cell_metadata$Cell == activity$Cell)) return (-1)
   # Add the TF activity to the new dataframe
@@ -811,7 +807,7 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
     ggplot(aes(x = xpos, y = frac, fill = cluster)) +
     geom_area(stat = "identity", show.legend = show_legend) +
     scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
-    scale_x_continuous(breaks = seq_along(unique(df$stage)),
+    scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
                        labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
                        limits = c(1, length(unique(df$stage)))) +
     labs(x = "Developmental Age", y = "Proportion", title = TF) +
@@ -825,8 +821,16 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
   else{return(plot)}
 }
 #--------------------------Active_specific------------------------
+
+#' @param sample name of the data-set that the user wants to look at, used as a part of the path of file to read
+#' @param cluster cluster of interest 
+
+#'
+#' @return a list of 3 matrices: tf_table corresponds to the table for a specific cluster and used in the By_cluster subtab
+#' FC_df and AUC_df are matriices containing AUC and FC values for each gene in each cluster   
+
 active_specific_prep <- function(sample, cluster){
-  path <- glue("data/{sample}/{sample}.active_specific_tf.Rds")
+  path <- glue("data/{sample}/{sample}.active_specific_tf.Rds") 
   data <- readRDS(path) 
   #print()
   tf_table <- data$tf_table[[cluster]] %>% 
@@ -837,13 +841,23 @@ active_specific_prep <- function(sample, cluster){
   send_back <- list("tf_table" = tf_table,
                     "FC_df" = FC_df,
                     "AUC_df" = AUC_df)
-  #names(data) <- cluster
 }
+
+#' @param data data generated by active_specific_prep. Specifically, the tf_table part
+#' @param fc Fold change cutoff selected by the user, TFs above cutoff are labelled and displayed in the table, genes below
+#' are not
+#' @param cluster cluster of interest 
+
+#'
+#' @return a scatter plot of TFs
+
 plot_scatter <- function(data, fc, cluster){
 
+  #data used for ggrepel
+  #the mutate(gsub) statements are to replace the "_extended (21g)" portion with just a "+" to shorten the label
   to_label <- data %>% filter(AUC_FC > fc) %>% mutate(why = gsub("_extended", "+", TF)) %>%
     mutate(TF = gsub("\\(.+\\)", "", why))
-  #print(to_label)
+
   
   ggplot(data = data, mapping = aes(AUC_out, AUC_in)) +
     geom_point(aes(color = AUC_FC, shape = is_ext), size = 4, alpha = 0.6) + 
@@ -870,13 +884,18 @@ plot_scatter <- function(data, fc, cluster){
                               segment.size = 0.5,
                               arrow = NULL)
 }
+
+#' @param data data generated by active_specific prep. Specifically, the AUC_df data frame
+#' @param tf cluster of interest 
+
+#'
+#' @return a list of bar plots that displays the TF ranked by AUC value in each cluster 
 plot_bar_list <- function(data, tf){
   
   data <- data %>% mutate(Cluster = gsub("_", " ", Cluster))
     
-  #print(data$Cluster)
   palette <- master_palette$Cluster[names(master_palette$Cluster) %in% data$Cluster]
-  #print(palette)
+
   
   # 1. loop over genes, then each index can be referred to with .x
    purrr::map(.x = tf, .f = ~data %>% select(.x, Cluster) %>% 
@@ -894,14 +913,15 @@ plot_bar_list <- function(data, tf){
 }
 
 #-------------Bubble-plot--------------------
+#code adapeted from the clusters app
+
 bubble_prep <- function(sample, tf, dend_order, scale){
   path <- glue("data/{sample}/{sample}.active_specific_tf.Rds")
   data <- readRDS(path)
   
   AUC <- data$AUC_df %>% select(Cluster, tf) %>%
     filter(Cluster %in% dend_order)
-  
- # print(AUC)
+ 
   
   # Scale activity of each tf linearly across clusters to [0, 1]
   if (scale) {

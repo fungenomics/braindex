@@ -1,12 +1,8 @@
-#----------------------------------problem---------------------------------
-#need to check select input for TF and genes and display any that are not in the data or annotation
-#then generate a list of genes or TFs to use and then supply that as the input_new()$tf input
+
 
 server <- function(input, output, session) {
 
-  # Dynamic UI, change the selectInput tf lists on display depending on the brain region that is selected
-  updateSelectizeInput(session, inputId = "TF", choices = all_tf_list, 
-                       selected = c("Arx","Lef1"), server = TRUE)
+  # Dynamic UI, change the selectInput tf and gene lists on display depending on the brain region that is selected
   
   observeEvent(input$region,{
     if(input$region == "cortex"){
@@ -23,13 +19,12 @@ server <- function(input, output, session) {
                            selected = c("Gad2"), server = TRUE)
       
     }
-    #updateRadioButtons(session, "show", selected = "stop") #resets the network visualization 
   })
 
   
   #uses the input update button to update a list of the parameters of the app for the following functions
   input_new <- eventReactive(input$update,{
-    #data_cortex and data_pons are created by data_prep.R and loaded in global.R contains a list 
+    #data_cortex_extended and data_pons_extended are created by data_prep.R and loaded in global.R contains a list 
     #data files (defined in data_prep.R)
     l <- list()
     if(input$region == "cortex"){
@@ -42,12 +37,10 @@ server <- function(input, output, session) {
       temp <- paste("P-", input$time, sep = "")
       l$dend_order <- dend_order_joint_pons_extended
       }
-    #str(input$TF)
+ 
     l$tf <- input$TF
     l$region <- input$region
-    #l$input_pathway <- input$input_pathway
     l$method <- input$method
-    #l$num_cell_plot <- input$num_cell_plot
     l$time_point <- temp
     l$gene <- input$gene
     l$label <- input$label
@@ -61,10 +54,7 @@ server <- function(input, output, session) {
     l$as_toggle <- input$as_toggle
     l$fc <- input$fc
     l$as_tp <- input$as_tp
-    # l$gene_file_path <- input$file_gene$datapath
-    # print(l$gene_file_path)
-    # l has following elements with same names for both options above:
-    # l contains ...
+ 
     
     # We will use the same name attributes to retrieve data
     return (l)
@@ -81,8 +71,18 @@ server <- function(input, output, session) {
   #before the insertUI kicks in and supplies the correct time value to the path
   #using priorities in the observeEvent has not helped 
   
-  #solved using req() lol
+  #UPDATE:
+  #solved using req()
   
+  
+  #same chunk of code repeated for each tab that displays per-sample data 
+  #observes for 2 things: what tab the app is currently displaying, and if the per-sample toggel for that tab is T or F
+  #If the toggle is on for the tab that is curretnly displayed, insert an UI element to select which time-point to display 
+  #data for.
+  
+  #Organized this way such that each chunk of code corresponds to one tab, can be condensed, but done this way for ease of reading
+  
+  #--------------Insert UI: Table Tab-----------------
   observeEvent(input$tabs, {
     if (input$table_toggle == TRUE & !identical(input$tabs,
                                                 "Transcription Factor Target Information")){
@@ -131,6 +131,7 @@ server <- function(input, output, session) {
     }
   }, priority = 1000) 
   
+  #--------------Insert UI: GRN Tab-----------------
   observeEvent(input$tabs, {
     if (input$grn_toggle == TRUE & !identical(input$tabs,
                                                 "Regulatory Network Visualization")){
@@ -177,6 +178,8 @@ server <- function(input, output, session) {
     }
   }) 
   
+  #--------------Insert UI: Heatmap Tab-----------------
+  #heatmap tab has a timepoint selection UI element by default so this just updates the selection options
   observeEvent(input$heatmap_toggle,{
     if(input$heatmap_toggle){
       updateCheckboxGroupInput(session, inputId = "method", "Cluster Method",
@@ -206,6 +209,7 @@ server <- function(input, output, session) {
     
   })
   
+  #--------------Insert UI: DR plot Tab-----------------
   observeEvent(input$tabs, {
     if (input$cluster_toggle == TRUE & !identical(input$tabs,
                                               "Clustering")){
@@ -251,6 +255,8 @@ server <- function(input, output, session) {
       })
     }
   })
+  
+  #--------------Insert UI: Active/Specific Tab-----------------
   
   #Update the active and specific tab inputs and responding to toggle
   observeEvent(input$tabs, {
@@ -300,51 +306,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # observeEvent(input$tabs, {
-  #   if (input$bb_toggle == TRUE & !identical(input$tabs,
-  #                                             "bubble")){
-  #     removeUI(
-  #       selector = "div:has(>> #bb_tp)"
-  #     )
-  #   }
-  #   else if (input$bb_toggle == TRUE & identical(input$tabs,
-  #                                                 "bubble")){
-  #     insertUI(
-  #       selector = "#region",
-  #       where = "afterEnd",
-  #       ui = selectInput(inputId = "bb_tp",
-  #                        label = "Developmental Time-Point to Explore",
-  #                        choices = dev_time_points,
-  #                        multiple = FALSE,
-  #                        selected = "e12")
-  #     )
-  #   }
-  # })
-  # #insert timepoint selection when the toggle for sample data in the GRN tab is acted on
-  # observeEvent(input$bb_toggle,{
-  #   if(input$bb_toggle){
-  #     insertUI(
-  #       selector = "#region",
-  #       where = "afterEnd",
-  #       ui = selectInput(inputId = "bb_tp",
-  #                        label = "Developmental Time-Point to Explore",
-  #                        choices = dev_time_points,
-  #                        multiple = FALSE,
-  #                        selected = "e12")
-  #     )
-  #     output$bb_data <- renderText({
-  #       glue("<b>Current Dataset: {str_to_title(input_new()$region)} - Time-Point {input$bb_tp}</b>")
-  #     })
-  #   }
-  #   else if (input$bb_toggle == FALSE){
-  #     removeUI(
-  #       selector = "div:has(>> #bb_tp)"
-  #     )
-  #     output$bb_data <- renderText({
-  #       ""
-  #     })
-  #   }
-  # }) 
   
   #update inputs when toggle is turned so that the plots auto-update
   observeEvent(input$grn_toggle|input$table_toggle|input$heatmap_toggle|input$cluster_toggle|input$as_toggle|input$bb_toggle, {
@@ -352,7 +313,7 @@ server <- function(input, output, session) {
   }, ignoreInit = TRUE, priority = 1)
   
   #updates a reactive value reg depending on the input region which is used to select the right dataset to display in the app
-  #uses the input_new() region because wants to be dependant on the update button
+  #uses the input_new() region because wants to be dependent on the update button
   reg <- reactive({
     if(identical(input_new()$region, "cortex")){
       "ct"
@@ -362,20 +323,26 @@ server <- function(input, output, session) {
     }
   })
   
+  #displays informative pop-up about the per-timepoint toggles 
   observeEvent(input$info|input$info1|input$info2|input$info3|input$info4, {
     sendSweetAlert(session, title = "What Is This?", text = 
                      "Use toggle to explore data from SCENIC analyses performed
                    on each developmental time-point individually.")
   }, ignoreInit = TRUE)
   
+  #Initiates a reactive value that will contain all the TF inputs
+  # by the user, subset by whether or not the TFs are active in the currently viewed 
+  #dataset
+  
   tf_list <- reactiveValues(
     TF_in_data = NULL,
     TF_not_data = NULL
   )
+  
+  
+  #Tells the user which of their inputs are not active in our dataset
   output$tf_check <- renderText({
-    # if(identical(input$tabs, "active_specific")){
-    #   ""
-    # }
+
     if(!length(tf_list$TF_in_data) > 0 & !is.null(tf_list$TF_in_data)){
       "<font color=\"#FF0000\"><b> None of the input TFs are active in the current dataset. </b></font>"
     }
@@ -387,10 +354,12 @@ server <- function(input, output, session) {
   
   # -----------------------------Table------------------------------------------
 
-  #filter the data, add a column for logos, then display
+  #Starts with the dataframe containing all regulatory relationships of all TFs
+  #filter the data based on TF input, add a column for gene motif logos, then display
     output$table1 <- renderDataTable({
         # process data, filter the lines with our interested TF
-        
+      
+      
       datafile <- glue("data_{reg()}_{input$table_tp}")
       
       
@@ -398,12 +367,13 @@ server <- function(input, output, session) {
         
         req(input$table_tp)
         
+        #checks to see which TFs in the use input are active and which are not, and then subset accordingly
+        
         temp <- check_tf_input(input_new()$tf, get(datafile)$unique_TF)
         
         tf_list$TF_in_data <- temp$TF_in_data
         tf_list$TF_not_data <- temp$TF_not_data
         
-        #print(tf_list)
         
         subset_data <- get(datafile)$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
@@ -423,7 +393,6 @@ server <- function(input, output, session) {
         tf_list$TF_in_data <- temp$TF_in_data
         tf_list$TF_not_data <- temp$TF_not_data
 
-        #print(tf_list)
         
         subset_data <- input_new()$TF_target_gene_info %>% 
           dplyr::filter(TF %in% tf_list$TF_in_data) %>% 
@@ -443,7 +412,7 @@ server <- function(input, output, session) {
   
 
   # -----------------------------GRN------------------------------------------
-    gene_list <- reactiveValues( #makes reactive values to take in the user input gene list
+    gene_list <- reactiveValues( #makes reactive values to take in the user input gene list from a file
       data = NULL,
       clear = FALSE
     )
@@ -469,7 +438,7 @@ server <- function(input, output, session) {
     }, priority = 1000)
     
     output$file1_ui <- renderUI({
-      input$reset ## Create a dependency with the reset button
+      input$reset ## Create a dependency with the reset button that clears the UI everytime the reset button is clicked
       fileInput(
         "file_gene", "Choose a CSV file containing your genes list",
         accept = c(
@@ -480,6 +449,7 @@ server <- function(input, output, session) {
         placeholder = "example_list.csv"
       )
     })
+    
     #check if there is a user input gene_list file, if there is, use it, if not, use the selectInput genes 
     igraph_network <- reactive ({
       
@@ -540,20 +510,14 @@ server <- function(input, output, session) {
     
     
     # -----------------------------Heatmap-------------------------------------------
-    # output$color_hm_palette <- renderImage({
-    #   
-    #   expr = list(src = "www/timeseries_color.png", #picture of colors corresponding with clusters 
-    #        alt = "This is alternate text")
-    #   
-    #   
-    # },
-    # deleteFile = FALSE)
     
+    #this plot displays a heatmap of TF activity in each joint cluster when the per-sample toggle is off
+    #when the per_sample toggle is on, it displays the heatmap of TF activity of whatever timepoint is elected
     hm_joint_cluster_plot <- reactive({
       
       req("joint" %in% input_new()$method)
       
-      if(input_new()$heatmap_toggle == TRUE){
+      if(input_new()$heatmap_toggle == TRUE){ #luser is looking at per_sample data
         
         datafile <- glue("data_{reg()}_{input$time}")
         
@@ -581,8 +545,10 @@ server <- function(input, output, session) {
       }
 
     })
-    #need to adjust this, at least zoomable, change color scheme to dark blue and neon yellow
-    hm_sample_cluster_plot <- reactive({ #this is displaying heatmap clustering by sample cluster and not joint cluster
+    
+   #this plot shows TF activity heatmap for the joint_cortex(or pons)_extended dataset but using the sample clusers labels
+    #it is not displayed if the toggle is on
+    hm_sample_cluster_plot <- reactive({ 
       req("Cluster" %in% input_new()$method)
       
       temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
@@ -597,11 +563,12 @@ server <- function(input, output, session) {
     })
  
     output$heatmap_joint <- renderPlot({
-      #print(str(input_new()$tf))
+      
       req(length(input_new()$tf) != 23 ) #change this line after the tf input check has been done
       hm_joint_cluster_plot()
     })
     
+    #changes name of the file 
     hm_name <- reactive({
       if(input$heatmap_toggle){
         glue("{reg()}_{input$time}_heatmap.pdf")
@@ -610,6 +577,7 @@ server <- function(input, output, session) {
         "heatmap_joint.pdf"
       }
     })
+    
     output$download_hm_joint <- downloadHandler(filename = hm_name(),
                                                contentType = "application/pdf",
                                                content = function(file){
@@ -619,6 +587,7 @@ server <- function(input, output, session) {
     
     output$heatmap_cluster <- renderUI({
       
+      #adjusts plot width manually so that only the large plots have scrolling
       if(input$time == "All"){plot_width = '3500px'}
       else{plot_width = '800px'}
       
@@ -674,7 +643,7 @@ server <- function(input, output, session) {
       }
     }) #this part takes the TF that the user selects and subsets the feather file containing all 
     #regulon activity data to include only the regulons that the user selects and this is entered into the 
-    #UMAP plot function 
+    #DR plot function 
     
 
 
@@ -695,6 +664,7 @@ server <- function(input, output, session) {
                   activity_data_cluster(), input_new()$dim_red)
       }
     })
+    
     Umap_plot_2 <- reactive({
       req(ncol(activity_data_cluster()) > 2)
       
@@ -713,6 +683,7 @@ server <- function(input, output, session) {
       }
     })
     
+    #plots a DR plot of the current data set where points are coloured by which cluster they belong to
     output$color_by_cluster <- renderPlot({
       if (input_new()$cluster_toggle){
         
@@ -756,60 +727,6 @@ server <- function(input, output, session) {
     
     
     # --------------------------------------Timeseries-------------------------------------------
-    # tf_nexist_data <- reactive({
-    #   tf_nexist <- ""
-    #   for(tf in input_new()$tf){
-    #     if (tf %in% input_new()$tfs_not_exist_timeseries){
-    #       tf_nexist <- paste(tf_nexist,tf,sep = " ")
-    #     }
-    #   }
-    # })
-    # tf_desc_timeseries <- reactive({
-    #   tf_nexist_string <- ""
-    #   for(tf_n in input_new()$tfs_not_exist_timeseries){
-    #     tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
-    #   }
-    #   text <- glue("We do not have these followning tfs in this tab: {tf_nexist_string}")
-    #   
-    #   tf_nexist <- ""
-    #   for(tf in input_new()$tf){
-    #     if (tf %in% input_new()$tfs_not_exist_timeseries){
-    #       tf_nexist <- paste(tf_nexist,tf,sep = " ")
-    #     }
-    #   }
-    # 
-    #   if(tf_nexist == ""){
-    #     text <- "Good! All of your input tfs exist in our timeseries activity datasets!"
-    #   }
-    #   else{
-    #     tf_nexist_string <- ""
-    #     for(tf_n in input_new()$tfs_not_exist_timeseries){
-    #       tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
-    #     }
-    #     text <- glue('Those tfs in your input list does not not exist in our
-    #                timeseries datasets: {tf_nexist}.
-    #                We do not have these followning tfs in this tab: {tf_nexist_string}')
-    #   }
-    # })
-    
-    # output$tf_timeseries_desc <- renderText({
-    #   # tf_desc_timeseries()
-    #   tf_nexist_string <- ""
-    #   for(tf_n in input_new()$tfs_not_exist_timeseries){
-    #     tf_nexist_string <- paste(tf_nexist_string,tf_n,sep = " " )
-    #   }
-    #   text <- glue("We do not have data for the following trancription: {tf_nexist_string}")
-    #   
-    #   
-    # })
-    
-    
-    output$timeseries_desc <- renderText({
-      text <- "Click option: double clicking a cell type in the legend displays that cell type ONLY;
-      single click removes that cell type from the plot. Mouse over ribbons in the plot to see the cell types. 
-      We only support four plots of your first four transcripton factor inputs."
-    
-    })
     
     # we must transform the TF format, from raw form (Arx) to (Arx_extended (21g)) to fetch
     # information
@@ -824,16 +741,6 @@ server <- function(input, output, session) {
       translate_tf(input_new()$tf,input_new()$binary_active_TFs)
       })
     
-    # ggplotly_list_plot <- reactive({
-    #   req(TF_transformed())
-    #   # binary_active_TFs is loaded at beginning by data_prep.R
-    #   plot_list <- lapply(TF_transformed(), plot_timeseries, cell_metadata = data_cortex$timeseries_input_meta, 
-    #                       activity = data_cortex$binary_activity, make_plotly = TRUE)
-    #   # produce a list of ggplotly plots
-    #   subplot(plot_list, nrows = 2, margin = 0.04, heights = c(0.6, 0.4), shareX = TRUE, shareY = FALSE)
-    #   
-    # })
-    
     
     ggplot_list_plot <- reactive({
       req(TF_transformed())
@@ -842,7 +749,7 @@ server <- function(input, output, session) {
       plot_grid(plotlist = plot_list)
     })
     
-    output$timeseries1 <- renderPlotly({ # a plotly list
+    output$timeseries1 <- renderPlotly({ # a plotly plot
       req(length(input_new()$tf)>0)
       plot_timeseries(TF_transformed()[1][1], input_new()$timeseries_input_meta, input_new()$binary_activity, make_plotly = TRUE)
      })
@@ -859,12 +766,6 @@ server <- function(input, output, session) {
                                                          width = 20, height = 15)
                                                 })
     
-    # output$pons_timeseries <- renderImage({
-    #      
-    #      list(src = "www/pons_timeseries.png",
-    #           alt = "This is alternate text")
-    #      
-    #    }, deleteFile = FALSE)
     
     output$cell_proportion_timeseries <- renderPlotly({
       
@@ -882,13 +783,6 @@ server <- function(input, output, session) {
     })
    
     
-    # output$timeseries_color <- renderImage({
-    #   
-    #   list(src = "www/timeseries_color.png",
-    #        alt = "This is alternate text")
-    #   
-    # },
-    # deleteFile = FALSE)
     
 #-------------------------------------Active specific-------------------
     #same idea as reg but used to update the cluster list in this tab, uses the input$region because do not want 
@@ -901,6 +795,10 @@ server <- function(input, output, session) {
         "po"
       }
     })
+    
+    #each data-set for each timepoint and for the joint_extended data has a different set of clusters that belong to it
+    #clust_list is a reactive value that updates whenever the data-set that the user views changes, then its used to update
+    #the selection options in the side-bar
     clust_list <- reactive({
       if(input$as_toggle){
         
@@ -918,11 +816,16 @@ server <- function(input, output, session) {
           filter(!grepl("EXCLUDE", Sample_cluster)) %>% deframe()
       }
     })
+    
+    #actual updating the selection widget
     update_in <- observe({
       updateSelectizeInput(session, inputId = "active_specific_cluster", choices = clust_list(), 
                            selected = clust_list()[1], server = TRUE)
     }, priority = 1000)
     
+    
+    #Reactive data used in the active specific tab
+    #This updates depending on the region, the time-point, and the cluster of interest  
     active_specific_data <- reactive({
       if(input$as_toggle){
         
@@ -942,10 +845,9 @@ server <- function(input, output, session) {
         "data" = active_specific_prep(data_sample, input_new()$as_cluster),
         "name" = sample_name
       )
-      #active_specific_prep(data_sample, input_new()$as_cluster)
     })
     
-    
+    #a scatter plot and a table for the active-specific by Cluster subtab
     output$as_clust <- renderUI({
        fluidRow(
          column(width = 7, plotOutput("active_specific_scatter")),
@@ -954,20 +856,23 @@ server <- function(input, output, session) {
                 (div(style='height:400px;overflow-y: scroll; width:450px;overflow-x: scroll;',
                      tableOutput("active_specific_table"))))
        )
-      #fluidRow(plotOutput("active_specific_cluster"))
+
     })
     
+    #bar plot for the active-specific by TF subtab
     output$as_tf <- renderUI({
       plotOutput("as_bar_AUC", height = '800px')
     })
     
+    #A Umap plot that only colours the points that belong in the user selected cluster 
+    #uses the plot from color_by_cluster function and then overwrites the palette used 
     output$active_specific_dr <- renderPlot({
       data <- get(active_specific_data()$name)
-      #cluster <- gsub(".+_", "", input_new()$as_cluster)
+      
       awo <- hm_anno$side_colors$Cluster
       names(awo) <- gsub(" ", "_", names(hm_anno$side_colors$Cluster))
       to_color <- replace(awo, !grepl(input_new()$as_cluster, names(awo)), "#e5e5e5")
-      #print(to_color)
+     
       gg <- color_by_cluster(data$cell_metadata, 
                              "umap", FALSE,
                              per_sample = input_new()$as_toggle)
@@ -1042,17 +947,16 @@ server <- function(input, output, session) {
                   'Average AUC in Other' = AUC_out,
                   'AUC Fold Change' = AUC_FC )
       
-      # datatable(data, escape = TRUE,
-      #           colnames = c('Average AUC in Cluster' = 'AUC_in', 
-      #                        'Average AUC in Other' = 'AUC_out',
-      #                        'AUC Fold Change' = 'AUC_FC'),
-      #           rownames = FALSE)
     })
     
     
     
 #-------------------------Bubbles--------------------
-    output$dend_image <- renderUI({
+    #code courtesy of clusters app and adapted for use 
+    
+   #dendrogram image for the joint_cortex and pons extended datasets 
+    #size and width are hardcoded to line up with the bubble plot
+     output$dend_image <- renderUI({
       image_source <- switch(input$region,
                              "cortex" = "joint_cortex_extended_tree.png",
                              "pons" = "joint_pons_extended_tree.png")
@@ -1067,13 +971,7 @@ server <- function(input, output, session) {
     
     #reactively changes data for bubble plot depending on inputs
     bubble_data <- reactive({
-      # if(identical(input_new()$region, "cortex")){
-      #   dend_source <- dend_order_forebrain_tp
-      # }
-      # else{
-      #   dend_source <- dend_order_pons_tp
-      # }
-        
+ 
       temp <- check_tf_input(input_new()$tf, unique(input_new()$TF_and_ext[["type"]]))
       tf_list$TF_in_data <- temp$TF_in_data %>% transform_tf_input(input_new()$TF_and_ext) %>%
         head(20)
@@ -1081,13 +979,13 @@ server <- function(input, output, session) {
         
       data_sample <- glue("joint_{input_new()$region}_extended")
 
-      #dend_order <- dend_source[data_sample]
+
       
       bubble_prep(sample = data_sample,
                   tf = tf_list$TF_in_data,
                   dend_order = input_new()$dend_order,
                   scale = FALSE)
-      #active_specific_prep(data_sample, input_new()$as_cluster)
+
     })
     
     num_of_tf <- reactive({
@@ -1097,7 +995,7 @@ server <- function(input, output, session) {
     # Generate the bubbleplot
     output$bubble <- renderPlot({
       
-      #print(bubble_data()$data)
+   
       
       plot_bubble(data = bubble_data()$data,
                   label_palette = bubble_data()$label_palette, 

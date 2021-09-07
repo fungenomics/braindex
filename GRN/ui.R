@@ -174,9 +174,7 @@ ui <- fluidPage(
                                               value = FALSE, status = "success")),
             column(width = 3, actionButton("info2", "What Is This?"))
           ),
-          # materialSwitch(inputId = "heatmap_toggle", 
-          #                label = "Explore per Time-Point Heatmap", 
-          #                value = FALSE, status = "success"),
+         
           htmlOutput("hm_data"),
           title = "TF Activity Heatmap",
           value = "Heatmap",
@@ -189,12 +187,8 @@ ui <- fluidPage(
           (div(style='width:800px;overflow-x: scroll;',
                uiOutput("heatmap_cluster"))),
           
-          # div(style = "margin-left: 1.3em; margin-right: 1.3em;",
-          # fluidRow(
-          #   plotOutput("heatmap_cluster")
-          # )),
+         
           downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
-          #imageOutput("color_hm_palette", width = "6in", height = "4in")
         ),
         
         # -----------------DR plots ---------------------------------------------     
@@ -248,8 +242,7 @@ ui <- fluidPage(
           
           htmlOutput("grn_data"),
           
-          #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
-          #textOutput("desc"),
+
           plotlyOutput("network"),
           br(),#so the plotly doesn't overlap with the download button
           br(),
@@ -285,10 +278,9 @@ ui <- fluidPage(
                                               value = FALSE, status = "success")),
             column(width = 3, actionButton("info1", "What Is This?"))
           ),
-          # materialSwitch(inputId = "table_toggle", label = "Explore per Time-Point Data",
-          #                value = FALSE, status = "success"),
+
           htmlOutput("table_data"),
-          #textOutput("general_desc"),
+          
           dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
         ),
@@ -304,21 +296,19 @@ ui <- fluidPage(
                   is higher than a TF activity threshold determined in the SCENIC pipeline."),
                p("• The time series for the first TF selected in the sidebar will be an interactive plot, with
                  the remaining plots being static."),
-               
-               textOutput("timeseries_desc"),
+               p("Interactive Plot Options: double clicking a cell type in the legend displays that cell type ONLY;
+                  single click removes that cell type from the plot. Mouse over ribbons in the plot to see the cell types. 
+                  We only support four plots of your first four transcripton factor inputs."),
+              
                br(),
-               #textOutput("tf_timeseries_desc"),
 
                fluidRow(
-               plotlyOutput("timeseries1"),
-               downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
-               plotOutput("timeseries2"),
-               #imageOutput("timeseries_color"),
-               #plotOutput("timeseries3"),
-               #plotlyOutput("timeseries4")
-               plotlyOutput("cell_proportion_timeseries")
+                  plotlyOutput("timeseries1"),
+                  downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
+                  plotOutput("timeseries2"),
+                  plotlyOutput("cell_proportion_timeseries")
                ),
-               #imageOutput("proportion_timeseries", width = "auto", height = "auto"),
+
                value = "Time Series"),
       #-----------------------------Active specific------------------------
       tabPanel("TF Activity and Specificity",
@@ -351,12 +341,7 @@ ui <- fluidPage(
                  tabPanel("By TF", uiOutput("as_tf"), value = "by_tf"),
                  id = "as_tabs"
                ),
-               #uiOutput("as_plots"),
-               # fluidRow(
-               #   column(width = 7, plotOutput("active_specific_scatter")),
-               #   column(width = 5, tableOutput("active_specific_table"))
-               #   
-               # ),
+
                plotOutput("active_specific_bar"),
                downloadButton("as_bar_download", "Bar-Plot Download (PDF)"),
                value = "active_specific"),

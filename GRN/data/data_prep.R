@@ -8,20 +8,26 @@ library(glue)
 library(ggplot2)
 source("../functions.R")
 
-# ———————————————————————————————————color palette————————————————————————————————————————
-# make color palette
-metadata <- read_tsv("shared/metadata_20190716.tsv") #for the non-extended dataset
+# --------------------color palettes-------------------------
+# make color palettes using the cluster label column and the colour label in the metadata data frame
+# color palette for ggplot plots are named vectors with cluster colour as names and colour hex codes as values
+# colour palette for pheatmap is a list of one element named "Cluster", this element is a named vector
+
+#different metadata files are loaded here because different SCENIC datasets (non-extended, extended, per-time point) 
+#have cluster labels generated at different dates 
+
+#metadata <- read_tsv("shared/metadata_20190716.tsv") #for the non-extended dataset
 
 metadata_extended <- read_tsv("shared/metadata_20210710_with_qc.tsv") #for the extended dataset in the joint space
 
 metadata_per_sample <- read_tsv("shared/metadata_20201028_with_qc.tsv") #for the per-timepoint analyses 
 
+#per_sample data colour palette
 colour_palette_per_sample <- metadata_per_sample %>% select(Label, Colour) %>% deframe()
 colour_palette_per_sample_space <- colour_palette_per_sample
 names(colour_palette_per_sample_space) <- gsub("_", " ", names(colour_palette_per_sample))
 
 # color palette for heatmap
-
 colour_palette_cluster <- metadata_extended %>% 
   mutate(Label_with_exclude = gsub("_EXCLUDE", "", Label_with_exclude)) %>%
   # use gsub to change all contents in Cluster (cluster name format)
@@ -35,7 +41,6 @@ colour_palette_cluster <- metadata_extended %>%
 colour_palette_cluster_underscore <- colour_palette_cluster
 names(colour_palette_cluster_underscore) <- gsub(" ", "_", names(colour_palette_cluster))
 
-all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
 # color palette for timeseries plot, tab3
 colour_palette <- metadata_extended %>% 
@@ -56,8 +61,13 @@ hm_anno <- makePheatmapAnno(colour_palette_cluster, "Cluster")
 hm_anno_new <- makePheatmapAnno(colour_palette, "Cluster")
 # this is used in: annotation_colors = hm_anno_new$side_colors, in both heatmaps (by cluster/cells)
 
+#------------------------tf_input-------------------
+#this is list of the TF input into SCENIC, all active TF identified in each dataset is a subset of this
+all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
+
 
 # -----------------------joint_cortex_extended-----------------------------------
+#joint_cortex_extended metadata containing DR coordinates 
 forebrain_data_extended <- read_tsv("joint_cortex_extended/joint_cortex_extended.metadata.tsv", 
                                     col_types = cols(.default = col_character(), 
                                                      Joint_extended_PC_1 = col_double(),
@@ -70,24 +80,33 @@ forebrain_data_extended <- read_tsv("joint_cortex_extended/joint_cortex_extended
             "Joint_cluster_number" = Joint_extended_cluster, "Joint_cluster" = ID_20210710_joint_clustering,
             "PC1" = Joint_extended_PC_1, "PC2" = Joint_extended_PC_2, 
             "tSNE_1" = Joint_extended_tSNE_1, "tSNE_2" = Joint_extended_tSNE_2,
-            "UMAP1" = Joint_extended_UMAP_1, "UMAP2" = Joint_extended_UMAP_2)
+            "UMAP1" = Joint_extended_UMAP_1, "UMAP2" = Joint_extended_UMAP_2) #renames different columns to be more clear
 
+#TFs that are active in this dataset
 TF_active_cortex_extended <- as_tibble(read_rds("joint_cortex_extended/joint_cortex_extended.active_regulons.Rds"))
 
+#Dataframe containing TF-target gene pair in each row with info from the GRNBoost portion of SCENIC
+#Use: GRN tab, Gene target info Table Tab
 TF_target_gene_joint_cortex_extended <- as_tibble(read_rds(
   "joint_cortex_extended/joint_cortex_extended.regulon_target_info.Rds")) %>%
   select(-logo)
 
 unique_TF_cortex_extended <- unique(TF_target_gene_joint_cortex_extended[["TF"]])
 
+#Converts between TF's gene symbol and the name of its regulon produced by SCENIC
+#regulon name format: {gene symbol}_{extended} ({number of genes in the regulon})
+#extended regulon indicates if low confidence regulatory relationships are included in the regulon
+# ex: Gene symbol: Arx   Regulon name: Arx_extended (21g)
 TF_and_ext_cortex_extended <- identify_tf(TF_active_cortex_extended)
 
-# activity for cortex timeseries graph data
+# binarized activity matrix for time-series ribbon plot
 binary_activity_cortex_extended <- readRDS("joint_cortex_extended/4.2_binaryRegulonActivity_nonDupl_cortex_extended.Rds")
 colnames(binary_activity_cortex_extended) <- gsub("_.","", colnames(binary_activity_cortex_extended))
 tf_df_cortex_extended <- as_tibble(rownames(binary_activity_cortex_extended))
 
+#metadata file for time-series ribbon plot
 timeseries_input_meta_cortex_extended <- create_metadata_timeseries(forebrain_data_extended, "cortex")
+
 
 data_cortex_extended <- list(
   "cell_metadata"  = forebrain_data_extended,
@@ -104,6 +123,7 @@ data_cortex_extended <- list(
 save(data_cortex_extended, file = "joint_cortex_extended/cortex_extended_prep.Rda")
 
 # -----------------------joint_pons_extended-----------------------------------
+#every element identical to the cortex_extended data
 pons_data_extended <- read_tsv("joint_pons_extended/joint_pons_extended.metadata.tsv", 
                                     col_types = cols(.default = col_character(), 
                                                      Joint_extended_PC_1 = col_double(),
@@ -134,6 +154,8 @@ binary_activity_pons_extended <- readRDS("joint_pons_extended/4.2_binaryRegulonA
 colnames(binary_activity_pons_extended) <- gsub("_.","", colnames(binary_activity_pons_extended))
 tf_df_pons_extended <- as_tibble(rownames(binary_activity_pons_extended))
 
+
+
 data_pons_extended <- list(
   "cell_metadata"  = pons_data_extended,
   "TF_and_ext" = TF_and_ext_pons_extended,
@@ -147,131 +169,139 @@ data_pons_extended <- list(
 )
 save(data_pons_extended, file = "joint_pons_extended/pons_extended_prep.Rda")
 
-# --------------------Cortex data---------------------
-forebrain_data <- read_tsv("joint_cortex/Forebrain_join.2D.tsv") %>% # for UMAP cluster
-  mutate(Sample_cluster = str_replace(Sample_cluster," ","_"))
-# clean some samples with space in between ...
+# # --------------------Cortex data---------------------
+# forebrain_data <- read_tsv("joint_cortex/Forebrain_join.2D.tsv") %>% # for UMAP cluster
+#   mutate(Sample_cluster = str_replace(Sample_cluster," ","_"))
+# # clean some samples with space in between ...
+# 
+# TF_active <- as_tibble(read_rds("joint_cortex/joint_cortex.active_regulons.Rds"))
+# 
+# # These datasets describe TF and genes that are target of TFs, don't have ext suffix
+# TF_target_gene <- as_tibble(read_rds("joint_cortex/joint_cortex.regulon_target_info.Rds")) %>%
+#   select(-logo)
+# unique_TF <- unique(TF_target_gene[["TF"]])
+# 
+# #reads metadata file for color palette of clustering by region
+# forebrain_cluster_palette <- read_tsv("joint_cortex/Jessa2019_Table_2b_joint_cortex_metadata.tsv")
+# forebrain_cluster_palette <- forebrain_cluster_palette %>% select(Cluster, Colour) %>% deframe()
+# 
+# TF_and_ext <- identify_tf(TF_active)
+# 
+# timeseries_input_meta_cortex <- create_metadata_timeseries(forebrain_data, "cortex")
+# 
+# 
+# # metadata specific for each cell, corresponding to the activity data
+# #cell_metadata_cortex_prep <- read_tsv("joint_cortex/joint_cortex.metadata.tsv")
+# 
+# #cell_metadata_cortex_test <- create_cell_metadata_cortex(forebrain_data)
+# 
+# #cell_metadata_cortex <- create_cell_metadata(cell_metadata_cortex_prep)
+# # activity for cortex timeseries graph data
+# binary_activity <- readRDS("joint_cortex/joint_cortex.binaryRegulonActivity_nonDupl.Rds")
+# tf_df <- as_tibble(rownames(binary_activity)) #a dataframe that contains all the tf with 
+# # best representation of its identity in the binary_activity dataset
+# 
+# l <- c()
+# l_nexist_cortex <- c()
+# for (tf in unique_TF){
+#   tf_after <- translate_tf(tf, tf_df)
+#   if(tf_after !=FALSE ){
+#     l <- c(l, tf)
+#   }
+#   else{l_nexist_cortex<- c(l_nexist_cortex,tf)}
+# }
+# 
+# # ----------------------------------Pons data-------------------------------------------------------
+# 
+# pons_data <- read_tsv("joint_pons/Pons_join.2D.tsv") # for UMAP cluster
+# 
+# TF_active_pon <- as_tibble(read_rds("joint_pons/joint_pons.active_regulons.Rds"))
+# 
+# # These datasets describe TF and genes that are target of TFs, don't have ext suffix
+# TF_target_gene_pon <- as_tibble(read_rds("joint_pons/joint_pons.regulon_target_info.Rds")) %>%
+#   select(-logo)
+# unique_TF_pon <- unique(TF_target_gene_pon[["TF"]])
+# 
+# #reads metadata file for color palette of clustering by region
+# pons_cluster_palette <- read_tsv("joint_pons/Jessa2019_Table_2c_joint_pons_metadata.tsv")
+# pons_cluster_palette <- pons_cluster_palette %>% select(Cluster, Colour) %>% deframe()
+# 
+# 
+# TF_and_ext_pon <- identify_tf(TF_active_pon)
+# 
+# timeseries_input_meta_pons <- create_metadata_timeseries(pons_data,"pons") %>%
+#   filter(Cell != "___po_e12_TACGGGCGTCAAGCGA")
+# # filter out the extra cell
+# # remove the extra line to make the number of cells the same as the binary activity pon data
+# # to correctly make the timeseires ribbon plot
+# 
+# # activity for cortex timeseries graph data
+# binary_activity_pon <- readRDS("joint_pons/joint_pons.binaryRegulonActivity_nonDupl.Rds")
+# tf_df_pon <- as_tibble(rownames(binary_activity_pon)) #a dataframe that contains all the tf with 
+# # best representation of its identity in the binary_activity dataset
+# 
+# l <- c()
+# l_nexist_pons <- c()
+# for (tf in unique_TF_pon){
+#   tf_after <- translate_tf(tf, tf_df_pon)
+#   if(tf_after !=FALSE ){
+#     l <- c(l, tf)
+#   }
+#   else{l_nexist_pons<- c(l_nexist_pons,tf)}
+# }
+# 
+# 
+# # make two lists containing same name (will be assigned to a reactive list),
+# # then we can use the same name to code
+# data_cortex <- list(
+#   "cell_metadata"  = forebrain_data,
+#   "TF_and_ext" = TF_and_ext,
+#   "TF_target_gene_info" = TF_target_gene,
+#   "unique_active_TFs_bare" = unique_TF,
+#   "active_TFs" = TF_active,
+#   "binary_active_TFs" = tf_df,
+#   "timeseries_input_meta" = timeseries_input_meta_cortex,
+#   "binary_activity" = binary_activity,
+#   "tfs_not_exist_timeseries" = l_nexist_cortex,
+#   "cluster_palette" = forebrain_cluster_palette
+# 
+# )
+# 
+# data_pons <- list(
+#   "cell_metadata" = pons_data,
+#   "TF_and_ext" = TF_and_ext_pon,
+#   "TF_target_gene_info" = TF_target_gene_pon,
+#   "unique_active_TFs_bare" = unique_TF_pon,
+#   "active_TFs" = TF_active_pon,
+#   "binary_active_TFs" = tf_df_pon,
+#   "timeseries_input_meta" = timeseries_input_meta_pons,
+#   "binary_activity" = binary_activity_pon,
+#   "tfs_not_exist_timeseries" = l_nexist_pons,
+#   "cluster_palette" = pons_cluster_palette
+# )
+#------------------------master color palette----------------------------------
+#When I was adding various different data sets generated at different times with different formats,
+#colour palettes were super annoying. 
+#The master palette contains colours for all cluster labels regardless of when the cluster labels were assigned or
+#if the labels have underscores or not
+#Used in all ggplots in the app
 
-TF_active <- as_tibble(read_rds("joint_cortex/joint_cortex.active_regulons.Rds"))
-
-# These datasets describe TF and genes that are target of TFs, don't have ext suffix
-TF_target_gene <- as_tibble(read_rds("joint_cortex/joint_cortex.regulon_target_info.Rds")) %>%
-  select(-logo)
-unique_TF <- unique(TF_target_gene[["TF"]])
-
-#reads metadata file for color palette of clustering by region
-forebrain_cluster_palette <- read_tsv("joint_cortex/Jessa2019_Table_2b_joint_cortex_metadata.tsv")
-forebrain_cluster_palette <- forebrain_cluster_palette %>% select(Cluster, Colour) %>% deframe()
-
-TF_and_ext <- identify_tf(TF_active)
-
-timeseries_input_meta_cortex <- create_metadata_timeseries(forebrain_data, "cortex")
-
-
-# metadata specific for each cell, corresponding to the activity data
-#cell_metadata_cortex_prep <- read_tsv("joint_cortex/joint_cortex.metadata.tsv")
-
-#cell_metadata_cortex_test <- create_cell_metadata_cortex(forebrain_data)
-
-#cell_metadata_cortex <- create_cell_metadata(cell_metadata_cortex_prep)
-# activity for cortex timeseries graph data
-binary_activity <- readRDS("joint_cortex/joint_cortex.binaryRegulonActivity_nonDupl.Rds")
-tf_df <- as_tibble(rownames(binary_activity)) #a dataframe that contains all the tf with 
-# best representation of its identity in the binary_activity dataset
-
-l <- c()
-l_nexist_cortex <- c()
-for (tf in unique_TF){
-  tf_after <- translate_tf(tf, tf_df)
-  if(tf_after !=FALSE ){
-    l <- c(l, tf)
-  }
-  else{l_nexist_cortex<- c(l_nexist_cortex,tf)}
-}
-
-# ----------------------------------Pons data-------------------------------------------------------
-
-pons_data <- read_tsv("joint_pons/Pons_join.2D.tsv") # for UMAP cluster
-
-TF_active_pon <- as_tibble(read_rds("joint_pons/joint_pons.active_regulons.Rds"))
-
-# These datasets describe TF and genes that are target of TFs, don't have ext suffix
-TF_target_gene_pon <- as_tibble(read_rds("joint_pons/joint_pons.regulon_target_info.Rds")) %>%
-  select(-logo)
-unique_TF_pon <- unique(TF_target_gene_pon[["TF"]])
-
-#reads metadata file for color palette of clustering by region
-pons_cluster_palette <- read_tsv("joint_pons/Jessa2019_Table_2c_joint_pons_metadata.tsv")
-pons_cluster_palette <- pons_cluster_palette %>% select(Cluster, Colour) %>% deframe()
-
-
-TF_and_ext_pon <- identify_tf(TF_active_pon)
-
-timeseries_input_meta_pons <- create_metadata_timeseries(pons_data,"pons") %>%
-  filter(Cell != "___po_e12_TACGGGCGTCAAGCGA")
-# filter out the extra cell
-# remove the extra line to make the number of cells the same as the binary activity pon data
-# to correctly make the timeseires ribbon plot
-
-# activity for cortex timeseries graph data
-binary_activity_pon <- readRDS("joint_pons/joint_pons.binaryRegulonActivity_nonDupl.Rds")
-tf_df_pon <- as_tibble(rownames(binary_activity_pon)) #a dataframe that contains all the tf with 
-# best representation of its identity in the binary_activity dataset
-
-l <- c()
-l_nexist_pons <- c()
-for (tf in unique_TF_pon){
-  tf_after <- translate_tf(tf, tf_df_pon)
-  if(tf_after !=FALSE ){
-    l <- c(l, tf)
-  }
-  else{l_nexist_pons<- c(l_nexist_pons,tf)}
-}
-
-
-# make two lists containing same name (will be assigned to a reactive list),
-# then we can use the same name to code
-data_cortex <- list(
-  "cell_metadata"  = forebrain_data,
-  "TF_and_ext" = TF_and_ext,
-  "TF_target_gene_info" = TF_target_gene,
-  "unique_active_TFs_bare" = unique_TF,
-  "active_TFs" = TF_active,
-  "binary_active_TFs" = tf_df,
-  "timeseries_input_meta" = timeseries_input_meta_cortex,
-  "binary_activity" = binary_activity,
-  "tfs_not_exist_timeseries" = l_nexist_cortex,
-  "cluster_palette" = forebrain_cluster_palette
-
-)
-
-data_pons <- list(
-  "cell_metadata" = pons_data,
-  "TF_and_ext" = TF_and_ext_pon,
-  "TF_target_gene_info" = TF_target_gene_pon,
-  "unique_active_TFs_bare" = unique_TF_pon,
-  "active_TFs" = TF_active_pon,
-  "binary_active_TFs" = tf_df_pon,
-  "timeseries_input_meta" = timeseries_input_meta_pons,
-  "binary_activity" = binary_activity_pon,
-  "tfs_not_exist_timeseries" = l_nexist_pons,
-  "cluster_palette" = pons_cluster_palette
-)
+#Note: all cluster labels should have the same format now, but will keep using this in case I missed something
 
 extended_mouse_joint_cluster_palette <- readRDS("shared/palette_ID_20210710_joint_clustering.Rds")
 
 master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint cluster with timepoint removed
                     colour_palette_cluster,                 # per-timepoint cluster, with spaces
 		    colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
-		    forebrain_cluster_palette,              # joint clustering, forebrain
-		    pons_cluster_palette,                   # joint clustering, pons
+		    #forebrain_cluster_palette,              # joint clustering, forebrain
+		    #pons_cluster_palette,                   # joint clustering, pons
         extended_mouse_joint_cluster_palette,
 		    colour_palette_per_sample_space,
 		    colour_palette_per_sample)
 master_palette <- list("Cluster" = master_palette)
 
 #---------------------time_point data----------------------------------------------
-#use a loop for this 
+#Data processing for each time point is the same
 for (reg in c("ct", "po")){
   
   for(tp in c("e10", "e12", "e13", "e15", "e16", "e18", "p0", "p3", "p6")){
@@ -283,76 +313,68 @@ for (reg in c("ct", "po")){
     TF_active <- as_tibble(read_rds(glue("{reg}_{tp}/{reg}_{tp}.active_regulons.Rds")))
     TF_and_ext <- identify_tf(TF_active)
     
+    #metadata with DR coords 
     cell_data <- read_tsv(glue("{reg}_{tp}/{reg}_{tp}.metadata.tsv")) 
     
+    #indicates cells that should not be included in plots because they belong to a blacklisted cluster
+    #Used to filter the TF activity per cell feather in the create_activity_data function 
     black_list_cells <- cell_data %>% select(Cell, ID_20201028_with_exclude) %>%
       filter(grepl("EXCLUDE", ID_20201028_with_exclude)) %>% select(Cell) %>%
       deframe()
     
-    #print(black_list_cells)
-    
     cell_data <- cell_data %>% filter(!grepl("EXCLUDE", ID_20201028_with_exclude))
       
-   #can get rid of palette here and use master_palette in the DR plots 
-    awoo <- switch(reg, "ct" = "F-", "po" = "P-")
-    
-    dr_palette <- metadata_extended %>% 
-      separate(Label, into = c("Timepoint", "Cluster"), sep = "_") %>%
-      filter(Timepoint == glue("{awoo}{tp}")) %>%
-      unite(col = "Cluster", c("Timepoint", "Cluster"), sep = "_") %>%
-      select(Cluster, Colour) %>% 
-      deframe()
     
     x <- list(
            "TF_target_gene_info" = TF_target_gene_info,
            "TF_and_ext" = TF_and_ext,
            "cell_metadata" = cell_data,
            "bad_cells" = black_list_cells,
-           "cluster_palette" = dr_palette,
            "unique_TF" = unique_TF
     )
-    #print(x)
     
     saveRDS(x, file = glue("{reg}_{tp}/{reg}_{tp}_prep.Rds"))
   }
   
 }
 
-#-----------------------------forebrain joint cluster regulon activity data for heatmap------------
-forebrain_regulon_activity_data <-
-  read_feather("joint_cortex/joint_cortex.regulon_activity_per_cell.feather")
-
-forebrain_joint_cluster_info <- forebrain_data %>% select(Cell, Joint_cluster)
-
-forebrain_cluster_regulon_data <- 
-  inner_join(forebrain_regulon_activity_data, forebrain_joint_cluster_info, by = "Cell")
-
-forebrain_cluster_regulon_data <- forebrain_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
-  summarize_if(is.numeric, mean)
-
-write_feather(forebrain_cluster_regulon_data, 
-     path = "joint_cortex/joint_cortex.regulon_activity_per_joint_cluster.feather")
-
-#-----------------------------pons joint cluster regulon activity data for heatmap------------
-pons_regulon_activity_data <-
-  read_feather("joint_pons/joint_pons.regulon_activity_per_cell.feather")
-
-pons_joint_cluster_info <- pons_data %>% select(Cell, Joint_cluster)
-
-pons_cluster_regulon_data <- 
-  inner_join(pons_regulon_activity_data, pons_joint_cluster_info, by = "Cell")
-
-pons_cluster_regulon_data <- pons_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
-  summarize_if(is.numeric, mean)
-
-write_feather(pons_cluster_regulon_data, 
-              path = "joint_pons/joint_pons.regulon_activity_per_joint_cluster.feather")
+# #-----------------------------forebrain joint cluster regulon activity data for heatmap------------
+# #TF activity per joint_cluster
+# #
+# forebrain_regulon_activity_data <-
+#   read_feather("joint_cortex/joint_cortex.regulon_activity_per_cell.feather")
+# 
+# forebrain_joint_cluster_info <- forebrain_data %>% select(Cell, Joint_cluster)
+# 
+# forebrain_cluster_regulon_data <- 
+#   inner_join(forebrain_regulon_activity_data, forebrain_joint_cluster_info, by = "Cell")
+# 
+# forebrain_cluster_regulon_data <- forebrain_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
+#   summarize_if(is.numeric, mean)
+# 
+# write_feather(forebrain_cluster_regulon_data, 
+#      path = "joint_cortex/joint_cortex.regulon_activity_per_joint_cluster.feather")
+# 
+# #-----------------------------pons joint cluster regulon activity data for heatmap------------
+# pons_regulon_activity_data <-
+#   read_feather("joint_pons/joint_pons.regulon_activity_per_cell.feather")
+# 
+# pons_joint_cluster_info <- pons_data %>% select(Cell, Joint_cluster)
+# 
+# pons_cluster_regulon_data <- 
+#   inner_join(pons_regulon_activity_data, pons_joint_cluster_info, by = "Cell")
+# 
+# pons_cluster_regulon_data <- pons_cluster_regulon_data %>% group_by(Joint_cluster) %>% 
+#   summarize_if(is.numeric, mean)
+# 
+# write_feather(pons_cluster_regulon_data, 
+#               path = "joint_pons/joint_pons.regulon_activity_per_joint_cluster.feather")
 # ---------------------------cortex data-----------------------------
-save(data_cortex, file = "joint_cortex/cortex_prep.Rda")
+#save(data_cortex, file = "joint_cortex/cortex_prep.Rda")
 
 
 # -----------------------------pons data-----------------------------
-save(data_pons, file = "joint_pons/pons_prep.Rda")
+#save(data_pons, file = "joint_pons/pons_prep.Rda")
 
 
 # -----------------------------shared data-----------------------------
@@ -361,21 +383,28 @@ save(colour_palette_cluster,
 
 #-----------------cell proportion over time ribbon plot--------------------
 
+#calculates the fraction of cells of the total that belong to each cluster
 forebrain_fraction <- forebrain_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
-  filter(!grepl("BLACKLIST", Sample_cluster)) %>%
+  filter(!grepl("EXCLUDE", Sample_cluster)) %>%
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
   group_by(Sample) %>% mutate (total_in_tp = n()) %>%
   ungroup() %>% group_by(Sample, Cluster) %>%
   mutate(frac = n()/total_in_tp) %>% 
   ungroup() %>% group_by(tp)
 
+#print("awoo")
+
+#unique clusters in the data
 forebrain_clusters <- forebrain_fraction$Cluster %>% unique
 
+#removes duplicate rows such that each row corresponds to data for one cluster at one timepoint
 unique_forebrain_fraction <- forebrain_fraction %>% select(-Cell) %>% 
   distinct() %>% select(-Sample, -total_in_tp)
 
 tp <- unique_forebrain_fraction$tp %>% unique()
 
+#not all clusters appear in all timepoints, each timepoint needs to have a complete set of clusters for ribbon plot to look right
+#adds any missing clusters in each timepoint and sets its fraction value to 0
 unique_forebrain_fraction_complete <- unique_forebrain_fraction %>%
 	mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
 	complete(Cluster, nesting(tp), fill = list(frac = 0))
@@ -398,8 +427,10 @@ forebrain_plot <- unique_forebrain_fraction_complete %>%
 
 #same for pons
 
+#ISSUE: Plot generated for joint_pons_extended has 2 white areas not filled with any cluster
+
 pons_fraction <- pons_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
-  filter(!grepl("BLACKLIST", Sample_cluster)) %>%
+  filter(!grepl("EXCLUDE", Sample_cluster)) %>%
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
   group_by(tp) %>% mutate (total_in_tp = n()) %>%
   ungroup() %>% group_by(Sample, Cluster) %>%
