@@ -58,7 +58,8 @@ server <- function(input, output, session) {
       "vln_points" = input$vln_points,
       "plotly_ribbon" = input$plotly_ribbon,
       "mean_exp" = input$mean_exp,
-      "heatmap_cells" = input$heatmap_cells
+      "heatmap_cells" = input$heatmap_cells,
+      "heatmap_anno" = input$heatmap_anno
     )
     
     # Get the columns for the appropriate type of dim red
@@ -978,8 +979,25 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
-    # Store this version of the df for later reference
-    df_for_cellclass <- df 
+    # Add new columns to annotation df for brain region and time points information
+    df <- df %>% 
+      mutate(Region = case_when(
+        grepl("Forebrain", Sample) ~ "Forebrain",
+        grepl("Pons", Sample) ~ "Pons",
+        TRUE ~ "Other"
+      ))
+    df <- df %>% 
+      mutate(Timepoint = case_when(
+        grepl("E12.5", Sample) ~ "E12.5",
+        grepl("E15.5", Sample) ~ "E15.5",
+        grepl("P0", Sample) ~ "P0",
+        grepl("P3", Sample) ~ "P3",
+        grepl("P6", Sample) ~ "P6",
+        TRUE ~ "Other"
+      ))
+    
+    # Store the df for later use in annotations
+    df_for_anno <- df 
     
     # Store mean expression for each cluster 
     df <- df %>% 
@@ -1002,7 +1020,7 @@ server <- function(input, output, session) {
     # Set NA values in df to 0 (from Selin's code)
     df[is.na(df)] <- 0 
     
-    # Flip dataframe over to match the order of user input (bubble_prep does reverse)
+    # Flip dataframe over to match the order of user input (bubble_prep outputs reverse)
     df <- df[nrow(df):1,]
     
     # Convert dataframe values to matrix, set rownames to genes for labeling purposes
@@ -1010,12 +1028,38 @@ server <- function(input, output, session) {
       data.matrix()  
     rownames(mat) <- df$Gene
     
-    # Set up values for heatmap annotation (cell class bar at top)
-    hm_anno <- makePheatmapAnno(general_palette, "Cell_class")
-    hm_anno$anno_row <- left_join(hm_anno$anno_row, 
-                                  unique(select(df_for_cellclass, Cluster, Cell_class)), by = "Cell_class") 
-    rownames(hm_anno$anno_row) <- hm_anno$anno_row$Cluster
-    hm_anno$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+
+    
+    # Create values for heatmap annotations (coloured bars at top)
+      # CELL CLASS ANNOTATIONS
+    hm_anno_class <- makePheatmapAnno(general_palette, "Cell_class")
+    hm_anno_class$anno_row <- left_join(hm_anno_class$anno_row, 
+                                  unique(select(df_for_anno, Cluster, Cell_class)), by = "Cell_class") 
+    rownames(hm_anno_class$anno_row) <- hm_anno_class$anno_row$Cluster
+    hm_anno_class$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+      # REGION ANNOTATIONS
+    hm_anno_region <- makePheatmapAnno(region_palette, "Region")
+    hm_anno_region$anno_row <- left_join(hm_anno_region$anno_row,
+                                         unique(select(df_for_anno, Cluster, Region), by = "Region"))
+    rownames(hm_anno_region$anno_row) <- hm_anno_region$anno_row$Cluster
+    hm_anno_region$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+      # TIMEPOINTS ANNOTATIONS
+    hm_anno_time <- makePheatmapAnno(timepoint_palette, "Timepoint")
+    hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
+                                         unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
+    rownames(hm_anno_time$anno_row) <- hm_anno_time$anno_row$Cluster
+    hm_anno_time$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plo
+    
+    anno = data.frame(Cell_class = hm_anno_class$anno_row,
+                       Region = hm_anno_region$anno_row,
+                       Timepoint = hm_anno_time$anno_row)
+    # anno_colors = list(Cell_class = hm_anno_class$side_colors,
+    #                    Region = hm_anno_region$side_colors,
+    #                    Timepoint = hm_anno_time$side_colors)
+    
+    # Display only the annotations selected by the user
+    anno <- anno %>% select(input_new()$heatmap_anno)
+    # anno_colors <- anno_colors %>% select(input_new()$heatmap_anno)
     
     # Plot heatmap, store dimensions for dynamically plotting full width
     hm <- mat %>% 
@@ -1029,8 +1073,8 @@ server <- function(input, output, session) {
                              cellwidth = 17,
                              cellheight = 17,
                              fontsize = 13,
-                             annotation_col = hm_anno$anno_row,
-                             annotation_colors = hm_anno$side_colors,
+                             annotation_col = anno, 
+                             #annotation_colors = anno_colors, 
                              na_col = "#e5e5e5")
 
     heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
@@ -1055,7 +1099,7 @@ server <- function(input, output, session) {
                              width = (as.numeric(substr(heatmap_dims$width,
                                                        1, nchar(heatmap_dims$width)-2)) + 1.5),
                              height = (as.numeric(substr(heatmap_dims$height,
-                                                        1, nchar(heatmap_dims$height)-2)) + 1.5),
+                                                        1, nchar(heatmap_dims$height))) + 2.5),
                              units = "in", 
                              scale = 1)
                     },

@@ -89,7 +89,13 @@ ui <- function(request){
                                                      selected = c("Oligodendrocytes",
                                                                   "Ependymal", 
                                                                   "Astrocytes",
-                                                                  "Neurons"))
+                                                                  "Neurons")),
+                                  checkboxGroupInput("heatmap_anno", label = "Column annotation(s)", 
+                                                     choices = list("Cell class" = "Cell_class",
+                                                                    "Brain region" = "Region",
+                                                                    "Time point" = "Timepoint"
+                                                                    ),
+                                                     selected = c("Cell_class"))
                                   ),
                  
                  # Input for tabs on joint analysis by region or by sample

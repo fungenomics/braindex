@@ -33,7 +33,7 @@ pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_
 # Joint mouse colour palette
 load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 
-# General cell type palette
+# Palettes used throughout the app (mainly in heatmap annotation)
 general_palette <- c("Progenitors/cyc." = "#ffaf49",
                        "Oligodendrocytes" = "#b7dd5f",
                        "Astrocytes" = "#00a385",
@@ -41,6 +41,14 @@ general_palette <- c("Progenitors/cyc." = "#ffaf49",
                        "Neurons" = "#840200",
                        "Non-neuroect." = "gray40",
                        "Other" = "gray60")
+region_palette <- c("Forebrain" = "#d618aa",
+                    "Pons" = "#18d644",
+                    "Other" = "#cfcfcf")
+timepoint_palette <- c("E12.5" = "#cfcfcf",
+                       "E15.5" = "#9c9c9c",
+                       "P0" = "#787878",
+                       "P3" = "#404040",
+                       "P6" = "#242424")
 
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
