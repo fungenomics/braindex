@@ -208,7 +208,7 @@ ui <- fluidPage(
           ),
           htmlOutput("dr_data"),
           fluidRow(
-            column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
+            column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "6in"))
           ),
           fluidRow(
             

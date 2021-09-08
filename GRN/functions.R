@@ -613,9 +613,8 @@ color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label,
   }
   
   gg <- ggplot(data = cell_metadata, mapping = aes_string(x = x_axis,y = y_axis))+
-    geom_point(aes(color = get(var_group)), alpha = 0.2) + theme_min() + theme(legend.position="bottom") + 
-    guides(fill=guide_legend(nrow=5, byrow=TRUE)) + scale_color_manual(values = master_palette$Cluster) +
-    labs(color = 'Cluster Label')
+    geom_point(aes(color = get(var_group)), alpha = 0.2) + theme_min() + theme(legend.position="none") +
+    scale_color_manual(values = master_palette$Cluster)
   
  # print("step2")
   if(cluster_label){

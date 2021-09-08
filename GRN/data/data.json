@@ -928,7 +928,7 @@
         },
 	{
         "file": "po_e18.regulon_activity_per_cluster.feather",
-        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18regulon_activity_per_cluster.feather",
+        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/po_e18/po_e18.regulon_activity_per_cluster.feather",
         "description": "Activity of each TF in each cluster in this sample",
         "contents": "A feather file containing a data frame"
                         
