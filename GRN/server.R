@@ -588,7 +588,7 @@ server <- function(input, output, session) {
     output$heatmap_cluster <- renderUI({
       
       #adjusts plot width manually so that only the large plots have scrolling
-      if(input$time == "All"){plot_width = '3500px'}
+      if(input$time == "All Time-Points"){plot_width = '3500px'}
       else{plot_width = '800px'}
       
       plotOutput('heatmap_cluster_plot', width = plot_width)             

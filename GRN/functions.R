@@ -419,7 +419,7 @@ create_activity_data <- function(tf, method, region, TF_and_ext,
   
   if(!(is.null(tp)) & per_sample == FALSE & identical(method, "Cluster")){ #when timepoint has an input and the input is not All
     #split column, select rows for the corresponding timepoints using filter 
-    if(identical(tp, "F-All") || identical(tp, "P-All")){
+    if(identical(tp, "F-All Time-Points") || identical(tp, "P-All Time-Points")){
     }
     else{
       activity <- separate(activity, Cluster, into = c("Timepoint", "Cluster"), sep = "_")
