@@ -964,6 +964,12 @@ server <- function(input, output, session) {
            glue("\n\n\n    Please select at least one cell type."))
     )
     
+    # Check that at least one column annotation has been chosen by the user
+    validate(
+      need(length(input_new()$heatmap_anno) > 0,
+           glue("\n\n\n    Please select at least one column annotation."))
+    )
+    
     # Get gene expression values for input genes
     df <- bubble_prep(gene = input_new()$gene) 
     
@@ -1028,21 +1034,22 @@ server <- function(input, output, session) {
       data.matrix()  
     rownames(mat) <- df$Gene
     
-
-    
     # Create values for heatmap annotations (coloured bars at top)
+    
       # CELL CLASS ANNOTATIONS
     hm_anno_class <- makePheatmapAnno(general_palette, "Cell_class")
     hm_anno_class$anno_row <- left_join(hm_anno_class$anno_row, 
                                   unique(select(df_for_anno, Cluster, Cell_class)), by = "Cell_class") 
     rownames(hm_anno_class$anno_row) <- hm_anno_class$anno_row$Cluster
     hm_anno_class$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+      
       # REGION ANNOTATIONS
     hm_anno_region <- makePheatmapAnno(region_palette, "Region")
     hm_anno_region$anno_row <- left_join(hm_anno_region$anno_row,
                                          unique(select(df_for_anno, Cluster, Region), by = "Region"))
     rownames(hm_anno_region$anno_row) <- hm_anno_region$anno_row$Cluster
     hm_anno_region$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+      
       # TIMEPOINTS ANNOTATIONS
     hm_anno_time <- makePheatmapAnno(timepoint_palette, "Timepoint")
     hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
