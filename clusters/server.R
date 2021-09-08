@@ -1083,9 +1083,10 @@ server <- function(input, output, session) {
                              annotation_col = anno, 
                              #annotation_colors = anno_colors, 
                              na_col = "#e5e5e5")
-
-    heatmap_dims$width <- glue("{get_plot_dims(hm)$width}in")
-    heatmap_dims$height <- glue("{get_plot_dims(hm)$height}in")
+    # Reduce width to properly plot in webpage (seems to add a margin)
+    heatmap_dims$width <- glue("{get_plot_dims(hm)$width*0.9}in")
+    # Add fixed height to accommodate large legend for multiple col annotations
+    heatmap_dims$height <- glue("{get_plot_dims(hm)$height + 2}in")
     hm
   })
   
@@ -1096,7 +1097,7 @@ server <- function(input, output, session) {
     plotOutput("heatmap", 
                width = heatmap_dims$width, 
                height = heatmap_dims$height)
-  })
+    })
   
   output$download_heatmap <- 
     downloadHandler(filename = "heatmap.pdf",
@@ -1104,9 +1105,10 @@ server <- function(input, output, session) {
                       ggsave(file, 
                              heatmap_plot(),
                              width = (as.numeric(substr(heatmap_dims$width,
-                                                       1, nchar(heatmap_dims$width)-2)) + 1.5),
+                                                       1, nchar(heatmap_dims$width)-2)))*1.2,
+                             
                              height = (as.numeric(substr(heatmap_dims$height,
-                                                        1, nchar(heatmap_dims$height))) + 2.5),
+                                                        1, nchar(heatmap_dims$height)))) + 1.5,
                              units = "in", 
                              scale = 1)
                     },
