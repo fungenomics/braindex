@@ -1086,10 +1086,15 @@ server <- function(input, output, session) {
                              annotation_col = anno, 
                              #annotation_colors = anno_colors, 
                              na_col = "#e5e5e5")
+    
     # Reduce width to properly plot in webpage (seems to add a margin)
-    heatmap_dims$width <- glue("{get_plot_dims(hm)$width*0.9}in")
-    # Add fixed height to accommodate large legend for multiple col annotations
-    heatmap_dims$height <- glue("{get_plot_dims(hm)$height + 4}in")
+    w <- get_plot_dims(hm)$width *0.9
+    # Add a fixed height to accommodate large legend for multiple col annotations
+    # when the legend is larger than the heatmap
+    h <- get_plot_dims(hm)$height + 4
+    
+    heatmap_dims$width <- glue("{w}in")
+    heatmap_dims$height <- glue("{h}in")
     hm
   })
   
@@ -1111,9 +1116,11 @@ server <- function(input, output, session) {
                                                        1, nchar(heatmap_dims$width)-2)))*1.2,
                              
                              height = (as.numeric(substr(heatmap_dims$height,
-                                                        1, nchar(heatmap_dims$height)))) + 1.5,
+                                                        1, nchar(heatmap_dims$height)-2))) + 1.5,
                              units = "in", 
-                             scale = 1)
+                             scale = 1,
+                             limitsize = FALSE # Allow large pdfs
+                             )
                     },
                     contentType = "application/pdf")
   
