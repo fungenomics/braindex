@@ -985,25 +985,26 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
+    # Add new columns to annotation df for brain region and time points information
+    df <- df %>%
+      mutate(Region = case_when(
+        grepl("Forebrain", Sample) | grepl("^F", Cluster) ~ "Forebrain",
+        grepl("Pons", Sample) | grepl("^P", Cluster) ~ "Pons",
+        TRUE ~ "Other"
+      ))
+    
+    df <- df %>%
+      mutate(Timepoint = case_when(
+        grepl("E12.5", Sample) | grepl("^*-e12", Cluster) ~ "E12.5",
+        grepl("E15.5", Sample) | grepl("^*-e15", Cluster) ~ "E15.5",
+        grepl("P0", Sample) | grepl("^*-p0", Cluster) ~ "P0",
+        grepl("P3", Sample) | grepl("^*-p3", Cluster) ~ "P3",
+        grepl("P6", Sample) | grepl("^*-p6", Cluster) ~ "P6",
+        TRUE ~ "Other"
+      ))
+    
     # Store the df for later use in annotations
     df_for_anno <- df 
-    
-    # Add new columns to annotation df for brain region and time points information
-    df_for_anno <- df_for_anno %>%
-      mutate(Region = case_when(
-        grepl("Forebrain", Sample) ~ "Forebrain",
-        grepl("Pons", Sample) ~ "Pons",
-        TRUE ~ "Other"
-      ))
-    df_for_anno <- df_for_anno %>%
-      mutate(Timepoint = case_when(
-        grepl("E12.5", Sample) ~ "E12.5",
-        grepl("E15.5", Sample) ~ "E15.5",
-        grepl("P0", Sample) ~ "P0",
-        grepl("P3", Sample) ~ "P3",
-        grepl("P6", Sample) ~ "P6",
-        TRUE ~ "Other"
-      ))
     
     # df_for_anno <- df_for_anno %>% 
     #   separate(col = Sample, into = c("Region", "Timepoint"), sep = " ")
@@ -1013,12 +1014,8 @@ server <- function(input, output, session) {
       group_by(Gene, Cluster, Cell_class) %>% 
       summarize(Expression = mean(Expression))
     
+    # Select cell types specified by user input
     df <- df %>% filter(Cell_class %in% input_new()$heatmap_cells)
-    
-    # Select only certain clusters that can be categorized 
-    # (from Selin's code, to be confirmed)
-    # df <- df %>% filter(grepl("ASTR|EPEN|OL|OPC|EXN", Cluster) & !grepl("^B", Cluster)) 
-    # df <- df %>% filter(!grepl("^B", Cluster)) 
     
     # Pivot the cluster rows to columns
     df <- df %>% 
@@ -1039,30 +1036,33 @@ server <- function(input, output, session) {
     
     # Create values for heatmap annotations (coloured bars at top)
     
-      # CELL CLASS ANNOTATIONS
+    # CELL CLASS ANNOTATIONS
     hm_anno_class <- makePheatmapAnno(general_palette, "Cell_class")
     hm_anno_class$anno_row <- left_join(hm_anno_class$anno_row, 
-                                  unique(select(df_for_anno, Cluster, Cell_class)), by = "Cell_class") 
-    rownames(hm_anno_class$anno_row) <- hm_anno_class$anno_row$Cluster
-    hm_anno_class$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
-      
-      # REGION ANNOTATIONS
+                                        unique(select(df_for_anno, Cluster, Cell_class)), by = "Cell_class") 
+    
+    # REGION ANNOTATIONS
     hm_anno_region <- makePheatmapAnno(region_palette, "Region")
     hm_anno_region$anno_row <- left_join(hm_anno_region$anno_row,
                                          unique(select(df_for_anno, Cluster, Region), by = "Region"))
-    rownames(hm_anno_region$anno_row) <- hm_anno_region$anno_row$Cluster
-    hm_anno_region$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
-      
-      # TIMEPOINTS ANNOTATIONS
+    
+    # TIMEPOINTS ANNOTATIONS
     hm_anno_time <- makePheatmapAnno(timepoint_palette, "Timepoint")
     hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
-                                         unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
-    rownames(hm_anno_time$anno_row) <- hm_anno_time$anno_row$Cluster
-    hm_anno_time$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
+                                       unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
     
-    anno = data.frame(Cell_class = hm_anno_class$anno_row,
-                       Region = hm_anno_region$anno_row,
-                       Timepoint = hm_anno_time$anno_row)
+    # Join annotations together in a data frame
+    anno <- 
+      left_join(hm_anno_class$anno_row,
+                hm_anno_region$anno_row,
+                by = "Cluster", all = TRUE) %>% 
+      left_join(hm_anno_time$anno_row,
+                by = "Cluster", all = TRUE)
+    
+    # Set cluster names as row names and delete dedicated column for clusters
+    rownames(anno) <- anno$Cluster
+    anno$Cluster <- NULL 
+
     # anno_colors = list(Cell_class = hm_anno_class$side_colors,
     #                    Region = hm_anno_region$side_colors,
     #                    Timepoint = hm_anno_time$side_colors)
