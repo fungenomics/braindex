@@ -973,7 +973,7 @@ server <- function(input, output, session) {
     # Get gene expression values for input genes
     df <- bubble_prep(gene = input_new()$gene) 
     
-    df <- df %>% 
+    df <- df %>%
       # Rename cell classes to more general names
       mutate(Cell_class = case_when(
         grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
@@ -985,14 +985,17 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
+    # Store the df for later use in annotations
+    df_for_anno <- df 
+    
     # Add new columns to annotation df for brain region and time points information
-    df <- df %>% 
+    df_for_anno <- df_for_anno %>%
       mutate(Region = case_when(
         grepl("Forebrain", Sample) ~ "Forebrain",
         grepl("Pons", Sample) ~ "Pons",
         TRUE ~ "Other"
       ))
-    df <- df %>% 
+    df_for_anno <- df_for_anno %>%
       mutate(Timepoint = case_when(
         grepl("E12.5", Sample) ~ "E12.5",
         grepl("E15.5", Sample) ~ "E15.5",
@@ -1002,8 +1005,8 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
-    # Store the df for later use in annotations
-    df_for_anno <- df 
+    # df_for_anno <- df_for_anno %>% 
+    #   separate(col = Sample, into = c("Region", "Timepoint"), sep = " ")
     
     # Store mean expression for each cluster 
     df <- df %>% 
@@ -1055,7 +1058,7 @@ server <- function(input, output, session) {
     hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
                                          unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
     rownames(hm_anno_time$anno_row) <- hm_anno_time$anno_row$Cluster
-    hm_anno_time$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plo
+    hm_anno_time$anno_row$Cluster <- NULL # Prevent individual clusters from showing in plot
     
     anno = data.frame(Cell_class = hm_anno_class$anno_row,
                        Region = hm_anno_region$anno_row,
@@ -1086,7 +1089,7 @@ server <- function(input, output, session) {
     # Reduce width to properly plot in webpage (seems to add a margin)
     heatmap_dims$width <- glue("{get_plot_dims(hm)$width*0.9}in")
     # Add fixed height to accommodate large legend for multiple col annotations
-    heatmap_dims$height <- glue("{get_plot_dims(hm)$height + 2}in")
+    heatmap_dims$height <- glue("{get_plot_dims(hm)$height + 4}in")
     hm
   })
   
