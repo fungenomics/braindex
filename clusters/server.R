@@ -271,6 +271,22 @@ server <- function(input, output, session) {
     # Create palette for expression level
     orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
     
+    # Produce a list of gene columns (dynamic based on input) with assigned formatting
+    # Concept from: https://github.com/glin/reactable/issues/65#issuecomment-667577253 
+    gene_columns <- 
+      sapply(gene_table_order, # Vector of input genes
+             function(this_gene) {
+               return(list(this_gene = 
+                             colDef(minWidth = 80,
+                                    # Color gene column values based on expression level
+                                    style = function(value) {
+                                      color <- orange_pal(value)
+                                      list(background = color)
+                                    })))
+             })
+    # Rename list names to gene names (they were changed during sapply)
+    names(gene_columns) <- gene_table_order 
+    
     # Produce a data table
     reactable(table, 
               rownames = FALSE,
@@ -280,15 +296,9 @@ server <- function(input, output, session) {
               showSortable = TRUE,
               fullWidth = FALSE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
-              # Formatting for gene columns - color based on expression level
-              defaultColDef = colDef(minWidth = 80,
-                                     style = function(value) {
-                                       color <- orange_pal(value)
-                                       list(background = color)
-                                     }),
-              # Override colDef manually for the first few rows (not genes)
-              columns = list(
-                Cluster = colDef(minWidth = 110,
+
+              columns = c(
+                list(Cluster = colDef(minWidth = 110,
                                  style = function(index){
                                    # Colour cluster column background by existing palette
                                    b_color <- toString(unname(joint_mouse_palette)[index])
@@ -304,12 +314,21 @@ server <- function(input, output, session) {
                                   },
                                  # headerStyle = 
                                  #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
-                                 ), 
-                Sample = colDef(minWidth = 125, style = list(background = "#FFFFFF")),
-                "Cell type" = colDef(minWidth = 200, style = list(background = "#FFFFFF")),
-                "Cell class" = colDef(minWidth = 150, style = list(background = "#FFFFFF")),
-                "Number of cells" = colDef(minWidth = 100, style = list(background = "#FFFFFF"))
-                )
+                                 )), 
+                
+                list(Sample = colDef(minWidth = 125)),
+                list("Cell type" = colDef(minWidth = 200)),
+                list("Cell class" = colDef(minWidth = 150)),
+                list("Number of cells" = colDef(minWidth = 100)),
+                
+                gene_columns
+              ),
+              selection = "single", onClick = "select", 
+              theme = reactableTheme(
+                rowSelectedStyle = 
+                  list(backgroundColor = "#ccc", 
+                       boxShadow = "inset 5px 0 0 0 #ffa62d")
+              )
     ) 
   })
   
@@ -986,6 +1005,7 @@ server <- function(input, output, session) {
       ))
     
     # Add new columns to annotation df for brain region and time points information
+    
     df <- df %>%
       mutate(Region = case_when(
         grepl("Forebrain", Sample) | grepl("^F", Cluster) ~ "Forebrain",
@@ -1112,6 +1132,7 @@ server <- function(input, output, session) {
                     content = function(file) {
                       ggsave(file, 
                              heatmap_plot(),
+                             # Adjust pdf dimensions to display the full heatmap
                              width = (as.numeric(substr(heatmap_dims$width,
                                                        1, nchar(heatmap_dims$width)-2)))*1.2,
                              
