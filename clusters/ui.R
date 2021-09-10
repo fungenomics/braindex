@@ -249,6 +249,13 @@ ui <- function(request){
                                   downloadButton("download_bubble", 
                                                  "Download data (TSV)"))
                ),
+               
+               HTML("<br>"), 
+               
+               conditionalPanel(condition='input.update!=0',
+                                verbatimTextOutput("selected")
+               ),
+               
                HTML("<br><br><br>"), 
                
                # Specify the value to use when checking if this tab is selected

@@ -295,6 +295,7 @@ server <- function(input, output, session) {
               searchable = TRUE,
               showSortable = TRUE,
               fullWidth = FALSE,
+              resizable = TRUE,
               showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
 
               columns = c(
@@ -332,14 +333,6 @@ server <- function(input, output, session) {
     ) 
   })
   
-  # output$x4 = renderPrint({
-  #   s = input$cluster_table_rows_selected
-  #   if (length(s)) {
-  #     cat('These clusters were selected:\n\n')
-  #     cat(bubble_input()$Cluster[s], sep = ', ')
-  #   }
-  # })
-  
   # Download data in bubbleplot tab and expression table as TSV
   output$download_bubble <- 
     downloadHandler(filename = "mean_cluster_expression.tsv",
@@ -347,6 +340,36 @@ server <- function(input, output, session) {
                     content = function(file) {
                       write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
                     })
+  
+  # Store the selected row (cluster) as index, and extract cluster name 
+  selected_index <- reactive(getReactableState("cluster_table", "selected"))
+  cluster_order <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
+                                columns = c("Cluster")) 
+  selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
+  
+  # Extract region change to format of signature & marker filenames
+  cluster_region <- reactive(
+    if(grepl("^P-", selected_cluster())){
+      "po_"
+    } else if (grepl("^F-", selected_cluster())){
+      "ct_"
+    })
+  
+  # Extract timepoint section of cluster name
+  
+  # Extract celltype part of cluster name, convert to whatever format is within marker & signature files(??)
+  
+  # Glue the region and timepoint in one string
+  
+  # Find & load the correct marker and signature files based on this string
+  
+  # Join the marker file by genes in signature file
+  
+  # Output the joined dataframe as a reacTable
+    
+  output$selected <- renderPrint({
+    print(cluster_region())
+  })
   
   #### ---- Timecourse tab content ----
   
