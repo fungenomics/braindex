@@ -1106,9 +1106,9 @@ server <- function(input, output, session) {
     rownames(anno) <- anno$Cluster
     anno$Cluster <- NULL 
 
-    # anno_colors = list(Cell_class = hm_anno_class$side_colors,
-    #                    Region = hm_anno_region$side_colors,
-    #                    Timepoint = hm_anno_time$side_colors)
+    anno_colors = c(hm_anno_class$side_colors,
+                    hm_anno_region$side_colors,
+                    hm_anno_time$side_colors)
     
     # Display only the annotations selected by the user
     anno <- anno %>% select(input_new()$heatmap_anno)
@@ -1127,7 +1127,7 @@ server <- function(input, output, session) {
                              cellheight = 17,
                              fontsize = 13,
                              annotation_col = anno, 
-                             #annotation_colors = anno_colors, 
+                             annotation_colors = anno_colors, 
                              na_col = "#e5e5e5")
     
     # Reduce width to properly plot in webpage (seems to add a margin)
