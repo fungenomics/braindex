@@ -41,13 +41,11 @@ general_palette <- c("Progenitors/cyc." = "#ffaf49",
                        "Neurons" = "#840200",
                        "Non-neuroect." = "gray40",
                        "Other" = "gray60")
-region_palette <- c("Forebrain" = "#d618aa",
-                    "Pons" = "#18d644")
-timepoint_palette <- c("E12.5" = "#cfcfcf",
-                       "E15.5" = "#9c9c9c",
-                       "P0" = "#787878",
-                       "P3" = "#404040",
-                       "P6" = "#242424")
+region_palette <- c("Forebrain" = "navy",
+                    "Pons" = "darkred")
+timepoint_palette <- c(RColorBrewer::brewer.pal(7, "Blues")[2:7],
+                       RColorBrewer::brewer.pal(4, "Reds")[2:4]) %>%
+  set_names(c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"))
 
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")

@@ -1133,7 +1133,7 @@ server <- function(input, output, session) {
     w <- get_plot_dims(hm)$width *0.9
     # Add a fixed height to accommodate large legend for multiple col annotations
     # when the legend is larger than the heatmap
-    h <- get_plot_dims(hm)$height + 4
+    h <- get_plot_dims(hm)$height + 5
     
     heatmap_dims$width <- glue("{w}in")
     heatmap_dims$height <- glue("{h}in")
