@@ -166,6 +166,35 @@ ui <- function(request){
     # Output plots and tables
     mainPanel(tabsetPanel(
       
+      tabPanel("Welcome",
+               
+               tags$br(),
+               tags$b("Welcome to the braindex clusters app!"),
+               tags$br(),
+               tags$br(),
+               p("Braindex is a portal for exploring a gene expression atlas of the mouse brain produced 
+                 through single-cell RNA sequencing. In this app, you can view over twenty different 
+                 visualizations of the data related to analysis via clustering."),
+               
+               p("Please visit ",
+               tags$a(href = "https://github.com/fungenomics/braindex/wiki/Clusters-app", "the wiki"),
+               " for more information on using the app, as well as sources & citations (to be added!)"),
+               
+               tags$br(),
+               p("More details on the dataset used in this app can be found in the following publication:"),
+
+               # This source is only used in the GRN app, I think
+               # p("Miller, J.A. et al. (2014) Transcriptional landscape of the prenatal human brain, Nature 508: 199-206. ",
+               #   tags$a(href = "https://doi.org/10.1038/nature13185", "doi:10.1038/nature13185"),
+               #   "(Data is ",
+               #   HTML("&#169;"),
+               #   " 2010 Allen Institute for Brain Science. Allen Human Brain Atlas. Available from: ",
+               #   tags$a(href = "https://www.brainspan.org/", "https://www.brainspan.org")),
+               
+               p("Jessa, S. et al. (2019) Stalled developmental programs at the root of pediatric brain tumors, Nature Genetics 51: 1702-1713. ",
+                 tags$a(href = "https://doi.org/10.1038/s41588-019-0531-7", "doi:10.1038/s41588-019-0531-7"))
+               ),
+      
       #### ---- Dendrogram tab output ---- 
           
       tabPanel("Dendrogram",
