@@ -1112,7 +1112,6 @@ server <- function(input, output, session) {
     
     # Display only the annotations selected by the user
     anno <- anno %>% select(input_new()$heatmap_anno)
-    # anno_colors <- anno_colors %>% select(input_new()$heatmap_anno)
     
     # Plot heatmap, store dimensions for dynamically plotting full width
     hm <- mat %>% 
