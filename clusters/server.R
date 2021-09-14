@@ -386,6 +386,7 @@ server <- function(input, output, session) {
       mutate(pct.2 = round(pct.2, 4)) %>%
       mutate(Specificity = round(Specificity, 4)) %>%
       select(Gene = external_gene_name,
+             "Gene type" = gene_biotype,
              Description = description,
              "Average log fold change" = avg_logFC,
              "P-value" = p_val_adj,
@@ -407,13 +408,31 @@ server <- function(input, output, session) {
               pageSizeOptions = c(10, 20, 40), 
               defaultPageSize = 10,
               columns = c(
-                list(Gene = colDef(minWidth = 80, style = list(fontWeight = "bold")),
+                list(Gene = colDef(minWidth = 90, style = list(fontWeight = "bold")),
+                     "Gene type" = colDef(minWidth = 120,
+                                          style = function(value) {
+                                            if (value == "protein_coding") color <- "#ebbbab"
+                                            else color <- "#abd3eb"
+                                            list(background = color)
+                                          }),
                      Description = colDef(minWidth = 300),
                      "Average log fold change" = colDef(minWidth = 120),
                      "P-value" = colDef(minWidth = 110),
-                     "Detection rate in cluster" = colDef(minWidth = 120),
-                     "Detection rate outside cluster" = colDef(minWidth = 130),
-                     Specificity = colDef(minWidth = 110)
+                     "Detection rate in cluster" = colDef(minWidth = 120,
+                                                          style = function(value) {
+                                                            color <- orange_pal(value)
+                                                            list(background = color)
+                                                          }),
+                     "Detection rate outside cluster" = colDef(minWidth = 130,
+                                                               style = function(value) {
+                                                                 color <- orange_pal(value)
+                                                                 list(background = color)
+                                                               }),
+                     Specificity = colDef(minWidth = 110,
+                                          style = function(value) {
+                                            color <- orange_pal(value)
+                                            list(background = color)
+                                          })
               )
     ))
   })
