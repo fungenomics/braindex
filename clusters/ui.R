@@ -300,7 +300,11 @@ ui <- function(request){
                
                p("• Specificity is calculated as the difference between the detection rate within the cluster and outside of the cluster"),
                
+               tags$br(),
                conditionalPanel(condition='input.update!=0',
+                                fluidRow(
+                                  uiOutput("selected_clust")
+                                ),
                                 fluidRow(
                                   reactableOutput("marker_table", 
                                                   width = 1100) %>% ws

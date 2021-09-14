@@ -50,9 +50,9 @@ load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
 
 # Palette used to colour values in table
 orange_pal <- function(x) {
-  # Assign negative values to 0 (helpful for Specificity column of Cluster markers
+  # Assign negative and NA values to 0 (helpful for Specificity column of Cluster markers
   # which often can contain negative numbers of low absolute value)
-  if (x<0) x <- 0 
+  if (is.na(x) || x<0) x <- 0 
   rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
 }
 

@@ -351,6 +351,10 @@ server <- function(input, output, session) {
                                 columns = c("Cluster")) 
   selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
   
+  output$selected_clust <- renderUI({
+    HTML(glue("<h4>Selected cluster: {selected_cluster()}</h4>"))
+  })
+  
   # Extract cluster info from metadata
   # Beware: metadata also includes some human samples
   cluster_info <- reactive(
@@ -411,7 +415,8 @@ server <- function(input, output, session) {
                 list(Gene = colDef(minWidth = 90, style = list(fontWeight = "bold")),
                      "Gene type" = colDef(minWidth = 120,
                                           style = function(value) {
-                                            if (value == "protein_coding") color <- "#ebbbab"
+                                            if (is.na(value)) color <- "e5e5e5"
+                                            else if (value == "protein_coding") color <- "#ebbbab"
                                             else color <- "#abd3eb"
                                             list(background = color)
                                           }),
