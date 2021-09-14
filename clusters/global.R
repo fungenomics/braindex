@@ -18,34 +18,11 @@ library(shinycssloaders)
 library(shiny)
 library(reactable)
 
-# ---- Set-up / load common data ----
+# ---- Load data ----
 
 # Cluster-level metadata
 metadata <- data.table::fread("data/joint_mouse/metadata_20190715_select.tsv",
                               data.table = FALSE)
-
-# Red-blue gradient and brain region colour palettes
-load("data/joint_mouse/palettes.Rda")
-
-cortex_palette_joint <- readRDS("data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds")
-pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds")
-
-# Joint mouse colour palette
-load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
-
-# Palettes used throughout the app (mainly in heatmap annotation)
-general_palette <- c("Progenitors/cyc." = "#ffaf49",
-                       "Oligodendrocytes" = "#b7dd5f",
-                       "Astrocytes" = "#00a385",
-                       "Ependymal" = "#8ee5cf",
-                       "Neurons" = "#840200",
-                       "Non-neuroect." = "gray40",
-                       "Other" = "gray60")
-region_palette <- c("Forebrain" = "navy",
-                    "Pons" = "darkred")
-timepoint_palette <- c(RColorBrewer::brewer.pal(7, "Blues")[2:7],
-                       RColorBrewer::brewer.pal(4, "Reds")[2:4]) %>%
-  set_names(c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"))
 
 # Vector specifying the order of clusters in the dendrogram
 load("data/joint_mouse/ID_20190715_dendrogram_order.Rda")
@@ -60,9 +37,41 @@ genes_anno <- data.table::fread("data/joint_mouse/all_mm10_genes.txt", header = 
 names(genes_anno) <- "Genes"
 genes_anno <- genes_anno[['Genes']]
 
+# ---- Palettes ----
+
+# Red-blue gradient and brain region colour palettes
+load("data/joint_mouse/palettes.Rda")
+
+cortex_palette_joint <- readRDS("data/joint_cortex/joint_cortex.palette_ID_20190715_joint_clustering.Rds")
+pons_palette_joint   <- readRDS("data/joint_pons/joint_pons.palette_ID_20190715_joint_clustering.Rds")
+
+# Joint mouse colour palette
+load("data/joint_mouse/joint_mouse.palette_ID_20190715.Rda")
+
+# Palette used to colour values in table
+orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
+
+# Palettes used in heatmap annotations
+
+general_palette <- c("Progenitors/cyc." = "#ffaf49",
+                       "Oligodendrocytes" = "#b7dd5f",
+                       "Astrocytes" = "#00a385",
+                       "Ependymal" = "#8ee5cf",
+                       "Neurons" = "#840200",
+                       "Non-neuroect." = "gray40",
+                       "Other" = "gray60")
+
+region_palette <- c("Forebrain" = "navy",
+                    "Pons" = "darkred")
+
+timepoint_palette <- c(RColorBrewer::brewer.pal(7, "Blues")[2:7],
+                       RColorBrewer::brewer.pal(4, "Reds")[2:4]) %>%
+  set_names(c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"))
+
+
 # ---- Shiny settings ----
 
-# -- Enable bookmarking
+# Enable bookmarking
 enableBookmarking(store = "url")
 
 # ---- R settings ----
