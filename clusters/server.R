@@ -239,8 +239,10 @@ server <- function(input, output, session) {
   )
   
   
-  #### ---- Expression table tab content ----
+  #### ---- Cluster info & markers table tab content ----
 
+  # EXPRESSION TABLE 
+  
   # Show table with cluster & expression info 
   output$cluster_table <- renderReactable({
     req(bubble_input())
@@ -268,9 +270,6 @@ server <- function(input, output, session) {
     #                              .after = last_col())
     # }
     
-    # Create palette for expression level
-    orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ffb54d"))(x), maxColorValue = 255)
-    
     # Produce a list of gene columns (dynamic based on input) with assigned formatting
     # Concept from: https://github.com/glin/reactable/issues/65#issuecomment-667577253 
     gene_columns <- 
@@ -292,11 +291,14 @@ server <- function(input, output, session) {
               rownames = FALSE,
               highlight = TRUE,
               compact = TRUE,
+              bordered = TRUE,
               searchable = TRUE,
               showSortable = TRUE,
               fullWidth = FALSE,
               resizable = TRUE,
-              showPageSizeOptions = TRUE, pageSizeOptions = c(10, 20, 40), defaultPageSize = 10,
+              showPageSizeOptions = TRUE, 
+              pageSizeOptions = c(10, 20, 40), 
+              defaultPageSize = 10,
 
               columns = c(
                 list(Cluster = colDef(minWidth = 110,
@@ -341,34 +343,79 @@ server <- function(input, output, session) {
                       write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
                     })
   
+  # MARKER TABLE
+  
   # Store the selected row (cluster) as index, and extract cluster name 
   selected_index <- reactive(getReactableState("cluster_table", "selected"))
   cluster_order <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
                                 columns = c("Cluster")) 
   selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
   
-  # Extract region change to format of signature & marker filenames
-  cluster_region <- reactive(
-    if(grepl("^P-", selected_cluster())){
-      "po_"
-    } else if (grepl("^F-", selected_cluster())){
-      "ct_"
-    })
-  
-  # Extract timepoint section of cluster name
-  
-  # Extract celltype part of cluster name, convert to whatever format is within marker & signature files(??)
-  
-  # Glue the region and timepoint in one string
-  
-  # Find & load the correct marker and signature files based on this string
-  
-  # Join the marker file by genes in signature file
-  
-  # Output the joined dataframe as a reacTable
+  # Extract cluster info from metadata
+  # Beware: metadata also includes some human samples
+  cluster_info <- reactive(
+    metadata %>% 
+      filter(Cluster_nounderscore == as.character(selected_cluster())) %>% 
+      select(Alias, Structure, Age, Cluster_number)
+    )
+
+  output$marker_table <- renderReactable({
+    validate(
+      need(!is.null(getReactableState("cluster_table", "selected")), "
+           Please select a cluster for which to display markers in the expression table above.")
+    )
     
-  output$selected <- renderPrint({
-    print(cluster_region())
+    # Load marker and signature files for the selected cluster's region & timepoint
+    if (as.character(cluster_info()$Structure) == "Forebrain") region <- "cortex"
+    else region <- "pons"  # else includes samples labeled "Pons" as well as "Hindbrain"
+    
+    markers <- data.table::fread(glue("data/markers_{region}/{cluster_info()$Alias}.markers.tsv.gz"),
+                                 data.table = FALSE)
+    signature <- loadRData(glue("data/signatures_{region}/{cluster_info()$Alias}.signatures_no_mito.Rda"))
+    
+    # Filter markers to contain only genes in the specified cluster's signature
+    cluster_string <- as.character(cluster_info()$Cluster_num)
+    
+    markers_filter <- markers %>% 
+      filter(cluster == as.integer(cluster_info()$Cluster_number)) %>% 
+      filter(external_gene_name %in% signature[[2]][[cluster_string]]) %>% 
+      mutate(Specificity = pct.1 - pct.2) %>% 
+      mutate(avg_logFC = round(avg_logFC, 4)) %>%
+      mutate(p_val_adj = signif(p_val_adj, 4)) %>%
+      mutate(pct.1 = round(pct.1, 4)) %>%
+      mutate(pct.2 = round(pct.2, 4)) %>%
+      mutate(Specificity = round(Specificity, 4)) %>%
+      select(Gene = external_gene_name,
+             Description = description,
+             "Average log fold change" = avg_logFC,
+             "P-value" = p_val_adj,
+             "Detection rate in cluster" = pct.1,
+             "Detection rate outside cluster" = pct.2,
+             Specificity)
+    
+    # Output the joined dataframe as a reacTable
+    reactable(markers_filter,
+              rownames = FALSE,
+              highlight = TRUE,
+              compact = TRUE,
+              bordered = TRUE,
+              searchable = TRUE,
+              showSortable = TRUE,
+              fullWidth = FALSE,
+              resizable = TRUE,
+              showPageSizeOptions = TRUE, 
+              pageSizeOptions = c(10, 20, 40), 
+              defaultPageSize = 10,
+              columns = c(
+                list(Gene = colDef(minWidth = 80, style = list(fontWeight = "bold")),
+                     Description = colDef(minWidth = 300),
+                     "Average log fold change" = colDef(minWidth = 120),
+                     "P-value" = colDef(minWidth = 110),
+                     "Detection rate in cluster" = colDef(minWidth = 120),
+                     "Detection rate outside cluster" = colDef(minWidth = 130),
+                     Specificity = colDef(minWidth = 110)
+              )
+    ))
   })
   
   #### ---- Timecourse tab content ----

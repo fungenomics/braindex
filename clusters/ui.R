@@ -250,11 +250,15 @@ ui <- function(request){
                
       ),
         
-      #### ---- Expression table tab output ---- 
+      #### ---- Cluster info & markers table tab output ---- 
       
-      tabPanel("Expression table", 
+      tabPanel("Cluster info & markers", 
                
                tags$br(),
+               
+               h4(tags$b("Gene expression by cluster")),
+               tags$br(),
+               
                tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
                tags$br(),
                tags$br(),
@@ -264,6 +268,8 @@ ui <- function(request){
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
+               p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (update button not required)"),
+            
                #div(style = "overflow-x: scroll; overflow-y: visible;",
                    fluidRow(
                      reactableOutput("cluster_table", width = 1100) %>% ws
@@ -276,13 +282,29 @@ ui <- function(request){
                conditionalPanel(condition='input.update!=0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
-                                                 "Download data (TSV)"))
+                                                 "Download expression table (TSV)"))
                ),
                
-               HTML("<br>"), 
+               HTML("<br><br><br><br>"),
+               
+               h4(tags$b("Cluster markers")),
+               
+               tags$br(),
+               tags$b("This table displays the 100-gene signature for the cluster selected in the expression table above."),
+               tags$br(),
+               tags$br(),
+               
+               p("• The signature comprises the 100 genes with the lowest adjusted p-value (highest significance) in the cluster"),
+               
+               p("• Detection rates are calculated as the proportion of cells in the specified population expressing the gene"),
+               
+               p("• Specificity is calculated as the difference between the detection rate within the cluster and outside of the cluster"),
                
                conditionalPanel(condition='input.update!=0',
-                                verbatimTextOutput("selected")
+                                fluidRow(
+                                  reactableOutput("marker_table", 
+                                                  width = 1100) %>% ws
+                                ),
                ),
                
                HTML("<br><br><br>"), 
