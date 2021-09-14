@@ -786,6 +786,71 @@ vln <- function(df,
   
 }
 
+
+#' Generate a bar plot of clusters ranked by their gene expression, with ticks
+#' below the plot indicating broad cell class of the clusters
+#' 
+#' @param df Dataframe, as produced by bubble_prep, with the expression of the 
+#' gene of interest or the mean expression of the genes of interest
+#' @param title_text String, desired title of the plot
+#' @param y_axis_text String, desired y-axis label of the plot
+#'
+#' @return Bar plot with aligned ticks (output of plot_grid)
+#' 
+#' @example 
+#' ranked_exp_plot(bubble_prep(gene = "Pdgfra"), "Pdgfra", "Mean Pdgfra expression")
+ranked_exp_plot <- function(df,
+                            title_text,
+                            y_axis_text) {
+  
+  df <- df %>% 
+    # Order from highest to lowest by expression (ranked)
+    arrange(desc(Expression)) %>% 
+    mutate(Cluster = factor(Cluster, levels = .$Cluster)) %>% 
+    # Rename cell classes to more general names
+    mutate(Cell_class = case_when(
+      grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
+      grepl("Olig", Cell_class) ~ "Oligodendrocytes",
+      grepl("Epen", Cell_class) ~ "Ependymal",
+      grepl("Astr", Cell_class) ~ "Astrocytes",
+      grepl("[Nn]euron", Cell_class) ~ "Neurons",
+      grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
+      TRUE ~ "Other"
+    ))
+  
+  p1 <- df %>% ggplot(aes(x = Cluster, y = Expression)) +
+    geom_bar(aes(fill = Cluster), stat = "identity") +
+    scale_fill_manual(values = df$Colour) +
+    theme_min(border_colour = "gray90") +
+    theme(legend.position = "none",
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          # Remove white space at the bottom of plot
+          plot.margin = margin(b=0, unit="cm")) +
+    expand_limits(x = -18) +
+    labs(title = title_text) +
+    ylab(y_axis_text)
+  
+  ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
+                                      palette = general_palette,
+                                      start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
+    # Make sure to expand to the same value that's in p1
+    expand_limits(x = -18) +
+    theme(legend.position = "none",
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 6),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          # Remove plot border
+          panel.border = element_blank(),
+          # Remove white space at the top of the plot
+          plot.margin = margin(t=0, unit="cm")) 
+  
+  plot_grid(p1, ticks, ncol = 1, align = "v")
+  
+}
+
 # ---- Helper functions ----
 
 #' Remove ticks from the axis of a ggplot
@@ -897,21 +962,15 @@ check_genes <- function(user_genes,
                         n = NULL,
                         annotation = FALSE) {
   
-  if (!is.null(n)) {
-    user_genes <- head(user_genes, n)
-  } 
+  if (!is.null(n)) user_genes <- head(user_genes, n)
   
-  if(annotation){
-    check_against <- genes_anno
-  } else {
-    check_against <- genes_mouse
-  }
+  if(annotation)   check_against <- genes_anno
+  else             check_against <- genes_mouse
   
-  if (!(all(user_genes %in% check_against))) {
+  if (!(all(user_genes %in% check_against)))   
     return(user_genes[!(user_genes %in% check_against)])
-  } else {
-    return(NULL)
-  }
+  else return(NULL)
+  
 }
 
 
@@ -950,9 +1009,11 @@ makePheatmapAnno <- function(palette, column) {
 #' numeric dimensions of the pheatmap (measured in inches)
 get_plot_dims <- function(heat_map)
 {
+  
   plot_height <- sum(sapply(heat_map$gtable$heights, grid::convertHeight, "in"))
   plot_width  <- sum(sapply(heat_map$gtable$widths, grid::convertWidth, "in"))
   return(list(height = plot_height, width = plot_width))
+  
 }
 
 
@@ -966,6 +1027,8 @@ get_plot_dims <- function(heat_map)
 #' @example my_variable_name <- loadRData("/my_data/my_work.Rda")
 #' (Now my_variable_name can be manipulated as the R object itself.)
 loadRData <- function(fileName){
+  
   load(fileName)
   get(ls()[ls() != "fileName"])
+  
 }

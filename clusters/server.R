@@ -961,59 +961,15 @@ server <- function(input, output, session) {
       df <- bubble_prep(gene = input_new()$gene,
                         show_mean = TRUE) %>% 
         filter(Gene == "MEAN")
-      y_axis_text <- "Mean gene expression"
-      title_text <- "Mean expression over all selected genes"
+      y_axis <- "Mean gene expression"
+      title <- "Mean expression over all selected genes"
     } else {
       df <- bubble_prep(gene = input$pick_ranked)
-      y_axis_text <- glue("Mean {input$pick_ranked} expression")
-      title_text <- input$pick_ranked
+      y_axis <- glue("Mean {input$pick_ranked} expression")
+      title <- input$pick_ranked
     }
     
-    df <- df %>% 
-      # Order from highest to lowest by expression (ranked)
-      arrange(desc(Expression)) %>% 
-      mutate(Cluster = factor(Cluster, levels = .$Cluster)) %>% 
-      # Rename cell classes to more general names
-      mutate(Cell_class = case_when(
-        grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
-        grepl("Olig", Cell_class) ~ "Oligodendrocytes",
-        grepl("Epen", Cell_class) ~ "Ependymal",
-        grepl("Astr", Cell_class) ~ "Astrocytes",
-        grepl("[Nn]euron", Cell_class) ~ "Neurons",
-        grepl("Non-neuro|Immune", Cell_class) ~ "Non-neuroect.",
-        TRUE ~ "Other"
-      ))
-    
-    p1 <- df %>% ggplot(aes(x = Cluster, y = Expression)) +
-      geom_bar(aes(fill = Cluster), stat = "identity") +
-      scale_fill_manual(values = df$Colour) +
-      theme_min(border_colour = "gray90") +
-      theme(legend.position = "none",
-            axis.title.x = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            # Remove white space at the bottom of plot
-            plot.margin = margin(b=0, unit="cm")) +
-      expand_limits(x = -18) +
-      labs(title = title_text) +
-      ylab(y_axis_text)
-
-    ticks <- ggplot() + add_class_ticks(df, unique(df$Cell_class),
-                             palette = general_palette,
-                             start = -5, sep = 5, height = 30, label_x_pos = -16, fontsize = 3) +
-      # Make sure to expand to the same value that's in p1
-      expand_limits(x = -18) +
-      theme(legend.position = "none",
-            axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 6),
-            axis.title.y = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks.y = element_blank(),
-            # Remove plot border
-            panel.border = element_blank(),
-            # Remove white space at the top of the plot
-            plot.margin = margin(t=0, unit="cm")) 
-    
-    plot_grid(p1, ticks, ncol = 1, align = "v")
+    ranked_exp_plot(df, title, y_axis)
   })
 
   output$rank_tick_plot <- renderPlot({
