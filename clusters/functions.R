@@ -1,6 +1,5 @@
-# Shiny helpers ----
 
-# Custom functions ----
+# ---- Data preparation functions ----
 
 # TODO: write documentation for this function
 get_embedding <- function(sample,
@@ -19,6 +18,7 @@ get_embedding <- function(sample,
   return(df)
   
 }
+
 
 # TODO: write documentation for this function
 get_expression <- function(sample,
@@ -81,10 +81,11 @@ get_expression <- function(sample,
 #' clusters to [0,1] to improve visualization. Default: TRUE
 #' @param show_mean Logical, whether or not to display the mean expression of
 #' given genes in a new bubble plot line. Default: FALSE
-#' TODO: Use this to provide an option to download the underlying data.
 #' 
-#' @examples 
+#' @example 
 #' bubble_prep("Dlx1")
+#' 
+#' 
 bubble_prep <- function(gene,
                         scale = TRUE,
                         show_mean = FALSE) {
@@ -179,6 +180,50 @@ bubble_prep <- function(gene,
 }
 
 
+#' Prepare input for ribbon plot
+#' 
+#' Loads gene expression values, cell metadata, and tidies values while filtering
+#' out blacklisted clusters
+#'
+#' @param gene String corresponding to gene name (only a single value allowed) 
+#' @param region String, corresponding to the brain region to plot, one of
+#' "joint_cortex" or "joint_pons"
+#'
+#' @return Dataframe with first column "Cell" and the rest corresponding to 
+#' sample & cluster-level metadata for each Cell
+#'
+#' TODO: At some point, generalize this to be able to be used by other functions
+#' which require a similar input
+#'
+#' @example
+#' prep_ribbon_input("Pdgfra", "joint_cortex")
+prep_ribbon_input <- function(gene, region) {
+  
+  ribbon_df <- read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
+                            c("Cell", "ID_20190715_with_blacklist_and_refined", gene)) %>% 
+    rowwise() %>% 
+    mutate(Cell = str_extract(Cell, "[ACGT]{16}")) %>% 
+    select(Cell, Cluster = ID_20190715_with_blacklist_and_refined, everything()) %>% 
+    ungroup() %>% 
+    left_join(metadata, by = "Cluster") %>% 
+    mutate(Age = ifelse(Age == "E12.5-E15.5", "E12.5", Age))
+  
+  ribbon_df <- ribbon_df %>% 
+    # Filter out cell types to exclude
+    filter(!grepl("BLACKLISTED", Cluster)) %>% 
+    filter(!is.na(Cell_type)) %>% 
+    mutate(Age = factor(Age, levels = c("E12.5",
+                                        "E15.5",
+                                        "P0",
+                                        "P3",
+                                        "P6"))) %>% 
+    arrange(Age)
+  
+}
+
+
+# ---- Custom plotting functions ----
+
 #' Bubbleplot of gene expression
 #' 
 #' Generate a bubble plot for genes of interest across clusters in the mouse
@@ -190,7 +235,7 @@ bubble_prep <- function(gene,
 #'
 #' @return A list containing a ggplot2 object and its legend (extracted with cowplot)
 #'
-#' @examples
+#' @example
 #' bubble_prep("Dlx1") %>% bubbleplot()
 #' 
 #' @export
@@ -225,59 +270,16 @@ bubble_plot <- function(df, max_point_size) {
 }
 
 
-#' Prepare input for ribbon plot
-#' 
-#' Loads gene expression values, cell metadata, and tidies values while filtering
-#' out blacklisted clusters
-#'
-#' @param gene String corresponding to gene name (only a single value allowed) 
-#' @param region String, corresponding to the brain region to plot, one of
-#' "joint_cortex" or "joint_pons"
-#'
-#' @return Dataframe with first column "Cell" and the rest corresponding to 
-#' sample & cluster-level metadata for each Cell
-#'
-#' TODO: At some point, generalize this to be able to be used by other functions
-#' which require a similar input
-#'
-#' @examples
-#' prep_ribbon_input("Pdgfra", "joint_cortex")
-prep_ribbon_input <- function(gene, region) {
-  
-  ribbon_df <- read_feather(glue("data/{region}/{region}.embedding_and_genes.feather"),
-                            c("Cell", "ID_20190715_with_blacklist_and_refined", gene)) %>% 
-    rowwise() %>% 
-    mutate(Cell = str_extract(Cell, "[ACGT]{16}")) %>% 
-    select(Cell, Cluster = ID_20190715_with_blacklist_and_refined, everything()) %>% 
-    ungroup() %>% 
-    left_join(metadata, by = "Cluster") %>% 
-    mutate(Age = ifelse(Age == "E12.5-E15.5", "E12.5", Age))
-  
-  ribbon_df <- ribbon_df %>% 
-    # Filter out cell types to exclude
-    filter(!grepl("BLACKLISTED", Cluster)) %>% 
-    filter(!is.na(Cell_type)) %>% 
-    mutate(Age = factor(Age, levels = c("E12.5",
-                                        "E15.5",
-                                        "P0",
-                                        "P3",
-                                        "P6"))) %>% 
-    arrange(Age)
-  
-}
-
-
-
 #' Generate a ribbon plot
 #' 
 #' This function generates a ribbon plot representing proportions over time,
 #' as seen in ,. This function is based on R code provided by the authors at
 #' https://github.com/MarioniLab/EmbryoTimecourse2018/tree/master/analysis_scripts/atlas/vis/ribbon
 #'
-#' @param gene String corresponding to gene name (only a single value allowed) 
-#' @param region String, corresponding to the brain region to plot, one of
+#' @param gene String, gene name (only a single value allowed) 
+#' @param region String, the brain region to plot, one of 
 #' "joint_cortex" or "joint_pons"
-#' @param ymax Numeric, value in [0, 1] specifying the maximum value for the y-axis.
+#' @param ymax Numeric, value in [0, 1] specifying the maximum value for the y-axis
 #' By default, y-axis is scaled to the range of the data (see more at 
 #' https://ggplot2.tidyverse.org/reference/lims.html)
 #' @param make_plotly Logical, whether or not to make an interactive (plotly)
@@ -392,6 +394,7 @@ ribbon_plot <- function(gene,
   }
   
 }
+
 
 #TODO: finish documentation for this function
 #' Generate dimensionality reduction plot from data embedding
@@ -557,6 +560,7 @@ dr_plot <- function(embedding,
   
 }
 
+
 #' Colour cells in t-SNE or PCA space by gene expression
 #'
 #' Plot a low-dimensional embedding of the cells,
@@ -567,7 +571,7 @@ dr_plot <- function(embedding,
 #' @param seurat Seurat object, where dimensionality reduction has been applied,
 #' i.e. (after applying Seurat::RunPCA() or Seurat::RunTSNE() to the object)
 #' @param genes String or character vector specifying gene(s) to use
-#' @param reduction String specifying the dimensionality reduction to use,
+#' @param reduction String, the desired dimensionality reduction:
 #' retrieves t-SNE by default. This should match the names of the elements of
 #' the list seurat@@dr, so it will typically be one of "pca" or "tsne".
 #' Default: "tsne"
@@ -579,7 +583,7 @@ dr_plot <- function(embedding,
 #' one of "viridis", "blues", or "redgrey", specifying which gradient
 #' palette to use. Otherwise, a character vector of colours (from low to high)
 #' to interpolate to create the scale. Default: redgrey.
-#' @param title (Optional) String specifying the plot title
+#' @param title (Optional) String,the plot title
 #' @param alpha Numeric, fixed alpha for points. Default: 0.6
 #' @param point_size Numeric, size of points in scatterplot. Default: 1. (A smaller
 #' value around 0.5 is better for plots which will be viewed at small scale.)
@@ -736,6 +740,7 @@ feature_plot <- function(df,
   
 }
 
+
 #' Generate a violin plot of single cell data
 #' 
 #' @param df Dataframe, contains data shown in plot
@@ -781,6 +786,8 @@ vln <- function(df,
   
 }
 
+# ---- Helper functions ----
+
 #' Remove ticks from the axis of a ggplot
 #' 
 #' @example 
@@ -793,6 +800,7 @@ noTicks <- function() {
         axis.ticks.y = element_blank())
   
 }
+
 
 #' Determine if a background colour is dark enough to warrant white text
 #' 
@@ -822,6 +830,7 @@ dark <- function(hex_color) {
     
   }
 }
+
 
 #' Add ticks below a bar plot to categorize x axis into less granular categories
 #' (Adapted from Selin's code)
@@ -874,6 +883,7 @@ add_class_ticks <- function(df, classes, height, sep, start, label_x_pos, palett
   
 }
 
+
 #' Check a certain number of input genes against an list of accepted genes 
 #' 
 #' @param user_genes Character vector, inputs from user (from textbox or file)
@@ -904,6 +914,17 @@ check_genes <- function(user_genes,
   }
 }
 
+
+#' Produce preliminary column annotation input for pheatmap
+#' (Code from Selin)
+#' 
+#' @param palette Named character vector with labels assigned to colours
+#' @param column String, desired annotation title
+#' 
+#' @return a list with two elements: a dataframe containing all keys (labels) in the palette,
+#' and a list of colours that assigns each key to a colour
+#' 
+#' @example anno <- makePheatmapAnno(c("Forebrain" = "#000", "Pons" = "#fff"), "Region")
 makePheatmapAnno <- function(palette, column) {
   
   palette <- palette[unique(names(palette))]
@@ -919,7 +940,14 @@ makePheatmapAnno <- function(palette, column) {
   
 }
 
-# Code from https://stackoverflow.com/questions/61874876/get-size-of-plot-in-pixels-in-r 
+
+#' Return the dimensions of a heatmap plotted in pheatmap 
+#' (Code from https://stackoverflow.com/a/61876386) 
+#' 
+#' @param heat_map pheatmap Object
+#' 
+#' @return a named list containing height and width elements assigned to
+#' numeric dimensions of the pheatmap (measured in inches)
 get_plot_dims <- function(heat_map)
 {
   plot_height <- sum(sapply(heat_map$gtable$heights, grid::convertHeight, "in"))
@@ -927,8 +955,16 @@ get_plot_dims <- function(heat_map)
   return(list(height = plot_height, width = plot_width))
 }
 
-# Loads an RData file, and returns it
-# Code from: https://stackoverflow.com/a/25455968  
+
+#' Load an RData file and return it
+#' (Code from https://stackoverflow.com/a/25455968)
+#' 
+#' @param fileName String, file path to RData file to be opened
+#' 
+#' @return R object, the contents of the RData file
+#' 
+#' @example my_variable_name <- loadRData("/my_data/my_work.Rda")
+#' (Now my_variable_name can be manipulated as the R object itself.)
 loadRData <- function(fileName){
   load(fileName)
   get(ls()[ls() != "fileName"])
