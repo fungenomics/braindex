@@ -926,3 +926,10 @@ get_plot_dims <- function(heat_map)
   plot_width  <- sum(sapply(heat_map$gtable$widths, grid::convertWidth, "in"))
   return(list(height = plot_height, width = plot_width))
 }
+
+# Loads an RData file, and returns it
+# Code from: https://stackoverflow.com/a/25455968  
+loadRData <- function(fileName){
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
