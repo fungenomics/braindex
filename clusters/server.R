@@ -413,26 +413,20 @@ server <- function(input, output, session) {
               defaultPageSize = 10,
               columns = c(
                 list(Gene = colDef(minWidth = 90, style = list(fontWeight = "bold")),
-                     "Gene type" = colDef(minWidth = 120,
-                                          style = function(value) {
-                                            if (is.na(value)) color <- "e5e5e5"
-                                            else if (value == "protein_coding") color <- "#ebbbab"
-                                            else color <- "#abd3eb"
-                                            list(background = color)
-                                          }),
+                     "Gene type" = colDef(minWidth = 120
+                                          # ,
+                                          # style = function(value) {
+                                          #   if (is.na(value)) color <- "e5e5e5"
+                                          #   else if (value == "protein_coding") color <- "#ebbbab"
+                                          #   else color <- "#abd3eb"
+                                          #   list(background = color)
+                                          # }
+                                          ),
                      Description = colDef(minWidth = 300),
                      "Average log fold change" = colDef(minWidth = 120),
                      "P-value" = colDef(minWidth = 110),
-                     "Detection rate in cluster" = colDef(minWidth = 120,
-                                                          style = function(value) {
-                                                            color <- orange_pal(value)
-                                                            list(background = color)
-                                                          }),
-                     "Detection rate outside cluster" = colDef(minWidth = 130,
-                                                               style = function(value) {
-                                                                 color <- orange_pal(value)
-                                                                 list(background = color)
-                                                               }),
+                     "Detection rate in cluster" = colDef(minWidth = 120),
+                     "Detection rate outside cluster" = colDef(minWidth = 130),
                      Specificity = colDef(minWidth = 110,
                                           style = function(value) {
                                             color <- orange_pal(value)
