@@ -14,6 +14,9 @@ ggplot2::theme_set(theme_min())
 
 server <- function(input, output, session) {
   
+  #### ---- Sidebar input ----
+  
+  # Implement selectize (i.e. server-side selection) to speed up loading time
   updateSelectizeInput(session, inputId = "gene", choices = genes_anno,
                        server = TRUE)
   
@@ -21,6 +24,8 @@ server <- function(input, output, session) {
   # more options in the future
   input_new <- eventReactive(input$update, {
     
+    # Allow user to upload gene lists as .csv, .tsv, .txt files
+    #   encoded in UTF-8
     g_list <- reactive({
       
       req(input$genelist)
@@ -36,18 +41,17 @@ server <- function(input, output, session) {
              txt = scan(input$genelist$datapath, 
                         what = "string", sep = "\t", 
                         encoding = "UTF-8", fileEncoding = "UTF-8-BOM"),
+             # Display message if the file is not in one of these formats
              validate("\n\n\nInvalid file; Please upload a .txt, .csv, or .tsv file")
       )
     })
     
-    # Condition which input is used based on the upload toggle
-    if (input$upload){
-      genes = g_list()
-    } else {
-      genes = input$gene
-    }
+    # Switch between gene input by file or typing based on toggle button
+    if (input$upload)      genes = g_list()
+    else                   genes = input$gene
     
-    # Inputs to use as is
+    
+    # Use the following inputs without modification:
     l <- list(
       "gene"   = genes,
       "scale"  = input$bubble_scale,
@@ -61,6 +65,8 @@ server <- function(input, output, session) {
       "heatmap_cells" = input$heatmap_cells,
       "heatmap_anno" = input$heatmap_anno
     )
+    
+    # Modify other inputs as required:
     
     # Get the columns for the appropriate type of dim red
     if      (input$dr == "tSNE") l$dr <- c("tSNE_1", "tSNE_2")
@@ -79,8 +85,8 @@ server <- function(input, output, session) {
     
     # Get the clustering to use for the joint analysis tab
     # Option 1: Clustering done at the joint analysis level
-    # Option 2: Clustering done per sample (for the forebrain, there was some refinement done so the latest
-    # version of labels is different than in the pons)
+    # Option 2: Clustering done per sample (for the forebrain, there was some 
+    #   refinement done, so the latest version of labels is different than in pons)
     if (input$dr_clustering == "joint") {
       
       l$clust <- "ID_20190715_joint_clustering"
@@ -126,12 +132,12 @@ server <- function(input, output, session) {
     } else {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
-
+    
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
@@ -155,21 +161,22 @@ server <- function(input, output, session) {
     
     req(bubble_input())
     
+    # Custom plotter (functions.R)
     bubble_plot(df = bubble_input(),
                 max_point_size = input_new()$size)$plot # Get plot part of output
     
   },
   
-  # Choose width to align horizontally with dendrogram image
+  # Choose specific width to align horizontally with dendrogram image
   width = 1103,
   
-  # Customize the height of the bubbleplot to scale with the number of genes which
-  # are being displayed, after allocating a baseline height for the x-axis & legend
+  # Customize height of the bubbleplot to scale with the number of displayed 
+  # genes, after allocating a baseline height for the x-axis & legend
   height = function() 150 + 30 * length(input_new()$gene))
   
-  # Create a tooltip with cluster / expression information 
-  # that appears when hovering over a bubble 
-  # This was adapted from this example: https://gitlab.com/snippets/16220
+  # Create a tooltip with cluster / expression information,
+  #     which appears when hovering over a bubble 
+  # Adapted from this example: https://gitlab.com/snippets/16220 
   output$bubble_hover_info <- renderUI({
     
     hover <- input$bubble_hover
@@ -187,17 +194,18 @@ server <- function(input, output, session) {
     if (nrow(point) == 0) return(NULL)
     
     # Create style property for tooltip
-    # background is set to the cluster colour, with opacity = 95% ("F2" at end of hex)
-    # z-index is set so we are sure are tooltip will be on top
+    # background is set to the cluster colour, opacity = 95% ("F2" at end of hex)
+    # z-index is set so we are sure the tooltip will be on top
     style <- paste0("position:absolute; z-index:100; background-color: ", point$Colour, "F2;",
                     "left: -350px; top: 500px; width: 350px;")
     
-    # Set text to white if the background colour is dark, else it's black (default)
+    # Set text to white (override default black) if background colour is dark
+    # See dark() in functions.R
     if (dark(point$Colour)) {
       style <- paste0(style, "color: #FFFFFF")
     }
     
-    # Specify text content of tooltips - special content for mean expression plot
+    # Specify text content of tooltips, with special content for mean expression plot
     if(identical(point$Gene, "MEAN")){
       tooltip_text <- paste0("<b> Mean expression level of plotted genes </b> <br/>",
                              "<b> Cluster: </b>",    point$Cluster, "<br/>",
@@ -213,14 +221,14 @@ server <- function(input, output, session) {
                              point$Gene, "+ cells out of ", point$N_cells, " cells in cluster <br/>")
     }
     
-    # Actual tooltip created as wellPanel
+    # Created tooltip as wellPanel
     wellPanel(
       style = style,
       p(HTML(tooltip_text))
     )
   })
   
-  # Render the bubble plot gene labels separately with ggdraw
+  # Render bubble plot gene labels separately with ggdraw
   output$bubble_labels <- renderPlot({
     
     ggdraw(bubble_plot(df = bubble_input(),
@@ -228,7 +236,7 @@ server <- function(input, output, session) {
     
   },
   
-  # Set height of bubble plot gene labels to (hopefully) align with plots
+  # Set height of bubble plot gene labels to align with plots
   height = function() 28.5 + 29 * length(input_new()$gene),
   
   # Max length of a gene is 200px
@@ -241,21 +249,22 @@ server <- function(input, output, session) {
   
   #### ---- Cluster info & markers table tab content ----
 
-  # EXPRESSION TABLE 
+  # --- EXPRESSION TABLE ---
   
   # Show table with cluster & expression info 
   output$cluster_table <- renderReactable({
     req(bubble_input())
     
-    # Use the order from bubble_input except reversed 
+    # Store reversed bubble_input gene order (to match user input left to right)
     gene_table_order <- rev(unique(bubble_input()$Gene))
     
+    # Modify table for plotting
     table <- 
       bubble_input() %>%
       select(-Pct1, -Gene_padded) %>% 
       mutate(Expression = round(Expression, 2)) %>% 
       spread(Gene, Expression) %>% 
-      # Select all except Colour column, rename some variables for clarity, and
+      # Select all except Colour column, rename columns for human readability,
       # follow bubble_input order for gene columns (saved above)
       select(Cluster,
              Sample,
@@ -264,13 +273,13 @@ server <- function(input, output, session) {
              "Number of cells" = N_cells,
              all_of(gene_table_order))
     
-    # Move mean expression to the rightmost column
+    ## Move mean expression to the rightmost column
     # if ("MEAN" %in% gene_table_order) {
     #   table <- table %>% relocate("MEAN",
     #                              .after = last_col())
     # }
     
-    # Produce a list of gene columns (dynamic based on input) with assigned formatting
+    # Store a dynamic list of gene columns (based on input) with assigned formatting
     # Concept from: https://github.com/glin/reactable/issues/65#issuecomment-667577253 
     gene_columns <- 
       sapply(gene_table_order, # Vector of input genes
@@ -283,11 +292,13 @@ server <- function(input, output, session) {
                                       list(background = color)
                                     })))
              })
+    
     # Rename list names to gene names (they were changed during sapply)
     names(gene_columns) <- gene_table_order 
     
-    # Produce a data table
+    # Output the dataframe as a reacTable
     reactable(table, 
+              # Table formatting
               rownames = FALSE,
               highlight = TRUE,
               compact = TRUE,
@@ -299,7 +310,8 @@ server <- function(input, output, session) {
               showPageSizeOptions = TRUE, 
               pageSizeOptions = c(10, 20, 40), 
               defaultPageSize = 10,
-
+              
+              # Column formatting
               columns = c(
                 list(Cluster = colDef(minWidth = 110,
                                  style = function(index){
@@ -312,8 +324,8 @@ server <- function(input, output, session) {
                                      f_color = "#000000"
                                    }
                                    list(background = b_color, color = f_color, fontWeight = "bold") 
-                                   # # Make the cluster column "sticky" i.e. freeze it in horizontal scroll
-                                   #      position = "sticky", left = 0, zIndex = 1)
+                                   ## Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                   #position = "sticky", left = 0, zIndex = 1)
                                   },
                                  # headerStyle = 
                                  #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
@@ -324,8 +336,10 @@ server <- function(input, output, session) {
                 list("Cell class" = colDef(minWidth = 150)),
                 list("Number of cells" = colDef(minWidth = 100)),
                 
+                # Include dynamic list of columns stored above
                 gene_columns
               ),
+              # Implement row selection and formatting
               selection = "single", onClick = "select", 
               theme = reactableTheme(
                 rowSelectedStyle = 
@@ -343,27 +357,30 @@ server <- function(input, output, session) {
                       write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
                     })
   
-  # MARKER TABLE
+  # --- MARKER TABLE ---
   
-  # Store the selected row (cluster) as index, and extract cluster name 
+  # Store selected row (cluster) as table index, extract cluster name 
   selected_index <- reactive(getReactableState("cluster_table", "selected"))
   cluster_order <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
                                 columns = c("Cluster")) 
   selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
   
+  # Display the selected cluster's name to the user above marker table
   output$selected_clust <- renderUI({
     HTML(glue("<h4>Selected cluster: {selected_cluster()}</h4>"))
   })
   
-  # Extract cluster info from metadata
+  # Extract selected cluster's info from metadata
   # Beware: metadata also includes some human samples
   cluster_info <- reactive(
     metadata %>% 
       filter(Cluster_nounderscore == as.character(selected_cluster())) %>% 
       select(Alias, Structure, Age, Cluster_number)
-    )
-
+  )
+  
   output$marker_table <- renderReactable({
+    
+    # Validate whether a cluster is selected or not, display message to user
     validate(
       need(!is.null(getReactableState("cluster_table", "selected")), "
            Please select a cluster for which to display markers in the expression table above.")
@@ -377,18 +394,23 @@ server <- function(input, output, session) {
                                  data.table = FALSE)
     signature <- loadRData(glue("data/signatures_{region}/{cluster_info()$Alias}.signatures_no_mito.Rda"))
     
-    # Filter markers to contain only genes in the specified cluster's signature
+    # Store selected cluster's number as a string for filtering
     cluster_string <- as.character(cluster_info()$Cluster_num)
     
     markers_filter <- markers %>% 
+      # Filter markers to contain only genes in the specified cluster's signature
       filter(cluster == as.integer(cluster_info()$Cluster_number)) %>% 
       filter(external_gene_name %in% signature[[2]][[cluster_string]]) %>% 
+      
+      # Calculate new columns and round decimal values
       mutate(Specificity = pct.1 - pct.2) %>% 
       mutate(avg_logFC = round(avg_logFC, 4)) %>%
       mutate(p_val_adj = signif(p_val_adj, 4)) %>%
       mutate(pct.1 = round(pct.1, 4)) %>%
       mutate(pct.2 = round(pct.2, 4)) %>%
       mutate(Specificity = round(Specificity, 4)) %>%
+      
+      # Rename columns for human readability
       select(Gene = external_gene_name,
              "Gene type" = gene_biotype,
              Description = description,
@@ -400,6 +422,7 @@ server <- function(input, output, session) {
     
     # Output the joined dataframe as a reacTable
     reactable(markers_filter,
+              # Table formatting
               rownames = FALSE,
               highlight = TRUE,
               compact = TRUE,
@@ -411,10 +434,13 @@ server <- function(input, output, session) {
               showPageSizeOptions = TRUE, 
               pageSizeOptions = c(10, 20, 40), 
               defaultPageSize = 10,
+              
+              # Column formatting
               columns = c(
                 list(Gene = colDef(minWidth = 90, style = list(fontWeight = "bold")),
                      "Gene type" = colDef(minWidth = 120
                                           # ,
+                                          ## Conditional colour formatting
                                           # style = function(value) {
                                           #   if (is.na(value)) color <- "e5e5e5"
                                           #   else if (value == "protein_coding") color <- "#ebbbab"
@@ -428,6 +454,7 @@ server <- function(input, output, session) {
                      "Detection rate in cluster" = colDef(minWidth = 120),
                      "Detection rate outside cluster" = colDef(minWidth = 130),
                      Specificity = colDef(minWidth = 110,
+                                          # Conditional colour formatting
                                           style = function(value) {
                                             color <- orange_pal(value)
                                             list(background = color)
@@ -438,22 +465,19 @@ server <- function(input, output, session) {
   
   #### ---- Timecourse tab content ----
   
+  # Dynamic dropdown menu to choose which input gene to plot
   observe({
     x <- input_new()$gene
     
     # Use character(0) to remove all choices when input hasn't been received
-    if (is.null(x))
-      x <- character(0)
+    if (is.null(x))    x <- character(0)
     
-    if (length(x) == 1){
-      text_select_input <- " input)"
-    } else if (length(x) > 1){
-      text_select_input <- " inputs)"
-    } else {
-      text_select_input <- NULL
-    }
+    # Update the selection dropdown menu label based on length of input
+    if (length(x) == 1)      text_select_input <- " input)"
+    else if (length(x) > 1)  text_select_input <- " inputs)"
+    else                     text_select_input <- NULL
     
-    # Update the label based on length of input
+    # Produce dynamically updating dropdown menu to select gene from inputs
     updateSelectInput(session, "pick_timecourse",
                       label = paste("Select gene to display (from ", length(x), text_select_input),
                       choices = x,
@@ -461,10 +485,9 @@ server <- function(input, output, session) {
     )
   })
   
-  # STATIC TIMECOURSE 
+  # --- STATIC TIMECOURSE ---
   
-  # Generate ribbon plot and save the output so that we can allow the
-  # user to download it 
+  # Generate ribbon plot and save output for user download
   ribbon_static <- reactive({
     
     # Check whether a gene was provided or not
@@ -483,17 +506,17 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
-    # Check if expression is all zero in the brain region
+    # Check if expression is all zero in the selected brain region
     # TODO: fix this to make it work
     all_zero <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$zero
@@ -502,6 +525,7 @@ server <- function(input, output, session) {
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
     
+    # Create plot with custom plotter (functions.R)
     p1 <- ribbon_plot(gene   = input$pick_timecourse,
                       region = input_new()$region)$plot
     
@@ -525,7 +549,7 @@ server <- function(input, output, session) {
     
   })
   
-  # INTERACTIVE TIMECOURSE
+  # --- INTERACTIVE TIMECOURSE --- 
   
   # Generate interactive ribbon plot and save the output
   ribbon_plotly <- reactive({
@@ -546,11 +570,11 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
@@ -565,20 +589,21 @@ server <- function(input, output, session) {
       need(all_zero == FALSE, "This gene has no detected expression in the selected brain region.")
     )
     
+    # Create plot with custom plotter (functions.R)
     ribbon_plot(gene   = input$pick_timecourse,
                 region = input_new()$region,
                 make_plotly = TRUE)$plot
     
   })
   
+  # Output the interactive plot
   output$plotlyRibbon <- renderPlotly({ 
 
       # Position legend to the right of the plot
       layout(ribbon_plotly(), legend = list(x = 1, y = 0))
   })
 
-  # DOWNLOAD TIMECOURSE (static plot) AS A PDF
-  
+  # Download static timecourse plot as a PDF
   output$download_ribbon <- 
     downloadHandler(filename = "timecourse_ribbon.pdf",
                     content = function(file) {
@@ -614,11 +639,11 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
@@ -631,7 +656,8 @@ server <- function(input, output, session) {
     
   })
   
-  # Create a dim. red. plot coloured by cluster
+  # Create a dimensionality reduction plot coloured by cluster
+  # See dr_plot() in functions.R
   output$dr_joint <- renderPlot({
     
     req(input_new())
@@ -648,6 +674,8 @@ server <- function(input, output, session) {
     
   })
   
+  # Store the coordinates for the center (average x & y) of each cluster
+  # See dr_plot() in functions.R
   clust_centers <- reactive({
     
     req(input_new())
@@ -669,9 +697,9 @@ server <- function(input, output, session) {
       # Add cluster colours into the same dataframe
       left_join(palette_df, by = c("Cluster" = "Cluster")) 
       
-    
   })
   
+  # Output the hover tooltip UI
   output$dr_joint_hover_info <- renderUI({
 
     hover <- input$dr_joint_hover
@@ -710,7 +738,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # Get the gene expression for the gene(s) from user input
+  # Store the gene expression for the gene(s) in user input
   dr_joint_exp <- reactive({
     
     req(input_new())
@@ -782,6 +810,7 @@ server <- function(input, output, session) {
   # })
   
   # Create and plot a violin plot coloured by cluster
+  # See vln() in functions.R
   output$vln_joint <- renderPlot({
     
     vln(dr_joint_exp(),
@@ -792,6 +821,7 @@ server <- function(input, output, session) {
   
   #### ---- Sample joint analysis tab content ----
   
+  # Store data for the selected region, format dataframe
   dr_sample_embedding <- reactive({
     
     region <- str_split(input_new()$region, "_") %>% sapply(getElement, 2)
@@ -822,6 +852,8 @@ server <- function(input, output, session) {
     
     timepoints <- c("E12.5", "E15.5", "P0", "P3", "P6")
     
+    # Map the dr_plot() plotter (functions.R) to each of the timepoints, 
+    #   creating one plot per timepoint
     map2(dr_sample_embedding(), timepoints,
         ~ dr_plot(.x,
                   colour_by  = "Cluster",
@@ -840,7 +872,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Get the gene expression for the gene(s) from user input
+  # Get gene expression for the gene(s) in user input
   dr_sample_exp <- reactive({
     
     region <- input_new()$region
@@ -880,6 +912,8 @@ server <- function(input, output, session) {
     
     timepoints <- c("E12.5", "E15.5", "P0", "P3", "P6")
     
+    # Map vln() plotter (functions.R) to each timepoint, producing
+    #   one plot per timepoint
     map(dr_sample_exp(),
         ~ vln(.x,
               palette = pal,
@@ -892,22 +926,19 @@ server <- function(input, output, session) {
   
   #### ---- Clusters ranked by expression tab content ----
   
+  # Dynamic dropdown menu to choose which input gene to plot
   observe({
     x <- input_new()$gene
     
     # Use character(0) to remove all choices when input hasn't been received
-    if (is.null(x))
-      x <- character(0)
+    if (is.null(x))    x <- character(0)
     
-    if (length(x) == 1){
-      text_select_input <- " input)"
-    } else if (length(x) > 1){
-      text_select_input <- " inputs)"
-    } else {
-      text_select_input <- NULL
-    }
+    # Update the selection dropdown menu label based on length of input
+    if (length(x) == 1)      text_select_input <- " input)"
+    else if (length(x) > 1)  text_select_input <- " inputs)"
+    else                     text_select_input <- NULL
     
-    # Update the label based on length of input
+    # Produce dynamically updating dropdown menu to select gene from inputs
     updateSelectInput(session, "pick_ranked",
                       label = paste("Select gene to display (from ", length(x), text_select_input),
                       choices = x,
@@ -915,6 +946,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Store the plot
   ranked_plot <- reactive({
     
     # Check whether a gene was provided or not
@@ -922,10 +954,11 @@ server <- function(input, output, session) {
       need(length(input_new()$gene) > 0, "\n\n\n      Please enter a gene.")
     )
     
+    # Check all genes OR selected genes against the dataset & annotations
+    #   (need to check all genes if mean expression over genes is being displayed)
     if(input_new()$mean_exp){
-      # Check ALL inputs against the dataset genes
+      # Check ALL inputs against the dataset & annotations
       num_genes <- NULL
-      # Check gene inputs against the dataset & annotations
       not_data_genes <- check_genes(input_new()$gene, num_genes, annotation = FALSE)
       not_anno_genes <- check_genes(input_new()$gene, num_genes, annotation = TRUE)
     } else{
@@ -941,16 +974,17 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\n     The input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\n     The input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
+    # Customize plot axis labels & title for plotting mean expression vs. one gene
     if (input_new()$mean_exp){
       df <- bubble_prep(gene = input_new()$gene,
                         show_mean = TRUE) %>% 
@@ -963,13 +997,16 @@ server <- function(input, output, session) {
       title <- input$pick_ranked
     }
     
+    # Create the plot using custom plotter (functions.R)
     ranked_exp_plot(df, title, y_axis)
   })
 
+  # Output the plot
   output$rank_tick_plot <- renderPlot({
     ranked_plot()
   })
   
+  # Download plot as a PDF
   output$download_ranked_plot <- 
     downloadHandler(filename = "ranked_plot.pdf",
                     content = function(file) {
@@ -984,10 +1021,12 @@ server <- function(input, output, session) {
   
   #### ---- Cell types clustered by expression tab content ----
   
-  # Initial values, will show up briefly while plot is loading, so set 
-  # large height value so the plot that shows briefly is out of view
+  # Store initial dimensions of plot, will show briefly while plot is loading,
+  #   so set large height value so the plot that shows briefly is out of view
+  #   (Need to initialize this in order to later store dimensions dynamically)
   heatmap_dims <- reactiveValues(height = "100in", width = "12in")
   
+  # Store heatmap plot
   heatmap_plot <- reactive({
     
     # Check whether a gene was provided or not
@@ -1011,11 +1050,11 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Perform input validation
     validate(
       need(is.null(anno_genes),
            glue("\n\n\n    The input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
     )
-    
     validate(
       need(is.null(not_anno_genes),
            glue("\n\n\n    The input gene \"{not_anno_genes}\" was not found in the gene annotation."))
@@ -1036,8 +1075,8 @@ server <- function(input, output, session) {
     # Get gene expression values for input genes
     df <- bubble_prep(gene = input_new()$gene) 
     
+    # Replace cell class column values with more general categories
     df <- df %>%
-      # Rename cell classes to more general names
       mutate(Cell_class = case_when(
         grepl("RGC", Cell_class) | grepl("-P$", Cluster) ~ "Progenitors/cyc.",
         grepl("Olig", Cell_class) ~ "Oligodendrocytes",
@@ -1048,15 +1087,13 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
-    # Add new columns to annotation df for brain region and time points information
-    
+    # Add new columns to dataframe for brain region and time points information
     df <- df %>%
       mutate(Region = case_when(
         grepl("Forebrain", Sample) | grepl("^F", Cluster) ~ "Forebrain",
         grepl("Pons", Sample) | grepl("^P", Cluster) ~ "Pons",
         TRUE ~ "Other"
       ))
-    
     df <- df %>%
       mutate(Timepoint = case_when(
         grepl("E12.5", Sample) | grepl("^*-e12", Cluster) ~ "E12.5",
@@ -1067,9 +1104,10 @@ server <- function(input, output, session) {
         TRUE ~ "Other"
       ))
     
-    # Store the df for later use in annotations
+    # Store the current df for later use in column annotations
     df_for_anno <- df 
     
+    ## Split the Sample column into Region and Timepoint columns
     # df_for_anno <- df_for_anno %>% 
     #   separate(col = Sample, into = c("Region", "Timepoint"), sep = " ")
     
@@ -1087,7 +1125,7 @@ server <- function(input, output, session) {
       mutate(Expression = as.numeric(Expression)) %>% 
       tidyr::pivot_wider(names_from = "Cluster", values_from = "Expression")  
     
-    # Set NA values in df to 0 (from Selin's code)
+    # Set NA values in df to 0
     df[is.na(df)] <- 0 
     
     # Flip dataframe over to match the order of user input (bubble_prep outputs reverse)
@@ -1098,7 +1136,7 @@ server <- function(input, output, session) {
       data.matrix()  
     rownames(mat) <- df$Gene
     
-    # Create values for heatmap annotations (coloured bars at top)
+    # Store values for heatmap column annotations (coloured bars at top)
     
     # CELL CLASS ANNOTATIONS
     hm_anno_class <- makePheatmapAnno(general_palette, "Cell_class")
@@ -1115,7 +1153,7 @@ server <- function(input, output, session) {
     hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
                                        unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
     
-    # Join annotations together in a data frame
+    # Join column annotations together in a data frame
     anno <- 
       left_join(hm_anno_class$anno_row,
                 hm_anno_region$anno_row,
@@ -1126,7 +1164,8 @@ server <- function(input, output, session) {
     # Set cluster names as row names and delete dedicated column for clusters
     rownames(anno) <- anno$Cluster
     anno$Cluster <- NULL 
-
+    
+    # Create vector for column annotation palettes
     anno_colors = c(hm_anno_class$side_colors,
                     hm_anno_region$side_colors,
                     hm_anno_time$side_colors)
@@ -1149,16 +1188,15 @@ server <- function(input, output, session) {
                              annotation_col = anno, 
                              annotation_colors = anno_colors, 
                              na_col = "#e5e5e5")
-    
     # Reduce width to properly plot in webpage (seems to add a margin)
     w <- get_plot_dims(hm)$width *0.9
     # Add a fixed height to accommodate large legend for multiple col annotations
     # when the legend is larger than the heatmap
     h <- get_plot_dims(hm)$height + 5
-    
     heatmap_dims$width <- glue("{w}in")
     heatmap_dims$height <- glue("{h}in")
     hm
+    
   })
   
   output$heatmap <- renderPlot(heatmap_plot())
@@ -1170,6 +1208,7 @@ server <- function(input, output, session) {
                height = heatmap_dims$height)
     })
   
+  # Download heatmap plot as a PDF
   output$download_heatmap <- 
     downloadHandler(filename = "heatmap.pdf",
                     content = function(file) {
