@@ -925,7 +925,7 @@ ranked_exp_plot <- function(df,
 #' @param df Dataframe in format of bubble_prep() output
 #' @param cell_classes Character vector, cell class names to be displayed
 #' (choices are as listed in gen_cell_class() data prep function above)
-#' @param anno Character vector, column annotation types to be displayed 
+#' @param anno_list Character vector, column annotation types to be displayed 
 #' (choices are "Cell_class", "Region", "Timepoint")
 #' 
 #' @return A named vector, with heatmap stored under plot and measured height
@@ -938,7 +938,7 @@ ranked_exp_plot <- function(df,
 #' 
 heatmap_anno_plot <- function(df,
                               cell_classes,
-                              anno) {
+                              anno_list) {
   
   # Replace cell class column values with more general categories
   df <- gen_cell_class(df)
@@ -1013,7 +1013,7 @@ heatmap_anno_plot <- function(df,
                   hm_anno_time$side_colors)
   
   # Display only selected annotations 
-  anno <- anno %>% select(input_new()$anno)
+  anno <- anno %>% select(all_of(anno_list))
   
   # Plot heatmap
   hm <- mat %>% 
@@ -1032,14 +1032,14 @@ heatmap_anno_plot <- function(df,
                        na_col = "#e5e5e5")
   
   # Store dimensions for dynamically plotting full heatmap width
-    w <- get_plot_dims(hm)$width *0.9 # Reduce width to properly plot in webpage (seems to add a margin)
+  w <- get_plot_dims(hm)$width *0.9 # Reduce width to properly plot in webpage (seems to add a margin)
   h <- get_plot_dims(hm)$height + 5 # Add a fixed height to accommodate large legend for multiple col annotations
   
   # Store plot and dimensions in a named vector to output
-  heatmap$width <- glue("{w}in")
-  heatmap$height <- glue("{h}in")
-  heatmap$plot <- hm
-  return(heatmap)
+  heatmap_out = c(width = glue("{w}in"),
+                  height = glue("{h}in"),
+                  plot = hm)
+  return(heatmap_out)
   
 }
 

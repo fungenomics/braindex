@@ -1050,8 +1050,8 @@ server <- function(input, output, session) {
     # selected cell classes, and selected annotations using
     # custom plotter (see functions.R)
     hm_out <- heatmap_anno_plot(df = bubble_prep(gene = input_new()$gene),
-                            cell_classes = input_new()$heatmap_cells,
-                            anno = input_new()$heatmap_anno)
+                                cell_classes = input_new()$heatmap_cells,
+                                anno = input_new()$heatmap_anno)
     
     # Modify reactive values to dynamically plot the heatmap width
     heatmap_dims$height <- hm_out$height 
