@@ -2,6 +2,7 @@
 # for the other R files required for the shiny app (e.g. server.R, ui.R)
 
 # ---- Load required packages ----
+
 library(feather)
 library(tidyr)
 library(dplyr)
@@ -37,7 +38,7 @@ genes_anno <- data.table::fread("data/joint_mouse/all_mm10_genes.txt", header = 
 names(genes_anno) <- "Genes"
 genes_anno <- genes_anno[['Genes']]
 
-# ---- Palettes ----
+# ---- Load / define palettes ----
 
 # Red-blue gradient and brain region colour palettes
 load("data/joint_mouse/palettes.Rda")
@@ -81,15 +82,14 @@ enableBookmarking(store = "url")
 
 # ---- R settings ----
 
-# -- Overwrite pheatmap function so the heatmap labels can flipped and 45 degrees
-library(grid)
+# Overwrite pheatmap function so the heatmap labels can flipped and 45 degrees
 
+library(grid)
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord = pheatmap:::find_coordinates(length(coln), gaps)
   x = coord$coord - 0.5 * coord$size
   res = textGrob(coln, x = x, y = unit(1, "npc") - unit(3,"bigpts"), vjust = 0.5, hjust = 1, rot = 45, gp = gpar(...))
   return(res)}
-
-## 'Overwrite' default draw_colnames with a new version 
+# 'Overwrite' default draw_colnames with the new version 
 assignInNamespace(x="draw_colnames", value="draw_colnames_45",
                   ns=asNamespace("pheatmap"))
