@@ -166,22 +166,26 @@ ui <- function(request){
     # Output plots and tables
     mainPanel(tabsetPanel(
       
+      #### ---- Landing page ----
+      
       tabPanel("Welcome",
                
                tags$br(),
-               tags$b("Welcome to the braindex clusters app!"),
-               tags$br(),
-               tags$br(),
-               p("Braindex is a portal for exploring a gene expression atlas of the mouse brain produced 
-                 through single-cell RNA sequencing. In this app, you can view over twenty different 
-                 visualizations of the data related to analysis via clustering."),
+               tags$h3(tags$b("Welcome to the braindex clusters app!")),
+               p("Braindex is a portal for exploring a single-cell gene expression atlas of 
+                         the mouse brain. The clusters app includes over twenty different 
+                         visualizations of the data related to analysis via clustering."),
                
+               tags$br(),
+               tags$h4(tags$b("Methods")),
                p("Please visit ",
                tags$a(href = "https://github.com/fungenomics/braindex/wiki/Clusters-app", "the wiki"),
-               " for more information on using the app, as well as sources & citations (to be added!)"),
+               " to read about methods used for analyses within this app. You can also find help with
+               troubleshooting on this page."),
                
                tags$br(),
-               p("More details on the dataset used in this app can be found in the following publication:"),
+               tags$h4(tags$b("Dataset")),
+               p("The dataset used in this app was published in:"),
 
                # This source is only used in the GRN app, I think
                # p("Miller, J.A. et al. (2014) Transcriptional landscape of the prenatal human brain, Nature 508: 199-206. ",
@@ -192,7 +196,20 @@ ui <- function(request){
                #   tags$a(href = "https://www.brainspan.org/", "https://www.brainspan.org")),
                
                p("Jessa, S. et al. (2019) Stalled developmental programs at the root of pediatric brain tumors, Nature Genetics 51: 1702-1713. ",
-                 tags$a(href = "https://doi.org/10.1038/s41588-019-0531-7", "doi:10.1038/s41588-019-0531-7"))
+                 tags$a(href = "https://doi.org/10.1038/s41588-019-0531-7", "doi:10.1038/s41588-019-0531-7")),
+               
+               p("Contributors to this dataset include: [IN PROGRESS]"),
+               
+               tags$br(),
+               tags$h4(tags$b("Source code")),
+               
+               p("Explore the source code for this app on our ",
+               tags$a(href = "https://github.com/fungenomics/braindex/tree/master/clusters", "Github page.")),
+               
+               p("This app was developed by Selin Jessa and Bhavyaa Chandarana, members of the ",
+                 tags$a(href = "https://functionalgenomics.ca", "Kleinman lab"),
+                 " at McGill University, Canada.")
+               
                ),
       
       #### ---- Dendrogram tab output ---- 
