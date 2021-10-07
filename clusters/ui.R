@@ -168,13 +168,22 @@ ui <- function(request){
       
       #### ---- Landing page ----
       
-      tabPanel("Welcome",
+      tabPanel("Welcome!",
                
                tags$br(),
                tags$h3(tags$b("Welcome to the braindex clusters app!")),
+               tags$br(),
+               tags$h4(tags$b("About the app")),
                p("Braindex is a portal for exploring a single-cell gene expression atlas of 
-                         the mouse brain. The clusters app includes over twenty different 
-                         visualizations of the data related to analysis via clustering."),
+                         the developing mouse brain. The clusters app includes over twenty
+                         different visualizations of this data based on cell-type clustering."),
+               
+               p("Several of these visualizations may be downloaded in PDF file format for use
+                 in publications and presentations."),
+               
+               p("This app is best viewed on a desktop or using landscape mode of a tablet computer. 
+                 Some visualizations are large in width and may display unexpected behaviour
+                 on mobile devices."),
                
                tags$br(),
                tags$h4(tags$b("Methods")),
@@ -195,10 +204,9 @@ ui <- function(request){
                #   " 2010 Allen Institute for Brain Science. Allen Human Brain Atlas. Available from: ",
                #   tags$a(href = "https://www.brainspan.org/", "https://www.brainspan.org")),
                
-               p("Jessa, S. et al. (2019) Stalled developmental programs at the root of pediatric brain tumors, Nature Genetics 51: 1702-1713. ",
+               p("Jessa, S. et al. (2019) Stalled developmental programs at the root of pediatric brain tumors, ",
+                 tags$i("Nature Genetics "), tags$b("51"), ": 1702-1713.",
                  tags$a(href = "https://doi.org/10.1038/s41588-019-0531-7", "doi:10.1038/s41588-019-0531-7")),
-               
-               p("Contributors to this dataset include: [IN PROGRESS]"),
                
                tags$br(),
                tags$h4(tags$b("Source code")),
@@ -208,7 +216,9 @@ ui <- function(request){
                
                p("This app was developed by Selin Jessa and Bhavyaa Chandarana, members of the ",
                  tags$a(href = "https://functionalgenomics.ca", "Kleinman lab"),
-                 " at McGill University, Canada.")
+                 " at McGill University, Canada. Please contact the lab for any 
+                 feedback or questions regarding the app."),
+               HTML("<br><br><br>"), 
                
                ),
       
@@ -217,7 +227,10 @@ ui <- function(request){
       tabPanel("Dendrogram",
                
                tags$br(),
-               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse scRNAseq development atlas."),
+               h3(tags$b("Dendrogram")),
+               
+               tags$br(),
+               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse single-cell RNAseq developmental atlas."),
                tags$br(),
                tags$br(),
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
@@ -269,10 +282,10 @@ ui <- function(request){
         
       #### ---- Cluster info & markers table tab output ---- 
       
-      tabPanel("Cluster info & markers", 
-               
+      tabPanel("Cluster information", 
                tags$br(),
-               
+               h3(tags$b("Cluster information")),
+               tags$br(),
                h4(tags$b("Gene expression by cluster")),
                tags$br(),
                
@@ -303,7 +316,7 @@ ui <- function(request){
                ),
                
                HTML("<br><br><br><br>"),
-               
+               tags$hr(),
                h4(tags$b("Cluster markers")),
                
                tags$br(),
@@ -339,6 +352,8 @@ ui <- function(request){
       
       tabPanel("Timecourse",
                
+               tags$br(),
+               h3(tags$b("Timecourse")),
                tags$br(),
                
                tags$b("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse."),
@@ -406,6 +421,8 @@ ui <- function(request){
       tabPanel("Single-cell expression, by region",
                
                tags$br(),
+               h3(tags$b("Single-cell expression, by region")),
+               tags$br(),
                
                tags$b("Use this tab to explore the expression of one or more genes at the single-cell level per brain region."),
                tags$br(),
@@ -455,7 +472,8 @@ ui <- function(request){
       #### ---- Sample joint expression tab output ---- 
       
       tabPanel("Single-cell expression, by sample",
-               
+               tags$br(),
+               h3(tags$b("Single-cell expression, by sample")),
                tags$br(),
                
                tags$b("Use these tabs to explore the expression of one or more genes at the single-cell level in each sample."),
@@ -501,7 +519,8 @@ ui <- function(request){
       #### ---- Clusters ranked by expression tab output ---- 
       
       tabPanel("Clusters ranked by expression",
-               
+               tags$br(),
+               h3(tags$b("Clusters ranked by expression")),
                tags$br(),
                
                tags$b("This plot displays the mean expression of the selected gene in each cluster, ranked from highest to lowest expression."),
@@ -555,7 +574,8 @@ ui <- function(request){
       #### ---- Cell types clustered by expression tab output ---- 
       
       tabPanel("Cell types clustered by expression",
-               
+               tags$br(),
+               h3(tags$b("Cell types clustered by expression")),
                tags$br(),
                tags$b("This plot is a heatmap clustering input genes and cell types together based on their mean expression within clusters."),
                tags$br(),
