@@ -51,7 +51,7 @@ ui <- function(request){
                  ),
                  
                  # Input for dendrogram tab
-                 conditionalPanel(condition = "input.tabs == 'dendrogram' || input.tabs == 'exp_table",
+                 conditionalPanel(condition = "input.tabs == 'dendrogram' || input.tabs == 'exp_table'",
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
