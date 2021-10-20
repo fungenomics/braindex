@@ -253,87 +253,145 @@ server <- function(input, output, session) {
   
   # Show table with cluster & expression info 
   output$cluster_table <- renderReactable({
-    req(bubble_input())
     
-    # Store reversed bubble_input gene order (to match user input left to right)
-    gene_table_order <- rev(unique(bubble_input()$Gene))
+    if (length(input_new()$gene) > 0){ 
+      
+      req(bubble_input()) # Use the reactive value stored when displaying the dendrogram tab
+      
+      # Store reversed bubble_input gene order (to match user input left to right)
+      gene_table_order <- rev(unique(bubble_input()$Gene))
+      
+      # Modify table for plotting
+      table <- 
+        bubble_input() %>%
+        select(-Pct1, -Gene_padded) %>% 
+        mutate(Expression = round(Expression, 2)) %>% 
+        spread(Gene, Expression) %>% 
+        # Select all except Colour column, rename columns for human readability,
+        # follow bubble_input order for gene columns (saved above)
+        select(Cluster,
+               Sample,
+               "Cell type" = Cell_type,
+               "Cell class" = Cell_class,
+               "Number of cells" = N_cells,
+               all_of(gene_table_order))
+      
+      ## Move mean expression to the rightmost column
+      # if ("MEAN" %in% gene_table_order) {
+      #   table <- table %>% relocate("MEAN",
+      #                              .after = last_col())
+      # }
+      
+      # Store a dynamic list of gene columns (based on input) with assigned formatting
+      # Concept from: https://github.com/glin/reactable/issues/65#issuecomment-667577253 
+      gene_columns <- 
+        sapply(gene_table_order, # Vector of input genes
+               function(this_gene) {
+                 return(list(this_gene = 
+                               colDef(minWidth = 80,
+                                      # Color gene column values based on expression level
+                                      style = function(value) {
+                                        color <- orange_pal(value)
+                                        list(background = color)
+                                      })))
+               })
+      
+      # Rename list names to gene names (they were changed during sapply)
+      names(gene_columns) <- gene_table_order 
+      
+      # Display the dataframe as a reacTable with custom partial function (functions.R)
+      reactable_table(table, 
+                      # Column formatting
+                      columns = c(
+                        list(Cluster = colDef(minWidth = 110,
+                                         style = function(index){
+                                           # Colour cluster column background by existing palette
+                                           b_color <- toString(unname(joint_mouse_palette)[index])
+                                           # Change text colour to white if background is dark
+                                           if (dark(b_color)){
+                                             f_color = "#FFFFFF"
+                                           } else {
+                                             f_color = "#000000"
+                                           }
+                                           list(background = b_color, color = f_color, fontWeight = "bold") 
+                                           ## Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                           #position = "sticky", left = 0, zIndex = 1)
+                                          },
+                                         # headerStyle = 
+                                         #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                                         )), 
+                        
+                        list(Sample = colDef(minWidth = 125)),
+                        list("Cell type" = colDef(minWidth = 200)),
+                        list("Cell class" = colDef(minWidth = 150)),
+                        list("Number of cells" = colDef(minWidth = 100)),
+                        
+                        # Include dynamic list of columns stored above
+                        gene_columns
+                      ),
+                      # Implement row selection and formatting
+                      selection = "single", onClick = "select", 
+                      theme = reactableTheme(
+                        rowSelectedStyle = 
+                          list(backgroundColor = "#ccc", 
+                               boxShadow = "inset 5px 0 0 0 #ffa62d")
+                      )
+      ) 
     
-    # Modify table for plotting
-    table <- 
-      bubble_input() %>%
-      select(-Pct1, -Gene_padded) %>% 
-      mutate(Expression = round(Expression, 2)) %>% 
-      spread(Gene, Expression) %>% 
-      # Select all except Colour column, rename columns for human readability,
-      # follow bubble_input order for gene columns (saved above)
-      select(Cluster,
-             Sample,
-             "Cell type" = Cell_type,
-             "Cell class" = Cell_class,
-             "Number of cells" = N_cells,
-             all_of(gene_table_order))
-    
-    ## Move mean expression to the rightmost column
-    # if ("MEAN" %in% gene_table_order) {
-    #   table <- table %>% relocate("MEAN",
-    #                              .after = last_col())
-    # }
-    
-    # Store a dynamic list of gene columns (based on input) with assigned formatting
-    # Concept from: https://github.com/glin/reactable/issues/65#issuecomment-667577253 
-    gene_columns <- 
-      sapply(gene_table_order, # Vector of input genes
-             function(this_gene) {
-               return(list(this_gene = 
-                             colDef(minWidth = 80,
-                                    # Color gene column values based on expression level
-                                    style = function(value) {
-                                      color <- orange_pal(value)
-                                      list(background = color)
-                                    })))
-             })
-    
-    # Rename list names to gene names (they were changed during sapply)
-    names(gene_columns) <- gene_table_order 
-    
-    # Display the dataframe as a reacTable with custom partial function (functions.R)
-    reactable_table(table, 
-                    # Column formatting
-                    columns = c(
-                      list(Cluster = colDef(minWidth = 110,
-                                       style = function(index){
-                                         # Colour cluster column background by existing palette
-                                         b_color <- toString(unname(joint_mouse_palette)[index])
-                                         # Change text colour to white if background is dark
-                                         if (dark(b_color)){
-                                           f_color = "#FFFFFF"
-                                         } else {
-                                           f_color = "#000000"
-                                         }
-                                         list(background = b_color, color = f_color, fontWeight = "bold") 
-                                         ## Make the cluster column "sticky" i.e. freeze it in horizontal scroll
-                                         #position = "sticky", left = 0, zIndex = 1)
-                                        },
-                                       # headerStyle = 
-                                       #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
-                                       )), 
-                      
-                      list(Sample = colDef(minWidth = 125)),
-                      list("Cell type" = colDef(minWidth = 200)),
-                      list("Cell class" = colDef(minWidth = 150)),
-                      list("Number of cells" = colDef(minWidth = 100)),
-                      
-                      # Include dynamic list of columns stored above
-                      gene_columns
-                    ),
-                    # Implement row selection and formatting
-                    selection = "single", onClick = "select", 
-                    theme = reactableTheme(
-                      rowSelectedStyle = 
-                        list(backgroundColor = "#ccc", 
-                             boxShadow = "inset 5px 0 0 0 #ffa62d")
-                    )
-    ) 
+    } else { # DISPLAY CLUSTER TABLE WITHOUT GENES HAVING BEEN ENTERED
+      
+      # Modify table for plotting
+      table <- 
+        metadata %>%
+        as.data.frame() %>%
+        # select(-Gene_padded) %>% 
+        # mutate(Expression = round(Expression, 2)) %>% 
+        # spread(Gene, Expression) %>% 
+        # # Select all except Colour column, rename columns for human readability,
+        # # follow bubble_input order for gene columns (saved above)
+        select(Cluster,
+               Sample,
+               "Cell type" = Cell_type,
+               "Cell class" = Cell_class,
+               "Number of cells" = N_cells)
+      
+      # Display the dataframe as a reacTable with custom partial function (functions.R)
+      reactable_table(table, 
+                      # Column formatting
+                      columns = 
+                        list(Cluster = colDef(minWidth = 110,
+                                              style = function(value){
+                                                # Colour cluster column background by existing palette
+                                                b_color <- toString(filter(metadata, Cluster == value)$Colour)
+                                                # Change text colour to white if background is dark
+                                                if (dark(b_color)){
+                                                  f_color = "#FFFFFF"
+                                                } else {
+                                                  f_color = "#000000"
+                                                }
+                                                list(background = b_color, color = f_color, fontWeight = "bold") 
+                                                ## Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                                #position = "sticky", left = 0, zIndex = 1)
+                                              },
+                                              # headerStyle = 
+                                              #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                        ), 
+                        
+                        Sample = colDef(minWidth = 125),
+                        "Cell type" = colDef(minWidth = 200),
+                        "Cell class" = colDef(minWidth = 150),
+                        "Number of cells" = colDef(minWidth = 100)
+                      ),
+                      # Implement row selection and formatting
+                      selection = "single", onClick = "select", 
+                      theme = reactableTheme(
+                        rowSelectedStyle = 
+                          list(backgroundColor = "#ccc", 
+                               boxShadow = "inset 5px 0 0 0 #ffa62d")
+                      )
+      ) 
+      
+    }
   })
   
   # Download data in bubbleplot tab and expression table as TSV
