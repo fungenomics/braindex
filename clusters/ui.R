@@ -176,10 +176,9 @@ ui <- function(request){
                tags$h4(tags$b("About the app")),
                p("Braindex is a portal for exploring a single-cell gene expression atlas of 
                          the developing mouse brain. The clusters app includes over twenty
-                         different visualizations of this data based on cell-type clustering."),
-               
-               p("Several of these visualizations may be downloaded in PDF file format for use
-                 in publications and presentations."),
+                         different visualizations the data, several of which may be 
+                         downloaded in PDF file format for use in publications and 
+                         presentations."),
                
                p("This app is best viewed on a desktop or using landscape mode of a tablet computer. 
                  Some visualizations are large in width and may display unexpected behaviour
