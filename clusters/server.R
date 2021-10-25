@@ -248,7 +248,51 @@ server <- function(input, output, session) {
   
   
   #### ---- Cluster info & markers table tab content ----
-
+  
+  # --- LOAD GENE EXPRESSION DATA ---
+  
+  # Generate the input dataframe for the expression table
+  table_exp_input <- reactive({
+    
+    # Check whether a gene was provided or not
+    validate(
+      need(length(input_new()$gene) > 0, "\n\n\n\nPlease enter a gene.")
+    )
+    
+    # Check first 20 gene inputs against the dataset & annotations
+    not_data_genes <- check_genes(input_new()$gene, 20, annotation = FALSE)
+    not_anno_genes <- check_genes(input_new()$gene, 20, annotation = TRUE)
+    
+    # Store genes that are within the annotation but not in dataset 
+    if (setequal(not_data_genes, not_anno_genes)){
+      anno_genes <- NULL
+    } else {
+      anno_genes <- setdiff(not_data_genes, not_anno_genes)
+    }
+    
+    # Perform input validation
+    validate(
+      need(is.null(anno_genes),
+           glue("\n\n\n\nThe input gene \"{anno_genes}\" is in the gene annotation but was not detected in this dataset."))
+    )
+    validate(
+      need(is.null(not_anno_genes),
+           glue("\n\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
+    )
+    
+    # Only display mean if more than one gene is given AND the user requested it
+    valid_mean <- FALSE
+    if (length(input_new()$gene) > 1 && input_new()$mean_exp){
+      valid_mean <- TRUE
+    } 
+    
+    # Display the first 20 genes provided as input
+    bubble_prep(gene  = head(input_new()$gene, 20),
+                scale = TRUE,  # ALWAYS WANT SCALING [0,1] FOR TABLE
+                show_mean = valid_mean)
+    
+  })
+  
   # --- EXPRESSION TABLE ---
   
   # Display table before update button has been clicked 
@@ -306,14 +350,14 @@ server <- function(input, output, session) {
     
     if (length(input_new()$gene) > 0){ 
       
-      req(bubble_input()) # Use the reactive value stored when displaying the dendrogram tab
+      req(table_exp_input()) # Use the reactive value stored when displaying the dendrogram tab
       
       # Store reversed bubble_input gene order (to match user input left to right)
       gene_table_order <- rev(unique(bubble_input()$Gene))
       
       # Modify table for plotting
       table <- 
-        bubble_input() %>%
+        table_exp_input() %>%
         select(-Pct1, -Gene_padded) %>% 
         mutate(Expression = round(Expression, 2)) %>% 
         spread(Gene, Expression) %>% 
@@ -439,35 +483,22 @@ server <- function(input, output, session) {
     }
   })
   
-  # Download data in bubbleplot tab and expression table as TSV
-   
-    #reactive({
-    # Download expression table if gene(s) have been entered
-    #
-      output$download_bubble <- 
-        # reactive({ 
-          # if (length(input_new()$gene) > 0) { 
-          downloadHandler(filename = "mean_cluster_expression.tsv",
-                          contentType = "text/tsv",
-                          content = function(file) {
-                            write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-                          })
-      #   } else {
-      #     downloadHandler(filename = "cluster_information.tsv",
-      #                     contentType = "text/tsv",
-      #                     content = function(file) {
-      #                       write_tsv(as.data.frame(metadata), path = file)
-      #                     })
-      #   }
-      # })
-    # } else { # Else just download the metadata (cluster info without genes)
-    #   output$download_bubble <- downloadHandler(filename = "cluster_information.tsv",
-    #                   contentType = "text/tsv",
-    #                   content = function(file) {
-    #                     write_tsv(metadata %>% select(-Gene_padded), path = file)
-    #                   })
-    # }
-    # })
+  # Download expression table as TSV
+  output$download_exp_table <- 
+      downloadHandler(filename = "mean_cluster_expression.tsv",
+                      contentType = "text/tsv",
+                      content = function(file) {
+                        write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                      })
+  
+  # Download cluster info (i.e. metadata) as TSV
+  output$download_clusterinfo_table <- downloadHandler(filename = "cluster_information.tsv",
+                  contentType = "text/tsv",
+                  content = function(file) {
+                    write_tsv(as.data.frame(metadata) %>% 
+                                select(-Cluster_nounderscore), path = file)
+                  })
+
 
   
   # --- MARKER TABLE ---
