@@ -50,19 +50,18 @@ ui <- function(request){
                                                  right = TRUE),
                  ),
                  
-                 # Input for dendrogram tab
-                 conditionalPanel(condition = "input.tabs == 'dendrogram' || input.tabs == 'exp_table'",
+                 # Input for dendrogram tab and cluster table tab
+                 conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
                                                           "Conserve scale across genes" = FALSE),
                                               selected = "Scale each gene to the same range, [0, 1]"),
-                                  
+
                                   sliderInput("bubble_size", "Max point size", min = 3, max = 6,
                                               step = 0.5, value = 4)
                                   
                  ),
-                 
 
                  # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
