@@ -251,6 +251,56 @@ server <- function(input, output, session) {
 
   # --- EXPRESSION TABLE ---
   
+  # Display table before update button has been clicked 
+  output$cluster_table_no_update <- renderReactable({
+      
+    # Modify metadata for plotting
+      table <- 
+        metadata %>%
+        as.data.frame() %>%
+        select(Cluster,
+               Sample,
+               "Cell type" = Cell_type,
+               "Cell class" = Cell_class,
+               "Number of cells" = N_cells)
+      
+      # Display the dataframe as a reacTable with custom partial function (functions.R)
+      reactable_table(table, 
+                      # Column formatting
+                      columns = 
+                        list(Cluster = colDef(minWidth = 110,
+                                              style = function(value){
+                                                # Colour cluster column background by existing palette
+                                                b_color <- toString(filter(metadata, Cluster == value)$Colour)
+                                                # Change text colour to white if background is dark
+                                                if (dark(b_color)){
+                                                  f_color = "#FFFFFF"
+                                                } else {
+                                                  f_color = "#000000"
+                                                }
+                                                list(background = b_color, color = f_color, fontWeight = "bold") 
+                                                ## Make the cluster column "sticky" i.e. freeze it in horizontal scroll
+                                                #position = "sticky", left = 0, zIndex = 1)
+                                              },
+                                              # headerStyle = 
+                                              #   list(position = "sticky", left = 0, background = "#fff", zIndex = 1)
+                        ), 
+                        
+                        Sample = colDef(minWidth = 125),
+                        "Cell type" = colDef(minWidth = 200),
+                        "Cell class" = colDef(minWidth = 150),
+                        "Number of cells" = colDef(minWidth = 100)
+                        ),
+                      # Implement row selection and formatting
+                      selection = "single", onClick = "select", 
+                      theme = reactableTheme(
+                        rowSelectedStyle = 
+                          list(backgroundColor = "#ccc", 
+                               boxShadow = "inset 5px 0 0 0 #ffa62d")
+                      )
+      ) 
+  })
+  
   # Show table with cluster & expression info 
   output$cluster_table <- renderReactable({
     
@@ -338,17 +388,12 @@ server <- function(input, output, session) {
                       )
       ) 
     
-    } else { # DISPLAY CLUSTER TABLE WITHOUT GENES HAVING BEEN ENTERED
+    } else { # DISPLAY CLUSTER TABLE WITHOUT GENES HAVING BEEN ENTERED, AFTER UPDATE BUTTON CLICKED
       
-      # Modify table for plotting
+      # Modify metadata for plotting
       table <- 
         metadata %>%
         as.data.frame() %>%
-        # select(-Gene_padded) %>% 
-        # mutate(Expression = round(Expression, 2)) %>% 
-        # spread(Gene, Expression) %>% 
-        # # Select all except Colour column, rename columns for human readability,
-        # # follow bubble_input order for gene columns (saved above)
         select(Cluster,
                Sample,
                "Cell type" = Cell_type,
@@ -395,24 +440,52 @@ server <- function(input, output, session) {
   })
   
   # Download data in bubbleplot tab and expression table as TSV
-  output$download_bubble <- 
-    downloadHandler(filename = "mean_cluster_expression.tsv",
-                    contentType = "text/tsv",
-                    content = function(file) {
-                      write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
-                    })
+   
+    #reactive({
+    # Download expression table if gene(s) have been entered
+    #
+      output$download_bubble <- 
+        # reactive({ 
+          # if (length(input_new()$gene) > 0) { 
+          downloadHandler(filename = "mean_cluster_expression.tsv",
+                          contentType = "text/tsv",
+                          content = function(file) {
+                            write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
+                          })
+      #   } else {
+      #     downloadHandler(filename = "cluster_information.tsv",
+      #                     contentType = "text/tsv",
+      #                     content = function(file) {
+      #                       write_tsv(as.data.frame(metadata), path = file)
+      #                     })
+      #   }
+      # })
+    # } else { # Else just download the metadata (cluster info without genes)
+    #   output$download_bubble <- downloadHandler(filename = "cluster_information.tsv",
+    #                   contentType = "text/tsv",
+    #                   content = function(file) {
+    #                     write_tsv(metadata %>% select(-Gene_padded), path = file)
+    #                   })
+    # }
+    # })
+
   
   # --- MARKER TABLE ---
   
-  # Store selected row (cluster) as table index, extract cluster name 
+  # Store selected row (cluster) as table index, extract cluster name  
   selected_index <- reactive(getReactableState("cluster_table", "selected"))
+  selected_index_no_update <- reactive(getReactableState("cluster_table_no_update", "selected"))
   cluster_order <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
                                 columns = c("Cluster")) 
   selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
+  selected_cluster_no_update <- reactive(cluster_order$Cluster[selected_index_no_update()])
   
   # Display the selected cluster's name to the user above marker table
   output$selected_clust <- renderUI({
     HTML(glue("<h4>Selected cluster: {selected_cluster()}</h4>"))
+  })
+  output$selected_clust_no_update <- renderUI({
+    HTML(glue("<h4>Selected cluster: {selected_cluster_no_update()}</h4>"))
   })
   
   # Extract selected cluster's info from metadata
@@ -422,6 +495,85 @@ server <- function(input, output, session) {
       filter(Cluster_nounderscore == as.character(selected_cluster())) %>% 
       select(Alias, Structure, Age, Cluster_number)
   )
+  
+  cluster_info_no_update <- reactive(
+    metadata %>% 
+      filter(Cluster_nounderscore == as.character(selected_cluster_no_update())) %>% 
+      select(Alias, Structure, Age, Cluster_number)
+  )
+  
+  output$marker_table_no_update <- renderReactable({
+    
+    # Validate whether a cluster is selected or not, display message to user
+    validate(
+      need(!is.null(getReactableState("cluster_table_no_update", "selected")), 
+             "Please select a cluster for which to display markers in the expression table above.")
+    )
+    
+    # Load marker and signature files for the selected cluster's region & timepoint
+    if (as.character(cluster_info_no_update()$Structure) == "Forebrain") region <- "cortex"
+    else region <- "pons"  # else includes samples labeled "Pons" as well as "Hindbrain"
+    
+    markers <- data.table::fread(glue("data/markers_{region}/{cluster_info_no_update()$Alias}.markers.tsv.gz"),
+                                 data.table = FALSE)
+    signature <- loadRData(glue("data/signatures_{region}/{cluster_info_no_update()$Alias}.signatures_no_mito.Rda"))
+    
+    # Store selected cluster's number as a string for filtering
+    cluster_string <- as.character(cluster_info_no_update()$Cluster_num)
+    
+    markers_filter <- markers %>% 
+      # Filter markers to contain only genes in the specified cluster's signature
+      filter(cluster == as.integer(cluster_info_no_update()$Cluster_number)) %>% 
+      filter(external_gene_name %in% signature[[2]][[cluster_string]]) %>% 
+      
+      # Calculate new columns and round decimal values
+      mutate(Specificity = pct.1 - pct.2) %>% 
+      mutate(avg_logFC = round(avg_logFC, 4)) %>%
+      mutate(p_val_adj = signif(p_val_adj, 4)) %>%
+      mutate(pct.1 = round(pct.1, 4)) %>%
+      mutate(pct.2 = round(pct.2, 4)) %>%
+      mutate(Specificity = round(Specificity, 4)) %>%
+      
+      # Rename columns for human readability
+      select(Gene = external_gene_name,
+             "Gene type" = gene_biotype,
+             Description = description,
+             "Average log fold change" = avg_logFC,
+             "P-value" = p_val_adj,
+             "Detection rate in cluster" = pct.1,
+             "Detection rate outside cluster" = pct.2,
+             Specificity)
+    
+    # Output the joined dataframe as a reacTable
+    reactable_table(markers_filter,
+                    # Column formatting
+                    columns = c(
+                      list(Gene = colDef(minWidth = 90, style = list(fontWeight = "bold")),
+                           "Gene type" = colDef(minWidth = 120
+                                                # ,
+                                                ## Conditional colour formatting
+                                                # style = function(value) {
+                                                #   if (is.na(value)) color <- "e5e5e5"
+                                                #   else if (value == "protein_coding") color <- "#ebbbab"
+                                                #   else color <- "#abd3eb"
+                                                #   list(background = color)
+                                                # }
+                           ),
+                           Description = colDef(minWidth = 300),
+                           "Average log fold change" = colDef(minWidth = 120),
+                           "P-value" = colDef(minWidth = 110),
+                           "Detection rate in cluster" = colDef(minWidth = 120),
+                           "Detection rate outside cluster" = colDef(minWidth = 130),
+                           Specificity = colDef(minWidth = 110,
+                                                # Conditional colour formatting
+                                                style = function(value) {
+                                                  color <- orange_pal(value)
+                                                  list(background = color)
+                                                })
+                      )
+  
+    ))
+  })
   
   output$marker_table <- renderReactable({
     

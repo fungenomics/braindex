@@ -300,14 +300,24 @@ ui <- function(request){
                tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
                tags$br(),
                tags$br(),
-               p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
+               
+               p(tags$b("• Sidebar gene input is optional for this tab. "), "Cluster information and the marker table will display before any genes have been entered."),
+               
+               p("• When genes are entered, The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                
                p("• When selecting more than one gene, use the sidebar switch to display the mean expression over these genes in a new column of the table"),
                
                p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
                
                p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (update button not required)"),
-            
+               
+               # Display table before update button has been clicked
+               conditionalPanel(condition='input.update==0',
+                                fluidRow(
+                                  reactableOutput("cluster_table_no_update", width = 1100) %>% ws
+                                  )
+                                ),
+               
                #div(style = "overflow-x: scroll; overflow-y: visible;",
                    fluidRow(
                      reactableOutput("cluster_table", width = 1100) %>% ws
@@ -316,11 +326,11 @@ ui <- function(request){
                
                HTML("<br>"),
                
-               # Only display download button if update has been pressed at least once
-               conditionalPanel(condition='input.update!=0',
+               # Display table download button 
+               conditionalPanel(condition='input.update==0',
                                 fluidRow(
                                   downloadButton("download_bubble", 
-                                                 "Download expression table (TSV)"))
+                                                 "Download table (TSV)"))
                ),
                
                HTML("<br><br><br><br>"),
@@ -339,14 +349,23 @@ ui <- function(request){
                p("• Specificity is calculated as the difference between the detection rate within the cluster and outside of the cluster"),
                
                tags$br(),
-               conditionalPanel(condition='input.update!=0',
+               conditionalPanel(condition ='input.update==0',
+                                fluidRow(
+                                  uiOutput("selected_clust_no_update")
+                                ),
+                                fluidRow(
+                                  reactableOutput("marker_table_no_update", 
+                                                  width = 1100) %>% ws
+                                )
+               ),
+               conditionalPanel(condition ='input.update!=0',
                                 fluidRow(
                                   uiOutput("selected_clust")
                                 ),
                                 fluidRow(
                                   reactableOutput("marker_table", 
                                                   width = 1100) %>% ws
-                                ),
+                                )
                ),
                
                HTML("<br><br><br>"), 
