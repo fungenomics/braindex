@@ -295,13 +295,15 @@ server <- function(input, output, session) {
   
   # --- EXPRESSION TABLE ---
   
-  # Display table before update button has been clicked 
+  # Display table before update button has been clicked (no gene expression either)
   output$cluster_table_no_update <- renderReactable({
       
     # Modify metadata for plotting
       table <- 
         metadata %>%
         as.data.frame() %>%
+        # Remove human samples & "refined" samples (match gene expression table)
+        filter(!grepl("Human", metadata$Species) & !grepl("*refined*", metadata$Sample))  %>%
         select(Cluster,
                Sample,
                "Cell type" = Cell_type,
@@ -438,6 +440,8 @@ server <- function(input, output, session) {
       table <- 
         metadata %>%
         as.data.frame() %>%
+        # Remove human samples & "refined" samples (match gene expression table)
+        filter(!grepl("Human", metadata$Species) & !grepl("*refined*", metadata$Sample))  %>%
         select(Cluster,
                Sample,
                "Cell type" = Cell_type,
