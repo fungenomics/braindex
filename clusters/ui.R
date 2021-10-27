@@ -179,9 +179,9 @@ ui <- function(request){
                          downloaded in PDF file format for use in publications and 
                          presentations."),
                
-               p("This app is best viewed on a desktop or using landscape mode of a tablet computer. 
+               p(tags$i("Note: this app is best viewed on a desktop or using landscape mode of a tablet computer. 
                  Some visualizations are large in width and may display unexpected behaviour
-                 on mobile devices."),
+                 on mobile devices.")),
                
                # tags$br(),
                # tags$h4(tags$b("Methods")),
@@ -238,18 +238,21 @@ ui <- function(request){
                h3(tags$b("Dendrogram")),
                
                tags$br(),
-               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse single-cell RNAseq developmental atlas."),
+               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse single-cell RNA-seq developmental atlas."),
                tags$br(),
                tags$br(),
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
-               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster that express the gene"),
+               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells 
+                 within each cluster that express the gene"),
                
-               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster 
+                 & its expression level"),
                
-               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
+               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a 
+                 new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -297,7 +300,7 @@ ui <- function(request){
                h4(tags$b("Gene expression by cluster")),
                tags$br(),
                
-               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
+               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse single-cell RNA-seq development atlas."),
                tags$br(),
                tags$br(),
                
