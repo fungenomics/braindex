@@ -511,7 +511,9 @@ server <- function(input, output, session) {
   selected_index <- reactive(getReactableState("cluster_table", "selected"))
   selected_index_no_update <- reactive(getReactableState("cluster_table_no_update", "selected"))
   cluster_order <- read_feather("data/joint_mouse/mean_expression_per_ID_20190715_cluster.feather",
-                                columns = c("Cluster")) 
+                                columns = c("Cluster")) %>% 
+    # Remove clusters that are not in the dendrogram e.g. human clusters
+    filter(.$Cluster %in% dendrogram_order)
   selected_cluster <- reactive(cluster_order$Cluster[selected_index()])
   selected_cluster_no_update <- reactive(cluster_order$Cluster[selected_index_no_update()])
   
