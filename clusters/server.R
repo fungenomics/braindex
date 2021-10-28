@@ -302,8 +302,8 @@ server <- function(input, output, session) {
       table <- 
         metadata %>%
         as.data.frame() %>%
-        # Remove human samples & "refined" samples (match gene expression table)
-        filter(!grepl("Human", metadata$Species) & !grepl("*refined*", metadata$Sample))  %>%
+        # Remove clusters that are not in the dendrogram e.g. human clusters
+        filter(.$Cluster_nounderscore %in% dendrogram_order)  %>%
         select(Cluster,
                Sample,
                "Cell type" = Cell_type,
@@ -440,8 +440,8 @@ server <- function(input, output, session) {
       table <- 
         metadata %>%
         as.data.frame() %>%
-        # Remove human samples & "refined" samples (match gene expression table)
-        filter(!grepl("Human", metadata$Species) & !grepl("*refined*", metadata$Sample))  %>%
+        # Remove clusters that are not in the dendrogram e.g. human clusters
+        filter(.$Cluster_nounderscore %in% dendrogram_order)  %>%
         select(Cluster,
                Sample,
                "Cell type" = Cell_type,
@@ -692,9 +692,9 @@ server <- function(input, output, session) {
     if (is.null(x))    x <- character(0)
     
     # Update the selection dropdown menu label based on length of input
-    if (length(x) == 1)      text_select_input <- " input)"
-    else if (length(x) > 1)  text_select_input <- " inputs)"
-    else                     text_select_input <- NULL
+    if (length(x) == 1)                         text_select_input <- " input)"
+    else if (length(x) > 1 || length(x) == 0)   text_select_input <- " inputs)"
+    else                                        text_select_input <- NULL
     
     # Produce dynamically updating dropdown menu to select gene from inputs
     updateSelectInput(session, "pick_timecourse",
