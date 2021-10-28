@@ -306,13 +306,19 @@ ui <- function(request){
                
                p(tags$b("• Sidebar gene input is optional for this tab. "), "Cluster information and the marker table will display before any genes have been entered."),
                
-               p("• When genes are entered, The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
+               p("• When genes are entered in the sidebar, the value in each gene's column denotes the mean expression of the gene in the specified cluster"),
                
-               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over these genes in a new column of the table"),
+               p("• When entering more than one gene, use the sidebar switch to display the  gene expression averaged (mean) over all input genes in a new column"),
                
-               p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
+               p("• Use the button(s) below the table to download TSV files of the table contents. Click \"Download cluster information table\" for the cluster information only.
+                 A second button named \"Download gene expression table\" will display when a gene is entered into the app. This button provides a TSV file containing the
+                 mean expression of each input gene in each cluster, as well as a percentage of cells in each cluster expressing the gene"),
                
-               p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (update button not required)"),
+               p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (sidebar update button not required)"),
+               
+               p("• Search the table's contents using the search box to the top right of the table"),
+               
+               p("• Click and drag the column dividers in the header row to resize the columns"),
                
                # Display table before update button has been clicked
                conditionalPanel(condition='input.update==0',
@@ -362,6 +368,10 @@ ui <- function(request){
                
                p("• Specificity is calculated as the difference between the detection rate within the cluster and outside of the cluster"),
                
+               p("• Search the table's contents using the search box to the top right of the table"),
+               
+               p("• Click and drag the column dividers in the header row to resize the columns"),
+               
                tags$br(),
                conditionalPanel(condition ='input.update==0',
                                 fluidRow(
@@ -402,9 +412,9 @@ ui <- function(request){
                tags$br(),
                p("• Use the side bar to select which brain region to interrogate"),
                
-               p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
+               p("• Use the switch above the plot to toggle between static and interactive plots (sidebar update button not required)"),
                
-               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (update button not required)"),
+               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (sidebar update button not required)"),
                
                p("• Download the static version of the plot as a pdf using the button below the plot"),
                
@@ -569,7 +579,8 @@ ui <- function(request){
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• Use the dropdown tool above the plot to choose which of the input genes to display (update button not required), or use the sidebar toggle to display mean expression over all input genes (update button required)"),
+               p("• Use the dropdown tool above the plot to choose which of the input genes to display (sidebar update button not required), 
+                 or use the sidebar toggle to display mean expression over all input genes (sidebar update button required)"),
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
