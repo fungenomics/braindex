@@ -1294,18 +1294,113 @@ server <- function(input, output, session) {
     )
     
     # Plot heatmap based on gene expression values for input genes,
-    # selected cell classes, and selected annotations using
-    # custom plotter (see functions.R)
-    hm_out <- heatmap_anno_plot(df = bubble_prep(gene = input_new()$gene),
-                                cell_classes = input_new()$heatmap_cells,
-                                anno = input_new()$heatmap_anno)
+    # selected cell classes, and selected annotations 
+    # NOTE: NOT USING CUSTOM PLOTTER IN functions.R FOR NOW SINCE IT BREAKS DOWNLOAD 
+    df <- bubble_prep(gene = input_new()$gene)
+    cell_classes <- input_new()$heatmap_cells
+    anno_list <- input_new()$heatmap_anno
+    
+    # Replace cell class column values with more general categories
+    df <- gen_cell_class(df)
+    
+    # Add new columns to dataframe for brain region and time points information
+    df <- time_region_col(df)
+    
+    # Store the current df for later use in column annotations
+    df_for_anno <- df 
+    
+    ## Split the Sample column into Region and Timepoint columns
+    # df_for_anno <- df_for_anno %>% 
+    #   separate(col = Sample, into = c("Region", "Timepoint"), sep = " ")
+    
+    # Store mean expression for each cluster 
+    df <- df %>% 
+      group_by(Gene, Cluster, Cell_class) %>% 
+      summarize(Expression = mean(Expression))
+    
+    # Select cell types specified by user input
+    df <- df %>% filter(Cell_class %in% cell_classes)
+    
+    # Pivot the cluster rows to columns
+    df <- df %>% 
+      select(Gene, Cluster, Expression) %>% 
+      mutate(Expression = as.numeric(Expression)) %>% 
+      tidyr::pivot_wider(names_from = "Cluster", values_from = "Expression")  
+    
+    # Set NA values in df to 0
+    df[is.na(df)] <- 0 
+    
+    # Flip dataframe over to match the order of user input (bubble_prep outputs reverse)
+    df <- df[nrow(df):1,]
+    
+    # Convert dataframe values to matrix, set rownames to genes for labeling purposes
+    mat <- df[,-1] %>%
+      data.matrix()  
+    rownames(mat) <- df$Gene
+    
+    # Store values for heatmap column annotations (coloured bars at top)
+    
+    # CELL CLASS ANNOTATIONS
+    hm_anno_class <- makePheatmapAnno(general_palette, "Cell_class")
+    hm_anno_class$anno_row <- left_join(hm_anno_class$anno_row, 
+                                        unique(select(df_for_anno, Cluster, Cell_class)), by = "Cell_class") 
+    
+    # REGION ANNOTATIONS
+    hm_anno_region <- makePheatmapAnno(region_palette, "Region")
+    hm_anno_region$anno_row <- left_join(hm_anno_region$anno_row,
+                                         unique(select(df_for_anno, Cluster, Region), by = "Region"))
+    
+    # TIMEPOINTS ANNOTATIONS
+    hm_anno_time <- makePheatmapAnno(timepoint_palette, "Timepoint")
+    hm_anno_time$anno_row <- left_join(hm_anno_time$anno_row,
+                                       unique(select(df_for_anno, Cluster, Timepoint), by = "Timepoint"))
+    
+    # Join column annotations together in a data frame
+    anno <- 
+      left_join(hm_anno_class$anno_row,
+                hm_anno_region$anno_row,
+                by = "Cluster", all = TRUE) %>% 
+      left_join(hm_anno_time$anno_row,
+                by = "Cluster", all = TRUE)
+    
+    # Set cluster names as row names and delete dedicated column for clusters
+    rownames(anno) <- anno$Cluster
+    anno$Cluster <- NULL 
+    
+    # Create vector for column annotation palettes
+    anno_colors = c(hm_anno_class$side_colors,
+                    hm_anno_region$side_colors,
+                    hm_anno_time$side_colors)
+    
+    # Display only selected annotations 
+    anno <- anno %>% select(all_of(anno_list))
+    
+    # Plot heatmap
+    hm <- mat %>% 
+      apply(1, scales::rescale) %>% 
+      t() %>% 
+      pheatmap::pheatmap(border_color = NA,
+                         color = colorRampPalette(c("blue", "white", "red"))(100),
+                         scale = "none",
+                         cluster_rows = TRUE,
+                         cluster_cols = TRUE,
+                         cellwidth = 17,
+                         cellheight = 17,
+                         fontsize = 13,
+                         annotation_col = anno, 
+                         annotation_colors = anno_colors, 
+                         na_col = "#e5e5e5")
+    
+    # Store dimensions for dynamically plotting full heatmap width
+    w <- get_plot_dims(hm)$width *0.9 # Reduce width to properly plot in webpage (seems to add a margin)
+    h <- get_plot_dims(hm)$height + 5 # Add a fixed height to accommodate large legend for multiple col annotations
     
     # Modify reactive values to dynamically plot the heatmap width
-    heatmap_dims$height <- hm_out$height 
-    heatmap_dims$width <- hm_out$width
+    heatmap_dims$height <- glue("{h}in")
+    heatmap_dims$width <- glue("{w}in")
     
     # Output the heatmap
-    hm_out$plot
+    hm
     
   })
   
