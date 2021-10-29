@@ -50,19 +50,18 @@ ui <- function(request){
                                                  right = TRUE),
                  ),
                  
-                 # Input for dendrogram tab
+                 # Input for dendrogram tab and cluster table tab
                  conditionalPanel(condition = "input.tabs == 'dendrogram'",
                                   
                                   selectInput("bubble_scale", "Scaling",
                                               choices = c("Scale each gene to [0, 1]" = TRUE,
                                                           "Conserve scale across genes" = FALSE),
                                               selected = "Scale each gene to the same range, [0, 1]"),
-                                  
+
                                   sliderInput("bubble_size", "Max point size", min = 3, max = 6,
                                               step = 0.5, value = 4)
                                   
                  ),
-                 
 
                  # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
@@ -89,7 +88,13 @@ ui <- function(request){
                                                      selected = c("Oligodendrocytes",
                                                                   "Ependymal", 
                                                                   "Astrocytes",
-                                                                  "Neurons"))
+                                                                  "Neurons")),
+                                  checkboxGroupInput("heatmap_anno", label = "Column annotation(s)", 
+                                                     choices = list("Cell class" = "Cell_class",
+                                                                    "Brain region" = "Region",
+                                                                    "Time point" = "Timepoint"
+                                                                    ),
+                                                     selected = c("Cell_class"))
                                   ),
                  
                  # Input for tabs on joint analysis by region or by sample
@@ -160,23 +165,94 @@ ui <- function(request){
     # Output plots and tables
     mainPanel(tabsetPanel(
       
+      #### ---- Landing page ----
+      
+      tabPanel("Welcome",
+               
+               tags$br(),
+               tags$h3(tags$b("Welcome to the braindex clusters app.")),
+               tags$br(),
+               tags$h4(tags$b("About the app")),
+               p("Braindex is a portal for exploring a single-cell gene expression atlas of 
+                         the developing mouse brain. This web app includes over twenty
+                         different visualizations, several of which may be 
+                         downloaded in PDF file format for use in publications and 
+                         presentations."),
+               
+               p(tags$i("Note: this app is best viewed on a desktop or using landscape mode of a tablet computer. 
+                 Some visualizations are large in width and may display unexpected behaviour
+                 on mobile devices.")),
+               
+               # tags$br(),
+               # tags$h4(tags$b("Methods")),
+               # p("Please visit ",
+               # tags$a(href = "https://github.com/fungenomics/braindex/wiki/Clusters-app", "the wiki"),
+               # " to read about methods used for analyses within this app. You can also find help with
+               # troubleshooting on this page."),
+               
+               tags$br(),
+               tags$h4(tags$b("Citation")),
+               p("If you use the data or visualizations provided here, please cite the following publication:"),
+
+               # This source is only used in the GRN app, I think
+               # p("Miller, J.A. et al. (2014) Transcriptional landscape of the prenatal human brain, Nature 508: 199-206. ",
+               #   tags$a(href = "https://doi.org/10.1038/nature13185", "doi:10.1038/nature13185"),
+               #   "(Data is ",
+               #   HTML("&#169;"),
+               #   " 2010 Allen Institute for Brain Science. Allen Human Brain Atlas. Available from: ",
+               #   tags$a(href = "https://www.brainspan.org/", "https://www.brainspan.org")),
+               
+               p("Jessa, S. et al. (2019) Stalled developmental programs at the root of pediatric brain tumors, ",
+                 tags$i("Nature Genetics "), tags$b("51:"), " 1702-1713.",
+                 tags$a(href = "https://doi.org/10.1038/s41588-019-0531-7", "doi:10.1038/s41588-019-0531-7")),
+               
+               p("Please also refer to this publication for details about the samples and data processing methods 
+                 used to produce the dataset visualized in this app."),
+               
+               tags$br(),
+               tags$h4(tags$b("Source code")),
+               
+               p("Explore the source code for this app on our ",
+               tags$a(href = "https://github.com/fungenomics/braindex/tree/master/clusters", "Github page.")),
+               
+               p("This app is developed and maintained by the ",
+                 tags$a(href = "https://functionalgenomics.ca", "Kleinman lab"),
+                 "and it is released under the GNU Public License (GPL 3.0). 
+                 Most of its current content was generated by Selin Jessa and Bhavyaa Chandarana."),
+               
+               p("For suggestions, questions or feedback, please contact ",
+                 tags$a(href = "mailto:bhavyaa.chandarana@mail.mcgill.ca", "bhavyaa.chandarana@mail.mcgill.ca"),
+                 ", or post a new issue on our ",
+                 tags$a(href = "https://github.com/fungenomics/braindex/issues", "Github issues page.")
+                 ),
+               
+               HTML("<br><br><br>"), 
+               
+               ),
+      
       #### ---- Dendrogram tab output ---- 
           
       tabPanel("Dendrogram",
                
                tags$br(),
-               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse scRNAseq development atlas."),
+               h3(tags$b("Dendrogram")),
+               
+               tags$br(),
+               tags$b("This tab displays the mean expression of up to 20 genes over each cluster in the mouse single-cell RNA-seq developmental atlas."),
                tags$br(),
                tags$br(),
                p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
                
                p("• Below the dendrogram, clusters are annotated by brain region, time point, and a cell cycle G2/M phase score"),
                
-               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells within each cluster that express the gene"),
+               p("• Bubble colour encodes the mean expression within the cluster, and bubble size encodes the proportion of cells 
+                 within each cluster that express the gene"),
                
-               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster & its expression level"),
+               p("• Hover over each bubble, or move to the tab containing the table, to get additional details about each cluster 
+                 & its expression level"),
                
-               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
+               p("• When selecting more than one gene, use the sidebar switch to plot the mean expression over these genes in a 
+                 new row of the bubble plot. Note that Pct values are disregarded here, so all bubbles in this row are the same size"),
                
                # Display the image of the cluster dendrogram as in Fig 1 of Jessa et al,
                # Nat Genet, 2019
@@ -215,19 +291,42 @@ ui <- function(request){
                
       ),
         
-      #### ---- Expression table tab output ---- 
+      #### ---- Cluster info & markers table tab output ---- 
       
-      tabPanel("Expression table", 
-               
+      tabPanel("Cluster information", 
                tags$br(),
-               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse scRNAseq development atlas."),
+               h3(tags$b("Cluster information")),
+               tags$br(),
+               h4(tags$b("Gene expression by cluster")),
+               tags$br(),
+               
+               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse single-cell RNA-seq development atlas."),
                tags$br(),
                tags$br(),
-               p("• The value in each gene column denotes the mean gene expression per cell in the specified cluster (mean expression)"),
                
-               p("• When selecting more than one gene, use the sidebar switch to display the mean expression over these genes in a new column of the table"),
+               p(tags$b("• Sidebar gene input is optional for this tab. "), "Cluster information and the marker table will display before any genes have been entered."),
                
-               p("• Use the download button below the table to obtain a TSV file with mean expression as well as percent cluster expression values"),
+               p("• When genes are entered in the sidebar, the value in each gene's column denotes the mean expression of the gene in the specified cluster"),
+               
+               p("• When entering more than one gene, use the sidebar switch to display the  gene expression averaged (mean) over all input genes in a new column"),
+               
+               p("• Use the button(s) below the table to download TSV files of the table contents. Click \"Download cluster information table\" for the cluster information only.
+                 A second button named \"Download gene expression table\" will display when a gene is entered into the app. This button provides a TSV file containing the
+                 mean expression of each input gene in each cluster, as well as a percentage of cells in each cluster expressing the gene"),
+               
+               p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (sidebar update button not required)"),
+               
+               p("• Search the table's contents using the search box to the top right of the table"),
+               
+               p("• Click on the column headers to sort the table by ascending and descending values, and click and drag the column dividers in the header row to 
+                 resize the columns"),
+               
+               # Display table before update button has been clicked
+               conditionalPanel(condition='input.update==0',
+                                fluidRow(
+                                  reactableOutput("cluster_table_no_update", width = 1100) %>% ws
+                                  )
+                                ),
                
                #div(style = "overflow-x: scroll; overflow-y: visible;",
                    fluidRow(
@@ -237,12 +336,64 @@ ui <- function(request){
                
                HTML("<br>"),
                
-               # Only display download button if update has been pressed at least once
-               conditionalPanel(condition='input.update!=0',
-                                fluidRow(
-                                  downloadButton("download_bubble", 
-                                                 "Download data (TSV)"))
+               
+               # Display metadata and gene expression table download buttons 
+               fluidRow(
+                 column(5,
+                   downloadButton("download_clusterinfo_table",
+                                  "Download cluster information table (TSV)")
+                 ),
+                 column(7,
+                 # Only show expression table if update button has been pressed once or more
+                 # Unfortunately, I cannot condition on the content of gene input in this file..
+                   conditionalPanel(condition='input.update!=0',
+                     downloadButton("download_exp_table", 
+                                    "Download gene expression table (TSV)")
+                   )
+                 )
                ),
+               
+               
+               HTML("<br><br><br><br>"),
+               tags$hr(),
+               h4(tags$b("Cluster markers")),
+               
+               tags$br(),
+               tags$b("This table displays the 100-gene signature for the cluster selected in the expression table above."),
+               tags$br(),
+               tags$br(),
+               
+               p("• The signature comprises the 100 genes with the lowest adjusted p-value (highest significance) in the cluster"),
+               
+               p("• Detection rates are calculated as the proportion of cells in the specified population expressing the gene"),
+               
+               p("• Specificity is calculated as the difference between the detection rate within the cluster and outside of the cluster"),
+               
+               p("• Search the table's contents using the search box to the top right of the table"),
+               
+               p("• Click on the column headers to sort the table by ascending and descending values, and click and drag the column dividers in the header row to 
+                 resize the columns"),
+               
+               tags$br(),
+               conditionalPanel(condition ='input.update==0',
+                                fluidRow(
+                                  uiOutput("selected_clust_no_update")
+                                ),
+                                fluidRow(
+                                  reactableOutput("marker_table_no_update", 
+                                                  width = 1100) %>% ws
+                                )
+               ),
+               conditionalPanel(condition ='input.update!=0',
+                                fluidRow(
+                                  uiOutput("selected_clust")
+                                ),
+                                fluidRow(
+                                  reactableOutput("marker_table", 
+                                                  width = 1100) %>% ws
+                                )
+               ),
+               
                HTML("<br><br><br>"), 
                
                # Specify the value to use when checking if this tab is selected
@@ -255,15 +406,17 @@ ui <- function(request){
       tabPanel("Timecourse",
                
                tags$br(),
+               h3(tags$b("Timecourse")),
+               tags$br(),
                
                tags$b("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given gene is detected, broken down by cell type, to allow for visualizing expression across the timecourse."),
                tags$br(),
                tags$br(),
                p("• Use the side bar to select which brain region to interrogate"),
                
-               p("• Use the switch above the plot to toggle between static and interactive plots (update button not required)"),
+               p("• Use the switch above the plot to toggle between static and interactive plots (sidebar update button not required)"),
                
-               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (update button not required)"),
+               p("• As only one gene can be plotted at a time, use the dropdown tool above the plots to choose which of the input genes to display (sidebar update button not required)"),
                
                p("• Download the static version of the plot as a pdf using the button below the plot"),
                
@@ -321,6 +474,8 @@ ui <- function(request){
       tabPanel("Single-cell expression, by region",
                
                tags$br(),
+               h3(tags$b("Single-cell expression, by region")),
+               tags$br(),
                
                tags$b("Use this tab to explore the expression of one or more genes at the single-cell level per brain region."),
                tags$br(),
@@ -370,7 +525,8 @@ ui <- function(request){
       #### ---- Sample joint expression tab output ---- 
       
       tabPanel("Single-cell expression, by sample",
-               
+               tags$br(),
+               h3(tags$b("Single-cell expression, by sample")),
                tags$br(),
                
                tags$b("Use these tabs to explore the expression of one or more genes at the single-cell level in each sample."),
@@ -416,7 +572,8 @@ ui <- function(request){
       #### ---- Clusters ranked by expression tab output ---- 
       
       tabPanel("Clusters ranked by expression",
-               
+               tags$br(),
+               h3(tags$b("Clusters ranked by expression")),
                tags$br(),
                
                tags$b("This plot displays the mean expression of the selected gene in each cluster, ranked from highest to lowest expression."),
@@ -424,7 +581,8 @@ ui <- function(request){
                tags$br(),
                p("• The ticks below the plot x-axis provide a general categorization by cell type"),
                
-               p("• Use the dropdown tool above the plot to choose which of the input genes to display (update button not required), or use the sidebar toggle to display mean expression over all input genes (update button required)"),
+               p("• Use the dropdown tool above the plot to choose which of the input genes to display (sidebar update button not required), 
+                 or use the sidebar toggle to display mean expression over all input genes (sidebar update button required)"),
                
                p("• Be aware of the y-axis, which is bounded by the maximum expression value present"),
                
@@ -470,7 +628,8 @@ ui <- function(request){
       #### ---- Cell types clustered by expression tab output ---- 
       
       tabPanel("Cell types clustered by expression",
-               
+               tags$br(),
+               h3(tags$b("Cell types clustered by expression")),
                tags$br(),
                tags$b("This plot is a heatmap clustering input genes and cell types together based on their mean expression within clusters."),
                tags$br(),

@@ -1,5 +1,312 @@
 {
   
+  "signatures_cortex": [
+    
+    {
+      
+       "file": "ct_e10.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e10/ct_e10.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E10 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_e12.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e12/ct_e12.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E12 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_e13.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e13/ct_e13.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E13 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_e15.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e15/ct_e15.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E15 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_e16.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e16/ct_e16.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E15 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_e18.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e18/ct_e18.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E15 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "ct_p0.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p0/ct_p0.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P0 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },    
+    {
+          
+       "file": "ct_p3.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p3/ct_p3.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P3 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },    
+    {
+          
+       "file": "ct_p6.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p6/ct_p6.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P6 in the cortex",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    }
+    
+  ],
+  
+  "markers_cortex": [
+    
+    {
+      
+       "file": "ct_e10.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e10/ct_e10.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E10 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_e12.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e12/ct_e12.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E12 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_e13.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e13/ct_e13.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E13 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_e15.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e15/ct_e15.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E15 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_e16.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e16/ct_e16.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E16 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_e18.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_e18/ct_e18.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E18 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_p0.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p0/ct_p0.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P0 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_p3.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p3/ct_p3.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P3 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "ct_p6.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/ct_p6/ct_p6.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P6 in the cortex",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    }
+    
+  ],
+  
+  "signatures_pons": [
+    
+    {
+      
+       "file": "po_e10.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e10/po_e10.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E10 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_e12.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e12/po_e12.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E12 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_e13.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e13/po_e13.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E13 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_e15.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e15/po_e15.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E15 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_e16.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e16/po_e16.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E16 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_e18.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e18/po_e18.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint E18 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },
+    {
+          
+       "file": "po_p0.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p0/po_p0.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P0 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },    
+    {
+          
+       "file": "po_p3.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p3/po_p3.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P3 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    },    
+    {
+          
+       "file": "po_p6.signatures_no_mito.Rda",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p6/po_p6.signatures_no_mito.Rda",
+       "description": "Vector of top 100 genes (gene signature) per cluster in timepoint P6 in the pons",
+       "contents": "List containing four sub-lists for the gene signature listed in different formats: human gene symbol, mouse gene symbol, human Ensembl ID, mouse Ensembl ID."
+       
+    }
+    
+  ],
+  
+  "markers_pons": [
+    
+    {
+      
+       "file": "po_e10.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e10/po_e10.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E10 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_e12.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e12/po_e12.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E12 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_e13.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e13/po_e13.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E13 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_e15.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e15/po_e15.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E15 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_e16.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e16/po_e16.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E16 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_e18.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_e18/po_e18.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint E18 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_p0.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p0/po_p0.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P0 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+    },
+    {
+      
+       "file": "po_p3.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p3/po_p3.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P3 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    },
+    {
+      
+       "file": "po_p6.markers.tsv.gz",
+       "path": "selin.jessa/from_hydra/atlas/data/po_p6/po_p6.markers.tsv.gz",
+       "description": "Table of all genes per cluster as well as statistics in timepoint P6 in the pons",
+       "contents": "Zipped TSV file with columns for average log fold change (avg_logFC), p values, pct1 and pct2 values for each gene detected in each cluster at this timepoint. Gene biotype description columns are included and the cluster index corresponding to the statistics is also specified in a column"
+      
+    }
+    
+  ],
+  
   "2021_files": [
     
      {

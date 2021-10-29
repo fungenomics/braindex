@@ -4,7 +4,7 @@ library(dplyr)
 library(readr)
 
 metadata <- data.table::fread("../joint_mouse/metadata_20190715.tsv", data.table = FALSE) %>% 
-  select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class, N_cells) %>% 
+  select(Sample, Age, Species, Structure, Alias, Cell_type, Cluster, Colour, Cell_class, N_cells, Cluster_number) %>% 
   mutate(Cluster_nounderscore = gsub("_", " ", Cluster)) %>% 
   write_tsv("../joint_mouse/metadata_20190715_select.tsv")
 

@@ -16,6 +16,7 @@ data/*.Rds
 data/*.tsv
 data/*.feather
 data/*.txt
+data/*.gz
 
 data/*/*.RData
 data/*/*.Rda
@@ -23,6 +24,7 @@ data/*/*.Rds
 data/*/*.tsv
 data/*/*.feather
 data/*/*.txt
+data/*/*.gz
 
 # Exclude illustrator files
 */img/*.ai
