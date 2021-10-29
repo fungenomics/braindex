@@ -318,7 +318,8 @@ ui <- function(request){
                
                p("• Search the table's contents using the search box to the top right of the table"),
                
-               p("• Click and drag the column dividers in the header row to resize the columns"),
+               p("• Click on the column headers to sort the table by ascending and descending values, and click and drag the column dividers in the header row to 
+                 resize the columns"),
                
                # Display table before update button has been clicked
                conditionalPanel(condition='input.update==0',
@@ -370,7 +371,8 @@ ui <- function(request){
                
                p("• Search the table's contents using the search box to the top right of the table"),
                
-               p("• Click and drag the column dividers in the header row to resize the columns"),
+               p("• Click on the column headers to sort the table by ascending and descending values, and click and drag the column dividers in the header row to 
+                 resize the columns"),
                
                tags$br(),
                conditionalPanel(condition ='input.update==0',
