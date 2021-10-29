@@ -934,8 +934,9 @@ ranked_exp_plot <- function(df,
 #' @example 
 #' heatmap_anno_plot(df = bubble_prep("Pdgfra"),
 #'    cell_classes = c("Oligodendrocytes", "Neurons"),
-#'    anno = c("Cell_class"))
-#' 
+#'    anno_list = c("Cell_class"))
+#'  
+#' NOTE: NOT USING CUSTOM PLOTTER IN functions.R FOR NOW SINCE IT BREAKS DOWNLOAD 
 heatmap_anno_plot <- function(df,
                               cell_classes,
                               anno_list) {
