@@ -21,6 +21,8 @@ ui <- function(request){
     
     sidebarPanel(width = 3,
                  
+                 tags$h4(tags$b("Input sidebar")),
+                 
                  conditionalPanel(condition = '!input.upload',
                                   # Gene input field, shared across tabs
                                   selectizeInput(inputId = "gene", label = "Gene", choices = NULL,
