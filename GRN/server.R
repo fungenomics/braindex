@@ -54,6 +54,8 @@ server <- function(input, output, session) {
     l$as_toggle <- input$as_toggle
     l$fc <- input$fc
     l$as_tp <- input$as_tp
+    l$bubble_scale <- input$bubble_scale
+    l$GRN_by_gene <- input$GRN_by_gene
  
     
     # We will use the same name attributes to retrieve data
@@ -473,8 +475,9 @@ server <- function(input, output, session) {
         
         req(length(tf_list$TF_in_data) > 0)
         
-        make_network(tf_list$TF_in_data, get(datafile)$TF_target_gene_info,
-                     gene_to_highlight)
+ 
+          make_network(tf_list$TF_in_data, get(datafile)$TF_target_gene_info,
+                       gene_to_highlight)
       }
       
       else{
@@ -484,9 +487,13 @@ server <- function(input, output, session) {
         tf_list$TF_not_data <- temp$TF_not_data
         
         req(length(tf_list$TF_in_data) > 0)
-         
-        make_network(tf_list$TF_in_data, input_new()$TF_target_gene_info,
-                     gene_to_highlight) #returns an igraph network object
+        
+    
+
+          make_network(tf_list$TF_in_data, input_new()$TF_target_gene_info,
+                       gene_to_highlight) #returns an igraph network object
+        
+
       }
     })
     network_ggplot <- reactive({
@@ -588,7 +595,8 @@ server <- function(input, output, session) {
     output$heatmap_cluster <- renderUI({
       
       #adjusts plot width manually so that only the large plots have scrolling
-      if(input$time == "All Time-Points"){plot_width = '3500px'}
+      if(input$time == "All Time-Points" & input$region == "cortex"){plot_width = '3500px'}
+      else if(input$time == "All Time-Points" & input$region == "pons"){plot_width = '3800px'}
       else{plot_width = '800px'}
       
       plotOutput('heatmap_cluster_plot', width = plot_width)             
@@ -984,7 +992,7 @@ server <- function(input, output, session) {
       bubble_prep(sample = data_sample,
                   tf = tf_list$TF_in_data,
                   dend_order = input_new()$dend_order,
-                  scale = FALSE)
+                  scale = input_new()$bubble_scale)
 
     })
     

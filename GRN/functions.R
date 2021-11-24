@@ -51,13 +51,17 @@ addMotifPic <- function(subset_data){
 #' @param tf_target_gene_info a data frame containing information for each association 
 #' between a TF and a target gene; created in data_prep.R, loaded in global.R and used depending 
 #' on the region input in input_new()
-make_network <- function(tf, tf_target_gene_info, gene_list){
-  #add a step to select only the transcription factors that are in the list 
+make_network <- function(gene_input, tf_target_gene_info, gene_list, network_by_target_gene = FALSE){
+
   #create edgelist
-  edges <- tf_target_gene_info %>% select(TF, gene, nMotifs, starts_with("Genie3Weight")) %>%
-    #and filter it to only the transcription factors that are the input
-    filter(TF %in% tf)
-  #print(edges)
+  edges <- tf_target_gene_info %>% select(TF, gene, nMotifs, starts_with("Genie3Weight")) #%>%
+  #  filter(TF %in% tf)
+  
+  #and filter it to only the transcription factors or genes that are the input
+  
+  if(network_by_target_gene){edges <- edges %>% filter(gene %in% gene_input)} #at this point, this is a matrix relating genes nad 
+  else{edges <- edges %>% filter(TF %in% gene_input)} #TFs 
+ 
   #create node list
   #the nodes in this case are all the TFs from user input and all the genes that are regulated by the 
   #transcription factors 
@@ -494,8 +498,13 @@ plot_heatmap <- function(tf, method, region, TF_and_ext,
     rownames(new_anno_row) <- gsub(" ", "_", rownames(hm_anno$anno_row)) # re-assign the rownames
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
+    
  
-    anno_col <- new_anno_row # this is loaded by data_prep.R
+    anno_col <- new_anno_row %>%
+      mutate('Broad Cluster' = recode(rownames(new_anno_row), !!!lvl2_cluster_labels)) %>%
+      mutate('Broader Cluster' = recode(rownames(new_anno_row), !!!lvl1_cluster_labels))
+    
+    rownames(anno_col)
 
     show_colname_plot <- TRUE
     title <- glue('Transcription Factor Regulon Activity at Developmental Time: {timepoint}')
@@ -511,9 +520,14 @@ plot_heatmap <- function(tf, method, region, TF_and_ext,
 
       col_to_row <- "Cluster"
       
+      
       #generate the labels for the clusters in the data-set so that the palette can be properly displayed
       new_anno_row <- act %>% mutate(rownames = Cluster) %>%
-        column_to_rownames("rownames") %>% select(Cluster)
+        column_to_rownames("rownames") %>% select(Cluster) %>%
+        mutate('Broad Cluster' = recode(act$Cluster, !!!lvl2_cluster_labels)) %>%
+        mutate('Broader Cluster' = recode(act$Cluster, !!!lvl1_cluster_labels))
+      
+      
       
     }
     else{
@@ -654,7 +668,7 @@ color_by_cluster <- function(cell_metadata, dim_red_type, cluster_label,
 #' cell_metadata_cortex <- read_tsv("data/joint_cortex/joint_cortex.metadata.tsv")
 #' cell_metadata_cortex <- create_cell_metadata(cell_metadata_cortex)
 #' 
-create_metadata_timeseries <- function(cell_metadata, part){
+create_metadata_timeseries <- function(cell_metadata, part, general_cluster_labels){
   if(part == "cortex") level <- c("Forebrain E10.5",
                                   "Forebrain E12.5",
                                   "Forebrain E13.5",
@@ -664,16 +678,16 @@ create_metadata_timeseries <- function(cell_metadata, part){
                                   "Forebrain P0",
                                   "Forebrain P3",
                                   "Forebrain P6")
-  else if (part == "pons") level <- c("Pons E10.5",
-                                      "Pons E12.5",
-                                      "Pons E13.5",
+  else if (part == "pons") level <- c("Hindbrain E10.5",
+                                      "Hindbrain E12.5",
+                                      "Hindbrain E13.5",
                                       "Pons E15.5",
                                       "Pons E16.5",
                                       "Pons E18.5",
                                       "Pons P0",
                                       "Pons P3",
                                       "Pons P6")
-  else{(return("Wrong usage, input either cortex or pons"))}
+  else{(return("Wrong usage, input either cortex or pons"))} #sanity check
   
   #print(level)
   cell_metadata %>% 
@@ -681,7 +695,9 @@ create_metadata_timeseries <- function(cell_metadata, part){
     # In this case, we remove the "prefix" of the Cluster column, so that we are
     # simply left with the abbreviation representing the cell type, so that 
     # we can link the cells of the same cell type across ages
-    separate(Cluster, into = c("Prefix", "Cluster"), sep = "_") %>% 
+    #separate(Cluster, into = c("Prefix", "Cluster"), sep = "_") %>% 
+    #filter(!grepl("EXCLUDE", Cluster)) %>%
+    mutate(broad_cluster = recode(Cluster, !!!general_cluster_labels)) %>%
     mutate(Age = factor(Age, levels = level)) %>% 
     arrange(Cell)
   
@@ -743,7 +759,7 @@ translate_tf <- function(tf_list, tf_dataframe){
 #' cell_metadata_cortex <- create_metadata_timeseries(data_cortex$cell_metadata, "cortex")
 #' plot_timeseries(TF,cell_metadata_cortex, binary_activity)
 #' 
-plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, show_legend = TRUE){
+plot_timeseries <- function(TF, cell_metadata, activity, make_plotly = FALSE, show_legend = TRUE){
   
   cell_names <- colnames(activity)
   
@@ -764,58 +780,44 @@ plot_timeseries <- function(TF,cell_metadata, activity, make_plotly = FALSE, sho
   
   
   if(!all(cell_metadata$Cell == activity$Cell)) return (-1)
-  # Add the TF activity to the new dataframe
+  # Add the binarized TF activity to the new dataframe
   ribbon_df <- cell_metadata
   ribbon_df$TF <- activity$TF
   
   ribbon_df <- ribbon_df %>% 
-    filter(!grepl("BLACKLIST", Cluster))
+    filter(!grepl("EXCLUDE", Cluster)) %>%
+    select(-Cluster) 
+  
   ribbon_df_celltype_frac <- ribbon_df %>% 
     group_by(Age) %>% 
     # Total cells at each age
     mutate(total = n()) %>% 
-    group_by(Age, Cluster) %>%
+    group_by(Age, broad_cluster) %>%
     # Proportion of TF+ cells per cluster, per age
     mutate(frac = sum(TF > 0) / total) %>% 
-    distinct(Age, Cluster, frac) %>% 
-    ungroup()
+    distinct(Age, broad_cluster, frac) %>% 
+    ungroup() %>% group_by(Age)
   
-  ribbon_df_cum_frac <- ribbon_df %>% 
-    group_by(Age) %>% 
-    summarize(cumfrac = sum(TF > 0) / n()) %>% 
-    ungroup()
+  ribbon_df_clusters_complete <- ribbon_df_celltype_frac %>%
+    mutate(broad_cluster = factor(broad_cluster, levels = unique(.$broad_cluster))) %>%
+    complete(broad_cluster, nesting(Age), fill = list(frac = 0))
   
-  timepoints2 <- ribbon_df$Age
-  clusters <- ribbon_df$Cluster
+  ribbon_df_clusters_complete$xpos = group_indices(ribbon_df_clusters_complete)
   
-  df = data.frame(cluster = rep(unique(clusters), length(unique(timepoints2))),
-                  stage = do.call(c, lapply(as.character(unique(timepoints2)), rep, times = length(unique(clusters)))))
-  
-  df$ranking = match(df$cluster, names(colours))
-  df = df[order(df$stage, df$ranking),]
-  
-  df <- left_join(df, select(ribbon_df_celltype_frac, cluster = Cluster, stage = Age, frac)) %>% 
-    mutate(frac = replace_na(frac, 0)) %>% 
-    left_join(select(ribbon_df_cum_frac, stage = Age, cumfrac))
-  
-  df$xpos = match(df$stage, unique(timepoints2))
-  
-  #view(df)
-  
-  plot <- df %>%
-    ggplot(aes(x = xpos, y = frac, fill = cluster)) +
+  plot <- ribbon_df_clusters_complete %>%
+    ggplot(aes(x = xpos, y = frac, fill = broad_cluster)) +
     geom_area(stat = "identity", show.legend = show_legend) +
-    scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
+    scale_fill_manual(values = palette_broad_clusters, drop = FALSE, name = "") +
     scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
                        labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
-                       limits = c(1, length(unique(df$stage)))) +
+                       limits = c(1, 9)) +
     labs(x = "Developmental Age", y = "Proportion", title = TF) +
     guides(fill = guide_legend(ncol = 5)) +
     theme_min() + 
     theme(legend.position = "bottom") 
   
   if(make_plotly) {
-    return (ggplotly(plot, tooltip = "cluster") %>% style(hoveron = "points + fills"))
+    return (ggplotly(plot, tooltip = "broad_cluster") %>% style(hoveron = "points + fills"))
   }
   else{return(plot)}
 }
@@ -920,7 +922,9 @@ bubble_prep <- function(sample, tf, dend_order, scale){
   
   AUC <- data$AUC_df %>% select(Cluster, tf) %>%
     filter(Cluster %in% dend_order)
- 
+  
+  FC <- data$FC_df %>% select(Cluster, tf) %>%
+    filter(Cluster %in% dend_order)
   
   # Scale activity of each tf linearly across clusters to [0, 1]
   if (scale) {
@@ -928,20 +932,30 @@ bubble_prep <- function(sample, tf, dend_order, scale){
     AUC <- AUC %>%
       as.data.frame() %>%
       select(-Cluster) %>%
-      apply(2, scales::rescale, to = c(0, 1)) %>%
+      apply(2, scales::rescale, to = c(0, 1)) %>% 
       as.data.frame %>%
       mutate(Cluster = rownames(AUC)) %>% 
       select(Cluster, everything())
     
+    # FC <- FC %>% 
+    #   as.data.frame() %>%
+    #   select(-Cluster) %>%
+    #   apply(c(1,2), log2) %>%
+    #   as.data.frame %>%
+    #   mutate(Cluster = rownames(AUC)) %>% 
+    #   select(Cluster, everything())
+    #   
+    
   }
+  
+  
   # Convert to long / tidy format with columns: Cluster, TF, AUC
   AUC <- AUC %>% 
     gather(., "TF", "AUC", 2:ncol(.))
   
   #print(AUC)
   
-  FC <- data$FC_df %>% select(Cluster, tf) %>%
-    filter(Cluster %in% dend_order) %>%
+  FC <- FC %>%
     gather(., "TF", "FC", 2:ncol(.))
   
   #print(AUC)
@@ -1005,8 +1019,7 @@ plot_bubble <- function(data, label_palette, dend_order){
           panel.border = element_blank(),
           axis.ticks.x = element_blank(),
           axis.ticks.y = element_blank(),
-          # Do not show the legend because it is included in the static
-          # dendrogram image displayed above the bubbleplot
+          legend.key.width = unit(1, "cm"),
           legend.position = "bottom") +
     # Put gene labels on the right hand side to improve alignment
     scale_y_discrete(position = "right")

@@ -20,8 +20,25 @@ source("../functions.R")
 
 metadata_extended <- read_tsv("shared/metadata_20210710_with_qc.tsv") #for the extended dataset in the joint space
 
+#maps the per sample cluster label to a more broad cluster label
+#F-e10_VRGC maps to RGC
+#used in timeseries 
+lvl2_cluster_extended <- metadata_extended %>% select(Label, Level2_type) %>% deframe
+
+#even borader cluster mapping, for use in the heatmap
+lvl1_cluster_extended <- metadata_extended %>% select(Label, Level1_type) %>% deframe
+
 metadata_per_sample <- read_tsv("shared/metadata_20201028_with_qc.tsv") #for the per-timepoint analyses 
 
+#used in timeseries 
+lvl2_cluster_per_sample <- metadata_per_sample %>% select(Label, Level2_type) %>% deframe
+
+#even borader cluster mapping, for use in the heatmap
+lvl1_cluster_per_sample <- metadata_per_sample %>% select(Label, Level1_type) %>% deframe
+
+lvl2_cluster_labels <- c(lvl2_cluster_extended, lvl2_cluster_per_sample)
+
+lvl1_cluster_labels <- c(lvl1_cluster_extended, lvl1_cluster_per_sample)
 #per_sample data colour palette
 colour_palette_per_sample <- metadata_per_sample %>% select(Label, Colour) %>% deframe()
 colour_palette_per_sample_space <- colour_palette_per_sample
@@ -105,7 +122,7 @@ colnames(binary_activity_cortex_extended) <- gsub("_.","", colnames(binary_activ
 tf_df_cortex_extended <- as_tibble(rownames(binary_activity_cortex_extended))
 
 #metadata file for time-series ribbon plot
-timeseries_input_meta_cortex_extended <- create_metadata_timeseries(forebrain_data_extended, "cortex")
+timeseries_input_meta_cortex_extended <- create_metadata_timeseries(forebrain_data_extended, "cortex", lvl2_cluster_labels)
 
 
 data_cortex_extended <- list(
@@ -148,7 +165,7 @@ unique_TF_pons_extended <- unique(TF_target_gene_joint_pons_extended[["TF"]])
 
 TF_and_ext_pons_extended <- identify_tf(TF_active_pons_extended)
 
-timeseries_input_meta_pons_extended <- create_metadata_timeseries(pons_data_extended, "pons")
+timeseries_input_meta_pons_extended <- create_metadata_timeseries(pons_data_extended, "pons", lvl2_cluster_labels)
 
 binary_activity_pons_extended <- readRDS("joint_pons_extended/4.2_binaryRegulonActivity_nonDupl_pons_extended.Rds")
 colnames(binary_activity_pons_extended) <- gsub("_.","", colnames(binary_activity_pons_extended))
@@ -290,15 +307,58 @@ save(data_pons_extended, file = "joint_pons_extended/pons_extended_prep.Rda")
 
 extended_mouse_joint_cluster_palette <- readRDS("shared/palette_ID_20210710_joint_clustering.Rds")
 
+#palette for the level2 cluster labels from metadata_extended
+palette_broad_clusters <- c("RGC" = "#ffcc00",
+                            "Telencephalic progenitors" = "#FFE5AF",
+                            "Inhibitory neurons" = "#135ca0",
+                            "Neuronal IPC" = "#f77750",
+                            "Excitatory neurons" = "#840200",
+                            "Meninges" = "#dbd2d7",
+                            "Unresolved" = "gray50", 
+                            "Myeloid" = "gray50",
+                            "Endothelial" = "#636363",
+                            "Thalamic precursors" = "gray50",
+                            "Other neurons" = "#c18ba0",
+                            "Cortical hem" = "#FFE5AF",
+                            "Thalamic neurons" = "#805f91",
+                            "Pericytes" = "#857e89",
+                            "Microglia" = "#aca2b2",
+                            "Gliogenic progenitors" = "#d5d98b",
+                            "Astrocytes" = "#00a385",
+                            "Choroid plexus" = "#1ba02a",
+                            "Oligodendrocytes" = "#d5d98b",
+                            "Macrophages" = "#86778e",
+                            "Ependymal" = "#8ee5cf",
+                            "Neurons" = "#ff9385",
+                            "Schwann cells" = "#4b6d34",
+                            "Vascular smooth muscle" = "#665f5f",
+                            "Hindbrain progenitors" = "#ffe5af",
+                            "Vascular leptomeningeal" = "#ceb9c5",
+                            "Mixed progenitors" = "#ffe500"
+                            
+)
+
+lvl1_cluster_palette <- c("Progenitors" = "#ffbda3",
+                                  "Neurons"    = "#135ca0",
+                                  "Leptomeningeal" = "#ceb9c5",
+                                  "Unresolved" = "gray50",
+                                  "Blood" = "gray90",
+                                  "Endothelial" = "#636363",
+                                  "Vascular" = "#665f5f",
+                                  "Immune" = "#86778e",
+                                  "Glia" = "#00a385")
+
 master_palette <- c(hm_anno_new$side_colors$Cluster,        # per-timepoint cluster with timepoint removed
                     colour_palette_cluster,                 # per-timepoint cluster, with spaces
-		    colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
-		    #forebrain_cluster_palette,              # joint clustering, forebrain
-		    #pons_cluster_palette,                   # joint clustering, pons
-        extended_mouse_joint_cluster_palette,
-		    colour_palette_per_sample_space,
-		    colour_palette_per_sample)
-master_palette <- list("Cluster" = master_palette)
+		                colour_palette_cluster_underscore,      # per-timepoint cluster, with underscores
+		               #forebrain_cluster_palette,              # joint clustering, forebrain
+		               #pons_cluster_palette,                   # joint clustering, pons
+                    extended_mouse_joint_cluster_palette,
+		                colour_palette_per_sample_space,
+		                colour_palette_per_sample)
+master_palette <- list("Cluster" = master_palette, 
+                       "Broad Cluster" = palette_broad_clusters,
+                       "Broader Cluster" = lvl1_cluster_palette)
 
 #---------------------time_point data----------------------------------------------
 #Data processing for each time point is the same
@@ -379,44 +439,46 @@ for (reg in c("ct", "po")){
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
-     hm_anno, hm_anno_new, colour_palette, all_tf_list, master_palette, file = "shared/common_prep.Rda")
+     hm_anno, hm_anno_new, colour_palette, all_tf_list, 
+     master_palette, palette_broad_clusters, 
+     lvl1_cluster_labels, lvl2_cluster_labels, file = "shared/common_prep.Rda")
 
 #-----------------cell proportion over time ribbon plot--------------------
 
 #calculates the fraction of cells of the total that belong to each cluster
 forebrain_fraction <- forebrain_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
-  filter(!grepl("EXCLUDE", Sample_cluster)) %>%
+  filter(!grepl("EXCLUDE", Sample_cluster))
+
+forebrain_fraction <- forebrain_fraction %>% 
+  mutate(broad_cluster = recode(forebrain_fraction$Sample_cluster, !!!lvl2_cluster_labels)) %>% 
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
   group_by(Sample) %>% mutate (total_in_tp = n()) %>%
-  ungroup() %>% group_by(Sample, Cluster) %>%
+  ungroup() %>% group_by(Sample, broad_cluster) %>%
   mutate(frac = n()/total_in_tp) %>% 
-  ungroup() %>% group_by(tp)
+  ungroup() %>% group_by(Sample)
 
-#print("awoo")
 
-#unique clusters in the data
-forebrain_clusters <- forebrain_fraction$Cluster %>% unique
+forebrain_clusters <- forebrain_fraction$broad_cluster %>% unique
 
 #removes duplicate rows such that each row corresponds to data for one cluster at one timepoint
-unique_forebrain_fraction <- forebrain_fraction %>% select(-Cell) %>% 
-  distinct() %>% select(-Sample, -total_in_tp)
+unique_forebrain_fraction <- forebrain_fraction %>% select(-Cell, -Cluster) %>% 
+  distinct() %>% select(-total_in_tp, -tp)
 
-tp <- unique_forebrain_fraction$tp %>% unique()
 
 #not all clusters appear in all timepoints, each timepoint needs to have a complete set of clusters for ribbon plot to look right
 #adds any missing clusters in each timepoint and sets its fraction value to 0
 unique_forebrain_fraction_complete <- unique_forebrain_fraction %>%
-	mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
-	complete(Cluster, nesting(tp), fill = list(frac = 0))
+  mutate(broad_cluster = factor(broad_cluster, levels = unique(.$broad_cluster))) %>%
+  complete(broad_cluster, nesting(Sample), fill = list(frac = 0))
 
 
 unique_forebrain_fraction_complete$xpos = group_indices(unique_forebrain_fraction_complete)
 
 
 forebrain_plot <- unique_forebrain_fraction_complete %>%
-  ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
+  ggplot(aes(x = xpos, y = frac, fill = broad_cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
-  scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
+  scale_fill_manual(values = palette_broad_clusters, drop = FALSE, name = "") +
   scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
                      labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
                      limits = c(1, 9)) +
@@ -427,38 +489,36 @@ forebrain_plot <- unique_forebrain_fraction_complete %>%
 
 #same for pons
 
-#ISSUE: Plot generated for joint_pons_extended has 2 white areas not filled with any cluster
 
 pons_fraction <- pons_data_extended %>% select(Cell, Sample, Sample_cluster) %>%
-  filter(!grepl("EXCLUDE", Sample_cluster)) %>%
+  filter(!grepl("EXCLUDE", Sample_cluster))
+
+
+pons_fraction <- pons_fraction %>%
+  mutate(broad_cluster = recode(pons_fraction$Sample_cluster, !!!lvl2_cluster_labels)) %>%
   separate(Sample_cluster, into = c("tp", "Cluster"), sep = "_") %>%
-  group_by(tp) %>% mutate (total_in_tp = n()) %>%
-  ungroup() %>% group_by(Sample, Cluster) %>%
+  group_by(Sample) %>% mutate (total_in_tp = n()) %>%
+  ungroup() %>% group_by(Sample, broad_cluster) %>%
   mutate(frac = n()/total_in_tp, number = n()) %>% 
-  ungroup() %>% group_by(tp)
+  ungroup() %>% group_by(Sample)
 
-pons_clusters <- pons_fraction$Cluster %>% unique
 
-unique_pons_fraction <- pons_fraction %>% select(-Cell) %>% 
-  distinct() %>% select(-Sample, -total_in_tp) 
+unique_pons_fraction <- pons_fraction %>% select(-Cell, -Cluster) %>% 
+  distinct() %>% select(-total_in_tp, -tp) 
 
-test <- unique_pons_fraction %>% group_by(tp) %>% summarize(sum(frac))
-
-tp <- unique_pons_fraction$tp %>% unique()
 
 unique_pons_fraction_complete <- unique_pons_fraction %>%
-	        mutate(Cluster = factor(Cluster, levels = unique(.$Cluster))) %>%
-		complete(Cluster, nesting(tp), fill = list(frac = 0))
-
+  mutate(broad_cluster = factor(broad_cluster, levels = unique(.$broad_cluster))) %>%
+  complete(broad_cluster, nesting(Sample), fill = list(frac = 0))
 
 
 unique_pons_fraction_complete$xpos = group_indices(unique_pons_fraction_complete)
 
 
 pons_plot <- unique_pons_fraction_complete %>%
-  ggplot(aes(x = xpos, y = frac, fill = Cluster)) +
+  ggplot(aes(x = xpos, y = frac, fill = broad_cluster)) +
   geom_area(stat = "identity", show.legend = FALSE) +
-  scale_fill_manual(values = colour_palette, drop = FALSE, name = "") +
+  scale_fill_manual(values = palette_broad_clusters, drop = FALSE, name = "") +
   scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9),
                      labels = c("E10.5", "E12.5", "E13.5", "E15.5", "E16.5", "E18.5", "P0", "P3", "P6"),
                      limits = c(1, 9)) +

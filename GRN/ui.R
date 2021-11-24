@@ -50,6 +50,9 @@ ui <- fluidPage(
           uiOutput('file1_ui'), ## instead of fileInput('file1', label = NULL) so that the file can be reset 
 
           actionButton("reset", label = "Reset File"),
+          
+          #a switch to allow subsetting the GRN by target gene instead of by TF, not fully implemented so commented out for now
+         #materialSwitch("GRN_by_gene", "View Network by Target Gene", status = "primary"),
                       
           checkboxInput(inputId = "label", label = "Label Target Gene Nodes", value = FALSE)
          
@@ -102,6 +105,14 @@ ui <- fluidPage(
                                    min = 1, max = 4, value = 1.5, step = 0.25, ticks = TRUE),
                        #materialSwitch("dendro", "See Dendrogram", status = "success", right = TRUE)
                        ),
+
+#----------------------Bubble-----------------      
+conditionalPanel(condition = "input.tabs == 'bubble'",
+                 selectInput("bubble_scale", "Scaling",
+                             choices = c("Scale activity of TFs to [0, 1]" = TRUE,
+                                         "Conserve scale across TFs" = FALSE),
+                             selected = "Scale activity of TFs to [0, 1]"),
+),
       
       # Update everything
       actionButton("update", label = "Update"),
@@ -165,7 +176,7 @@ ui <- fluidPage(
           p("• Joint clusters are classified based on the combined data from every developmental 
           time-point in a brain region (forebrain or pons); sample cluster are identified based on data from each 
           individual time-point per brain region."),
-          p("• Use the \"Time-point to Visalise\" option to select which (if not all) time-points
+          p("• Use the \"Time-point to Visualise\" option to select which (if not all) time-points
           to visualise in the sample cluster heatmap."),
           
           fluidRow(
