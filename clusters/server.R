@@ -1135,14 +1135,13 @@ server <- function(input, output, session) {
     
     # Map vln() plotter (functions.R) to each timepoint, producing
     #   one plot per timepoint
-    map(dr_sample_exp(),
+    map2(dr_sample_exp(), timepoints,
         ~ vln(.x,
+              title = .y,
               palette = pal,
               points = input_new()$vln_points) +
           theme(plot.margin = unit(c(0.5, 0, 1, 1.5), "cm"))) %>%
-      {plot_grid(plotlist = ., ncol = 1, align = "hv",
-                 labels = timepoints, label_size = 15)}
-    
+      {plot_grid(plotlist = ., ncol = 1)} 
   })
   
   #### ---- Clusters ranked by expression tab content ----

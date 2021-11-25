@@ -832,6 +832,7 @@ feature_plot <- function(df,
 #' @return a ggplot object
 vln <- function(df,
                 palette,
+                title = NULL,
                 scale = "width",
                 points = FALSE,
                 point_size = 0.4,
@@ -854,7 +855,13 @@ vln <- function(df,
     scale_fill_manual(values = palette) +
     theme_min() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1),
-          legend.position = "none")
+          legend.position = "none") 
+  
+  if (!is.null(title)){
+    gg <- gg + ggtitle(title) +
+      theme(plot.title = element_text(size = 15))
+  }
+    
   
   if (points) gg <- gg + geom_jitter(size = point_size)
   
