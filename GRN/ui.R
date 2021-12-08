@@ -50,6 +50,9 @@ ui <- fluidPage(
           uiOutput('file1_ui'), ## instead of fileInput('file1', label = NULL) so that the file can be reset 
 
           actionButton("reset", label = "Reset File"),
+          
+          #a switch to allow subsetting the GRN by target gene instead of by TF, not fully implemented so commented out for now
+         #materialSwitch("GRN_by_gene", "View Network by Target Gene", status = "primary"),
                       
           checkboxInput(inputId = "label", label = "Label Target Gene Nodes", value = FALSE)
          
@@ -72,9 +75,9 @@ ui <- fluidPage(
                                           selected = "joint"),
                        selectInput(inputId = "time",
                                    label = "Time-point to Visualize",
-                                   choices = c("All","e12", "e15", "p0", "p3", "p6"),
+                                   choices = c("All Time-Points", dev_time_points),
                                    multiple = FALSE,
-                                   selected = "All")
+                                   selected = "All Time-Points")
                                           
                        ),
 # -----------------DR plots ---------------------------------------------
@@ -102,6 +105,14 @@ ui <- fluidPage(
                                    min = 1, max = 4, value = 1.5, step = 0.25, ticks = TRUE),
                        #materialSwitch("dendro", "See Dendrogram", status = "success", right = TRUE)
                        ),
+
+#----------------------Bubble-----------------      
+conditionalPanel(condition = "input.tabs == 'bubble'",
+                 selectInput("bubble_scale", "Scaling",
+                             choices = c("Scale activity of TFs to [0, 1]" = TRUE,
+                                         "Conserve scale across TFs" = FALSE),
+                             selected = "Scale activity of TFs to [0, 1]"),
+),
       
       # Update everything
       actionButton("update", label = "Update"),
@@ -114,6 +125,114 @@ ui <- fluidPage(
 # -----------------Main Panel ---------------------------------------------
     mainPanel(
       tabsetPanel(
+        
+        #-----------------------Bubble-plot-------------------
+        tabPanel(
+         title = "Dendrogram",
+         tags$br(),
+         tags$b("This tab displays the activity and activity fold change of up to 20 TFs over each cluster in the selected brain region."),
+         tags$br(),
+         tags$br(),
+         p("• Clusters are ordered according to the dendrogram which represents a molecular taxonomy of all cell populations"),
+         
+         p("• Below the dendrogram, clusters are annotated by brain region, and time point."),
+         
+         p("• Bubble colour encodes the mean TF activity within the cluster, and bubble size encodes the fold change of TF activity in each cluster compared to all other clusters - effectively describing TF specificity."),
+         
+         p("• The \"Scaling\" option allows the option of normalizing mean TF activity of all TF from 0, 1 for a better visualization when different TFs have large differences in absolute AUC value. This does not change the FC values."),
+         
+         p("• Hover over each bubble to get additional details about each cluster & its expression level"),
+         
+        uiOutput("dend_image"),
+         
+         div(style = "margin-top: 2em; margin-left: 0em; margin-bottom: -5em;
+                   overflow-x: visible; overflow-y: visible;",
+             
+             fluidRow(
+               # Set cellWidths equal to the actual width of each plot (server.R)
+               splitLayout(cellWidths = c(1148, 200),
+                           
+                           # Bubble plot(s)
+                           (plotOutput("bubble",
+                                       hover = hoverOpts(id = "bubble_hover", clip = FALSE),
+                                       height = 2000) %>% ws),
+                           
+                           # Gene labels
+                           # No spinner to prevent confusing user, because there is only 1 plot
+                           (plotOutput("bubble_labels", height = 2000)) 
+               )
+               
+             ),
+             
+             # UI for tooltip
+             fluidRow(
+               uiOutput("bubble_hover_info")),
+             
+         ),
+         value = "bubble" 
+        ),
+        # -----------------Heatmap ---------------------------------------------       
+        tabPanel(
+          strong("This tab displays a heatmap of user selected TF activity per cluster") %>% p(),
+          p("• Values in the heatmap represent the mean TF activity per cluster."),
+          p("• Joint clusters are classified based on the combined data from every developmental 
+          time-point in a brain region (forebrain or pons); sample cluster are identified based on data from each 
+          individual time-point per brain region."),
+          p("• Use the \"Time-point to Visualise\" option to select which (if not all) time-points
+          to visualise in the sample cluster heatmap."),
+          
+          fluidRow(
+            column(width = 3,  materialSwitch(inputId = "heatmap_toggle", 
+                                              label = "Explore per Time-Point Heatmap", 
+                                              value = FALSE, status = "success")),
+            column(width = 3, actionButton("info2", "What Is This?"))
+          ),
+         
+          htmlOutput("hm_data"),
+          title = "TF Activity Heatmap",
+          value = "Heatmap",
+          fluidRow(
+            plotOutput("heatmap_joint")
+          ),
+          
+          downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
+          
+          (div(style='width:800px;overflow-x: scroll;',
+               uiOutput("heatmap_cluster"))),
+          
+         
+          downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
+        ),
+        
+        # -----------------DR plots ---------------------------------------------     
+        tabPanel(
+          title = "TF Activity, by Region",
+          value = "Clustering",
+          
+          p("This tab displays the activity of selected transcription factors") %>% strong(),
+          p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
+          p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
+          p("• Only the first two transcriptions factors are displayed"),
+          fluidRow(
+            column(width = 3, materialSwitch(inputId = "cluster_toggle", 
+                                             label = "Explore per Time-Point TF Activity",
+                                             value = FALSE, status = "success")),
+            column(width = 6, actionButton("info3", "What Is This?"))
+          ),
+          htmlOutput("dr_data"),
+          fluidRow(
+            column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "6in"))
+          ),
+          fluidRow(
+            
+            column(width = 6, plotOutput("cluster1",width = "4.2in", height = "4in"),
+                   downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PDF)")),
+            
+            column(width = 6, plotOutput("cluster2", width = "4.2in",height = "4in"),
+                   downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PDF)")),
+            
+          )
+        ),
         
         # -----------------ggNet visualisation ---------------------------------------------       
         tabPanel(
@@ -136,8 +255,7 @@ ui <- fluidPage(
           
           htmlOutput("grn_data"),
           
-          #textOutput("general_desc"), # this line breaks things/ probably cause you can't have 2 general_desc
-          #textOutput("desc"),
+
           plotlyOutput("network"),
           br(),#so the plotly doesn't overlap with the download button
           br(),
@@ -173,100 +291,37 @@ ui <- fluidPage(
                                               value = FALSE, status = "success")),
             column(width = 3, actionButton("info1", "What Is This?"))
           ),
-          # materialSwitch(inputId = "table_toggle", label = "Explore per Time-Point Data",
-          #                value = FALSE, status = "success"),
+
           htmlOutput("table_data"),
-          #textOutput("general_desc"),
+          
           dataTableOutput("table1"),
           value = "Transcription Factor Target Information"
         ),
 
-        # -----------------Heatmap ---------------------------------------------       
-      tabPanel(
-        strong("This tab displays a heatmap of user selected TF activity per cluster") %>% p(),
-        p("• Values in the heatmap represent the mean TF activity per cluster."),
-        p("• Joint clusters are classified based on the combined data from every developmental 
-          time-point in a brain region (forebrain or pons); sample cluster are identified based on data from each 
-          individual time-point per brain region."),
-        p("• Use the \"Time-point to Visalise\" option to select which (if not all) time-points
-          to visualise in the sample cluster heatmap."),
-        
-        fluidRow(
-          column(width = 3,  materialSwitch(inputId = "heatmap_toggle", 
-                                            label = "Explore per Time-Point Heatmap", 
-                                            value = FALSE, status = "success")),
-          column(width = 3, actionButton("info2", "What Is This?"))
-        ),
-        # materialSwitch(inputId = "heatmap_toggle", 
-        #                label = "Explore per Time-Point Heatmap", 
-        #                value = FALSE, status = "success"),
-        htmlOutput("hm_data"),
-        title = "TF Activity Heatmap",
-        value = "Heatmap",
-        fluidRow(
-          plotOutput("heatmap_joint")
-        ),
-        downloadButton("download_hm_joint", "Heatmap Download (PDF)"),
-        div(style = "margin-left: 1.3em; margin-right: 1.3em;",
-        fluidRow(
-          plotOutput("heatmap_cluster")
-        )),
-        downloadButton("download_hm_cluster", "Heatmap Download (PDF)"),
-        #imageOutput("color_hm_palette", width = "6in", height = "4in")
-      ),
-      # -----------------DR plots ---------------------------------------------     
-      tabPanel(
-        title = "TF Activity, by Region",
-        value = "Clustering",
-
-          p("This tab displays the activity of selected transcription factors") %>% strong(),
-          p("• Cells are plotted in 2D according to selected dimensionality reduction algorithm"),
-          p("• The top row is colored by joint cluster and the bottom row is colored by transcription factor activity"),
-          p("• Only the first two transcriptions factors are displayed"),
-        fluidRow(
-          column(width = 3, materialSwitch(inputId = "cluster_toggle", 
-                                           label = "Explore per Time-Point TF Activity",
-                                          value = FALSE, status = "success")),
-          column(width = 6, actionButton("info3", "What Is This?"))
-        ),
-          htmlOutput("dr_data"),
-        fluidRow(
-          column(width = 10, plotOutput("color_by_cluster", width = "6in", height = "7in"))
-        ),
-        fluidRow(
-  
-          column(width = 6, plotOutput("cluster1",width = "4.2in", height = "4in"),
-                 downloadButton("download_UMAP_1", "Transcription Factor 1 Activity Plot (PDF)")),
-
-          column(width = 6, plotOutput("cluster2", width = "4.2in",height = "4in"),
-                 downloadButton("download_UMAP_2", "Transcription Factor 2 Activity Plot (PDF)")),
-
-        )
-      ),
+      
+   
       # -----------------Time Series ---------------------------------------------
       tabPanel("Time Series",
                p("This plot quantifies the proportion of cells (from 0 to 1) at each timepoint where a given
                  TF is active, broken down by cell type, to allow for visualizing activity 
                  across time.") %>% strong(),
                p("• For any given cell, any given TF is considered active if its activity in that cell
-                  is higher than a TF activity threshold."),
+                  is higher than a TF activity threshold determined in the SCENIC pipeline."),
                p("• The time series for the first TF selected in the sidebar will be an interactive plot, with
                  the remaining plots being static."),
-               
-               textOutput("timeseries_desc"),
+               p("Interactive Plot Options: double clicking a cell type in the legend displays that cell type ONLY;
+                  single click removes that cell type from the plot. Mouse over ribbons in the plot to see the cell types. 
+                  We only support four plots of your first four transcripton factor inputs."),
+              
                br(),
-               #textOutput("tf_timeseries_desc"),
 
                fluidRow(
-               plotlyOutput("timeseries1"),
-               downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
-               plotOutput("timeseries2"),
-               #imageOutput("timeseries_color"),
-               #plotOutput("timeseries3"),
-               #plotlyOutput("timeseries4")
-               plotlyOutput("cell_proportion_timeseries")
+                  plotlyOutput("timeseries1"),
+                  downloadButton("download_ribbon_1", "Timeseries ribbon plot (PDF)"),
+                  plotOutput("timeseries2"),
+                  plotlyOutput("cell_proportion_timeseries")
                ),
-               #imageOutput("proportion_timeseries", width = "auto", height = "auto"),
+
                value = "Time Series"),
       #-----------------------------Active specific------------------------
       tabPanel("TF Activity and Specificity",
@@ -299,12 +354,7 @@ ui <- fluidPage(
                  tabPanel("By TF", uiOutput("as_tf"), value = "by_tf"),
                  id = "as_tabs"
                ),
-               #uiOutput("as_plots"),
-               # fluidRow(
-               #   column(width = 7, plotOutput("active_specific_scatter")),
-               #   column(width = 5, tableOutput("active_specific_table"))
-               #   
-               # ),
+
                plotOutput("active_specific_bar"),
                downloadButton("as_bar_download", "Bar-Plot Download (PDF)"),
                value = "active_specific"),
