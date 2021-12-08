@@ -9,6 +9,9 @@ library(ggplot2)
 source("../functions.R")
 
 # --------------------color palettes-------------------------
+
+message("@ color palettes")
+
 # make color palettes using the cluster label column and the colour label in the metadata data frame
 # color palette for ggplot plots are named vectors with cluster colour as names and colour hex codes as values
 # colour palette for pheatmap is a list of one element named "Cluster", this element is a named vector
@@ -56,9 +59,9 @@ names(colour_palette_per_sample_space) <- gsub("_", " ", names(colour_palette_pe
 
 # color palette for heatmap
 colour_palette_cluster <- metadata_extended %>% 
-  mutate(Label_with_exclude = gsub("_EXCLUDE", "", Label_with_exclude)) %>%
+  mutate(Label = gsub("_EXCLUDE", "", Label)) %>%
   # use gsub to change all contents in Cluster (cluster name format)
-  mutate(Cluster = gsub("_", " ", Label_with_exclude)) %>%
+  mutate(Cluster = gsub("_", " ", Label)) %>%
   # Get two columns
   select(Cluster, Colour) %>%
   # Convert to vector of colours, where the first column gives the names
@@ -71,7 +74,7 @@ names(colour_palette_cluster_underscore) <- gsub(" ", "_", names(colour_palette_
 
 # color palette for timeseries plot, tab3
 colour_palette <- metadata_extended %>% 
-  mutate(Cluster = gsub("_", " ", Label_with_exclude)) %>% 
+  mutate(Cluster = gsub("_", " ", Label)) %>% 
   separate(Cluster, into = c("Prefix", "Cluster"), sep = " ") %>% 
   # Get two columns
   select(Cluster, Colour) %>% 
@@ -92,6 +95,8 @@ hm_anno_new <- makePheatmapAnno(colour_palette, "Cluster")
 #this is list of the TF input into SCENIC, all active TF identified in each dataset is a subset of this
 all_tf_list <- scan("shared/Mus_musculus_TF_one_TF_per_line.txt", character())
 
+
+message("@ extended metadata")
 
 # -----------------------joint_cortex_extended-----------------------------------
 #joint_cortex_extended metadata containing DR coordinates 
@@ -196,6 +201,7 @@ data_pons_extended <- list(
 )
 save(data_pons_extended, file = "joint_pons_extended/pons_extended_prep.Rda")
 
+message("@ master color palettes")
 
 #------------------------master color palette----------------------------------
 #When I was adding various different data sets generated at different times with different formats,
@@ -277,6 +283,8 @@ master_palette <- list("Cluster" = master_palette,
                        "Broader Cluster" = lvl1_cluster_palette,
                        "Cell Ontology Class" = cell_ontological_class_palette)
 
+message("@ time point data")
+
 #---------------------time_point data----------------------------------------------
 #Data processing for each time point is the same
 for (reg in c("ct", "po")){
@@ -295,8 +303,8 @@ for (reg in c("ct", "po")){
     
     #indicates cells that should not be included in plots because they belong to a blacklisted cluster
     #Used to filter the TF activity per cell feather in the create_activity_data function 
-    black_list_cells <- cell_data %>% select(Cell, ID_20201028_with_exclude) %>%
-      filter(grepl("EXCLUDE", ID_20201028_with_exclude)) %>% select(Cell) %>%
+    black_list_cells <- cell_data %>% select(cell, ID_20201028_with_exclude) %>%
+      filter(grepl("EXCLUDE", ID_20201028_with_exclude)) %>% select(cell) %>%
       deframe()
     
     cell_data <- cell_data %>% filter(!grepl("EXCLUDE", ID_20201028_with_exclude))
@@ -315,6 +323,7 @@ for (reg in c("ct", "po")){
   
 }
 
+message("@ shared")
 
 # -----------------------------shared data-----------------------------
 save(colour_palette_cluster,
@@ -322,6 +331,8 @@ save(colour_palette_cluster,
      master_palette, palette_broad_clusters, 
      lvl1_cluster_labels, lvl2_cluster_labels, cell_onto_label,
      file = "shared/common_prep.Rda")
+
+message("@ ribbon")
 
 #-----------------cell proportion over time ribbon plot--------------------
 
@@ -417,5 +428,5 @@ timeseries_proportion_plots <- list(
 
 save(timeseries_proportion_plots, file = "shared/timeseries_proportion_plots.Rda")
 
-
+message("@ done.")
 
