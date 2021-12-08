@@ -10,7 +10,7 @@
         },
         {
         "file": "metadata_20201028_with_qc.tsv",
-        "path": "selin.jessa/from_hydra/single_cell/scDev_data/data/metadata_extended/metadata_20201028_with_qc.tsv",
+        "path": "selin.jessa/from_hydra/atlas/data/metadata_extended/metadata_20201028_with_qc.tsv",
         "description": "For extended mouse brain atlas (per sample analysis uses these cluster labels as the latest labelling): the whole metadata with important columns as Cluster (matching all the data),Cell_type (the full name of the cell type),Age (the time point of the sample),Colour (a hex value to use as a colour for that cluster)",
         "contents": "Dataframe with cluster metadata (extended mouse brain atlas)."
                         

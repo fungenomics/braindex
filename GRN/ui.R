@@ -139,6 +139,8 @@ conditionalPanel(condition = "input.tabs == 'bubble'",
          
          p("• Bubble colour encodes the mean TF activity within the cluster, and bubble size encodes the fold change of TF activity in each cluster compared to all other clusters - effectively describing TF specificity."),
          
+         p("• The \"Scaling\" option allows the option of normalizing mean TF activity of all TF from 0, 1 for a better visualization when different TFs have large differences in absolute AUC value. This does not change the FC values."),
+         
          p("• Hover over each bubble to get additional details about each cluster & its expression level"),
          
         uiOutput("dend_image"),

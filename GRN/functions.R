@@ -499,10 +499,22 @@ plot_heatmap <- function(tf, method, region, TF_and_ext,
     # note that the rownames correspond to the col names of the matrix t(act_cluster)
     # customized for plotting by cluster
     
- 
+    #anno_col contains the mapping from individual clusters to broader cluster classifications
+    #for the purpose of colour coding columns in the heatmap
+    #the each column is coloured by its individual per-sample cluster and by a braoder cell ontology class
+    #the following steps maps the per-sample cluster labels first to a broader lvl2 labels
+    #and then maps lvl2 labels to the cell ontology labels
+    #this is because the cell ontology labels are pulled from the metadata_20201028_with_qc file whlie
+    #the persample labels for the extended datasets are pulled from the metadata_20210710_with_qc file
+    #the formats of certain per-sample labels are different between these files so its easier to map with the 
+    #lvl2 labels as an intermediary 
     anno_col <- new_anno_row %>%
-      mutate('Broad Cluster' = recode(rownames(new_anno_row), !!!lvl2_cluster_labels)) %>%
-      mutate('Broader Cluster' = recode(rownames(new_anno_row), !!!lvl1_cluster_labels))
+      mutate('Broad Cluster' = recode(rownames(new_anno_row), !!!lvl2_cluster_labels))
+      
+    anno_col <- anno_col %>% mutate('Cell Ontology Class' = 
+                recode(get('Broad Cluster'), !!!cell_onto_label)) %>%
+                select(-'Broad Cluster')
+   # print(anno_col)
     
     rownames(anno_col)
 
@@ -524,10 +536,13 @@ plot_heatmap <- function(tf, method, region, TF_and_ext,
       #generate the labels for the clusters in the data-set so that the palette can be properly displayed
       new_anno_row <- act %>% mutate(rownames = Cluster) %>%
         column_to_rownames("rownames") %>% select(Cluster) %>%
-        mutate('Broad Cluster' = recode(act$Cluster, !!!lvl2_cluster_labels)) %>%
-        mutate('Broader Cluster' = recode(act$Cluster, !!!lvl1_cluster_labels))
+        mutate('Cell Ontology Class' = recode(act$Cluster, !!!cell_onto_label))
       
-      
+      # new_anno_row <- new_anno_row %>% mutate('Cell Ontological Classification' = 
+      #                                  recode(get('Broad Cluster'), !!!cell_ontological_class_labels)) %>%
+      #                 select(-'Broad Cluster')
+      # 
+      # print(new_anno_row)
       
     }
     else{
@@ -936,15 +951,7 @@ bubble_prep <- function(sample, tf, dend_order, scale){
       as.data.frame %>%
       mutate(Cluster = rownames(AUC)) %>% 
       select(Cluster, everything())
-    
-    # FC <- FC %>% 
-    #   as.data.frame() %>%
-    #   select(-Cluster) %>%
-    #   apply(c(1,2), log2) %>%
-    #   as.data.frame %>%
-    #   mutate(Cluster = rownames(AUC)) %>% 
-    #   select(Cluster, everything())
-    #   
+
     
   }
   
@@ -1008,7 +1015,8 @@ plot_bubble <- function(data, label_palette, dend_order){
   p1 <- data %>% 
     ggplot(aes(x = Cluster, y = TF_padded)) +
     geom_point(aes(size = FC, colour = AUC), alpha = 0.8) +
-    scale_size_area(max_size = 4) +
+    #scale_size_area(max_size = 4) +
+    scale_size(range = c(0.1, 4)) + 
     scale_color_gradientn(colours = tail(rdbu, 70)) +
     theme_min() +
     ylab(NULL) +
