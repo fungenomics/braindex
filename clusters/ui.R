@@ -3,6 +3,8 @@ source("../www/ui_functions.R")
 
 ui <- function(request){
 
+  tags$head(includeHTML(("google-analytics.html"))),
+
   bootstrapPage(
   
   # Custom styling
