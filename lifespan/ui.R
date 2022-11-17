@@ -38,6 +38,8 @@ shinyUI(bootstrapPage(
 	       tags$br(),
 
 	       p("Visualize the expression of a gene of interest across the lifespan in samples from the BrainSpan project"),
+	       
+	       p("This analysis is based on code for curve fitting and visualization from Marie Forest and Claudia Kleinman"),
 
 	       p("• In the top row, each curve corresponds to the smoothed expression for one brain region"),
 
@@ -53,6 +55,7 @@ shinyUI(bootstrapPage(
                ws(plotOutput("regcurves", width = "7in", height = "8in")),
                
                h3("Citation guidelines"),
+	       p("These visualizations are based on work from Marie Forest and Claudia Kleinman, please consult for Claudia Kleinman for citation and credit"),
                p("Miller, J.A. et al. (2014) Transcriptional landscape of the prenatal human brain, Nature 508: 199-206. doi:10.1038/nature13185"),
                p("© 2010 Allen Institute for Brain Science. Allen Human Brain Atlas. Available from: https://www.brainspan.org/")
       )
