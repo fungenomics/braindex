@@ -27,12 +27,12 @@ ui <- function(request){
                  
                  tags$h4(tags$b("Input sidebar")),
                  
-                 conditionalPanel(condition = '!input.upload',
+                 conditionalPanel(condition = "!input.upload && input.tabs != 'welcome'",
                                   # Gene input field, shared across tabs
                                   selectizeInput(inputId = "gene", label = "Gene", choices = NULL,
                                               multiple = TRUE)),
                  
-                 conditionalPanel(condition = 'input.upload',
+                 conditionalPanel(condition = "input.upload && input.tabs != 'welcome'",
                                   # Gene list input with a file, shared across tabs
                                   fileInput(inputId = "genelist", label = "Gene list (.txt, .csv, or .tsv)",
                                             buttonLabel = "Browse...",
@@ -40,11 +40,13 @@ ui <- function(request){
                                             accept = c(".txt", ".csv", ".tsv"),
                                             placeholder = "No file selected")),
   
-                 materialSwitch("upload", "Use gene list from file",
-                                # status doesn't have any effect other than color scheme. See bootstrap status values
-                                status = "success", 
-                                value = FALSE,
-                                right = TRUE),
+                 conditionalPanel(condition = "input.tabs != 'welcome'",
+                                materialSwitch("upload", "Use gene list from file",
+                                                # status doesn't have any effect other than color scheme. See bootstrap status values
+                                                status = "success", 
+                                                value = FALSE,
+                                                right = TRUE),
+                 ),
 
                  # Input for dendrogram tab, expression table, and ranked clusters tab
                  conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
@@ -71,7 +73,7 @@ ui <- function(request){
 
                  # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
                  conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
-                                  && input.tabs != 'rank_exp' && input.tabs != 'heatmap'",
+                                  && input.tabs != 'rank_exp' && input.tabs != 'heatmap' && input.tabs != 'welcome'",
                                   
                                   # Specify the visible label as well as the internal
                                   # strings used to refer to each region, matching
@@ -155,16 +157,22 @@ ui <- function(request){
                                   ),
                  ),
                  
-                 # Update button for all sidebar inputs. Coloured to differentiate
-                 # from the bookmark button beside it
-                 # tags$head(
-                 #   tags$style(HTML('#update{background-color:#4863A0; 
-                 #                   color:#FFFFFF;}'))
-                 # ),
-                 actionButton("update", label = "Update"),
+                 # Update button for all sidebar inputs. 
+                 conditionalPanel(condition = "input.tabs != 'welcome'",
+                                  actionButton("update", label = "Update"),
+                  ),
+                 
                  
                  # Bookmark button to store current inputs / state of app
-                 bookmarkButton()
+                 conditionalPanel(condition = "input.tabs != 'welcome'",
+                                  bookmarkButton(),
+                 ),
+                 
+                 # Information about the input sidebar for a user on the Welcome page
+                 conditionalPanel(condition = "input.tabs == 'welcome'",
+                                  p("Input options will appear here after navigation to an analysis tab."),
+                 ),
+                
                  
     ),
     
@@ -233,7 +241,7 @@ ui <- function(request){
                  ),
                
                HTML("<br><br><br>"), 
-               
+               value = "welcome"
                ),
       
       #### ---- Dendrogram tab output ---- 
