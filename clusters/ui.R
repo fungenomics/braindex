@@ -49,7 +49,7 @@ ui <- function(request){
                  ),
 
                  # Input for dendrogram tab, expression table, and ranked clusters tab
-                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'exp_table' || input.tabs == 'rank_exp') &&
+                 conditionalPanel(condition = "(input.tabs == 'dendrogram' || input.tabs == 'rank_exp') &&
                                   (input.gene.length > 1 || input.upload)",
                                   materialSwitch("mean_exp", "Display mean expression over the selected genes",
                                                  # status doesn't have any effect other than color scheme. See bootstrap status values
@@ -72,7 +72,7 @@ ui <- function(request){
                  ),
 
                  # Input for all tabs other than dendrogram, expression table, ranked clusters, and heatmap
-                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'exp_table'
+                 conditionalPanel(condition = "input.tabs != 'dendrogram' && input.tabs != 'pct_table'
                                   && input.tabs != 'rank_exp' && input.tabs != 'heatmap' && input.tabs != 'welcome'",
                                   
                                   # Specify the visible label as well as the internal
@@ -158,13 +158,9 @@ ui <- function(request){
                  ),
                  
                  # Update button for all sidebar inputs. 
-                 conditionalPanel(condition = "input.tabs != 'welcome'",
-                                  actionButton("update", label = "Update"),
-                  ),
-                 
-                 
                  # Bookmark button to store current inputs / state of app
                  conditionalPanel(condition = "input.tabs != 'welcome'",
+                                  actionButton("update", label = "Update"),
                                   bookmarkButton(),
                  ),
                  
@@ -311,21 +307,21 @@ ui <- function(request){
                tags$br(),
                h3(tags$b("Cluster information")),
                tags$br(),
-               h4(tags$b("Gene expression by cluster")),
+               h4(tags$b("Gene detection rate by cluster")),
                tags$br(),
                
-               tags$b("This table compares the expression of up to 20 genes in each cluster from the mouse single-cell RNA-seq development atlas."),
+               tags$b("This table compares the detection rate of up to 20 genes in each cluster from the mouse single-cell RNA-seq development atlas."),
                tags$br(),
                tags$br(),
                
                p(tags$b("• Sidebar gene input is optional for this tab. "), "Cluster information and the marker table will display before any genes have been entered."),
                
-               p("• When genes are entered in the sidebar, the value in each gene's column denotes the mean expression of the gene in the specified cluster"),
+               p("• When genes are entered in the sidebar, the value in each gene's column denotes the detection rate of the gene in cells of the specified cluster"),
                
-               p("• When entering more than one gene, use the sidebar switch to display the  gene expression averaged (mean) over all input genes in a new column"),
+               # p("• When entering more than one gene, use the sidebar switch to display the  gene expression averaged (mean) over all input genes in a new column"),
                
                p("• Use the button(s) below the table to download TSV files of the table contents. Click \"Download cluster information table\" for the cluster information only.
-                 A second button named \"Download gene expression table\" will display when a gene is entered into the app. This button provides a TSV file containing the
+                 A second button named \"Download detection rate table\" will display when a gene is entered into the app. This button provides a TSV file containing the
                  mean expression of each input gene in each cluster, as well as a percentage of cells in each cluster expressing the gene"),
                
                p("• Select a cluster using the radio button to the left of each row to view the cluster's gene markers below (sidebar update button not required)"),
@@ -361,8 +357,8 @@ ui <- function(request){
                  # Only show expression table if update button has been pressed once or more
                  # Unfortunately, I cannot condition on the content of gene input in this file..
                    conditionalPanel(condition='input.update!=0',
-                     downloadButton("download_exp_table", 
-                                    "Download gene expression table (TSV)")
+                     downloadButton("download_pct1_table", 
+                                    "Download detection rate table (TSV)")
                    )
                  )
                ),
@@ -411,7 +407,7 @@ ui <- function(request){
                HTML("<br><br><br>"), 
                
                # Specify the value to use when checking if this tab is selected
-               value = "exp_table"
+               value = "pct_table"
                    
       ),
       

@@ -249,9 +249,9 @@ server <- function(input, output, session) {
   
   #### ---- Cluster info & markers table tab content ----
   
-  # --- LOAD GENE EXPRESSION DATA ---
+  # --- LOAD GENE EXPRESSION / PCT DATA ---
   
-  # Generate the input dataframe for the expression table
+  # Generate the input dataframe for the detection rate table
   table_exp_input <- reactive({
     
     # Check whether a gene was provided or not
@@ -270,6 +270,9 @@ server <- function(input, output, session) {
       anno_genes <- setdiff(not_data_genes, not_anno_genes)
     }
     
+    # Set the mean as always valid since it is not being used
+    valid_mean <- TRUE
+    
     # Perform input validation
     validate(
       need(is.null(anno_genes),
@@ -280,22 +283,16 @@ server <- function(input, output, session) {
            glue("\n\n\n\nThe input gene \"{not_anno_genes}\" was not found in the gene annotation."))
     )
     
-    # Only display mean if more than one gene is given AND the user requested it
-    valid_mean <- FALSE
-    if (length(input_new()$gene) > 1 && input_new()$mean_exp){
-      valid_mean <- TRUE
-    } 
-    
     # Display the first 20 genes provided as input
     bubble_prep(gene  = head(input_new()$gene, 20),
-                scale = TRUE,  # ALWAYS WANT SCALING [0,1] FOR TABLE
+                scale = TRUE, 
                 show_mean = valid_mean)
     
   })
   
-  # --- EXPRESSION TABLE ---
+  # --- DETECTION RATE TABLE ---
   
-  # Display table before update button has been clicked (no gene expression either)
+  # Display table before update button has been clicked (no detection rate either)
   output$cluster_table_no_update <- renderReactable({
       
     # Modify metadata for plotting
@@ -347,7 +344,7 @@ server <- function(input, output, session) {
       ) 
   })
   
-  # Show table with cluster & expression info 
+  # Show table with cluster & detection rate info 
   output$cluster_table <- renderReactable({
     
     if (length(input_new()$gene) > 0){ 
@@ -360,9 +357,9 @@ server <- function(input, output, session) {
       # Modify table for plotting
       table <- 
         table_exp_input() %>%
-        select(-Pct1, -Gene_padded) %>% 
-        mutate(Expression = round(Expression, 2)) %>% 
-        spread(Gene, Expression) %>% 
+        select(-Expression, -Gene_padded) %>% 
+        mutate(Pct1 = round(Pct1, 2)) %>% 
+        spread(Gene, Pct1) %>% 
         # Select all except Colour column, rename columns for human readability,
         # follow bubble_input order for gene columns (saved above)
         select(Cluster,
@@ -487,9 +484,9 @@ server <- function(input, output, session) {
     }
   })
   
-  # Download expression table as TSV
-  output$download_exp_table <- 
-      downloadHandler(filename = "mean_cluster_expression.tsv",
+  # Download detection rate table as TSV
+  output$download_pct1_table <- 
+      downloadHandler(filename = "detection_rate_per_cluster.tsv",
                       contentType = "text/tsv",
                       content = function(file) {
                         write_tsv(bubble_input() %>% select(-Gene_padded), path = file)
@@ -544,7 +541,7 @@ server <- function(input, output, session) {
     # Validate whether a cluster is selected or not, display message to user
     validate(
       need(!is.null(getReactableState("cluster_table_no_update", "selected")), 
-             "Please select a cluster for which to display markers in the expression table above.")
+             "Please select a cluster for which to display markers in the detection rate table above.")
     )
     
     # Load marker and signature files for the selected cluster's region & timepoint
@@ -617,7 +614,7 @@ server <- function(input, output, session) {
     # Validate whether a cluster is selected or not, display message to user
     validate(
       need(!is.null(getReactableState("cluster_table", "selected")), "
-           Please select a cluster for which to display markers in the expression table above.")
+           Please select a cluster for which to display markers in the detection rate table above.")
     )
     
     # Load marker and signature files for the selected cluster's region & timepoint
