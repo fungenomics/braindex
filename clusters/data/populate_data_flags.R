@@ -88,7 +88,7 @@ process_file <- function(file, dir_name) {
     dest <- file.path(dir_name, file$file)
     
     # Produce and echo rsync command including hydra username
-    cmd <- glue("rsync {username}@hydra.ladydavis.ca:{src} {dest}")
+    cmd <- glue("rsync {username}@hydra2.ladydavis.ca:{src} {dest}")
     message(cmd)
     
   } else {
